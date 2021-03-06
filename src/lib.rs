@@ -1,11 +1,12 @@
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
-use vfs::{FileSystem};
+use vfs::FileSystem;
 
 extern crate semver;
 extern crate serde;
 extern crate toml;
+extern crate toml_edit;
 extern crate vfs;
 
 pub type AnyError = Box<dyn std::error::Error>;
@@ -13,12 +14,14 @@ pub type Result<T> = core::result::Result<T, AnyError>;
 
 const CARGO_CONFIG: &str = "Cargo.toml";
 
-fn read_workspace<F: FileSystem>(path: &str, fs: F) -> Result<()> {
+fn read_workspace_versions<F: FileSystem>(path: &str, fs: F) -> Result<Vec<Version>> {
     let wks_path = PathBuf::from(&path).join(CARGO_CONFIG);
 
     let mut wks_file = fs.open_file(wks_path.to_str().unwrap())?;
     let mut wc = String::new();
     wks_file.read_to_string(&mut wc)?;
+
+    let mut result = Vec::new();
 
     let wks: WorkspaceConfig = toml::from_str(&wc)?;
     let all_members: HashSet<&String> = wks.workspace.members.iter().collect();
@@ -31,22 +34,31 @@ fn read_workspace<F: FileSystem>(path: &str, fs: F) -> Result<()> {
         crt_file.read_to_string(&mut cc)?;
 
         let crt: CrateConfig = toml::from_str(&cc)?;
-        println!("crate: {} ver {}", &member, crt.package.version);
-        crt.dependencies
+        let v = Version {
+            path: String::from(crate_path),
+            place: Place::Package(crt.package.version),
+        };
+        result.push(v);
+        let deps = crt
+            .dependencies
             .iter()
-            .filter(|(n, _)| all_members.contains(n))
-            .map(|(n, v)| {
+            .filter(|(n, _)| all_members.contains(*n))
+            .filter_map(|(_, v)| {
                 if let Dependency::Object(m) = v {
                     if let Some(d) = m.get("version") {
                         if let Dependency::Plain(s) = d {
-                            println!("  depends on: {} ver: {}", n, s);
+                            return Some(Version {
+                                path: String::from(crate_path),
+                                place: Place::Dependency(s.clone()),
+                            });
                         }
                     }
                 }
-            })
-            .count();
+                None
+            });
+        result.extend(deps);
     }
-    Ok(())
+    Ok(result)
 }
 
 #[derive(Deserialize)]
@@ -59,13 +71,13 @@ struct Workspace {
     members: Vec<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 struct CrateConfig {
     package: Package,
     dependencies: HashMap<String, Dependency>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 struct Package {
     name: String,
     version: String,
@@ -79,10 +91,22 @@ enum Dependency {
     List(Vec<Dependency>),
 }
 
+#[derive(Debug)]
+pub struct Version {
+    path: String,
+    place: Place,
+}
+
+#[derive(Debug)]
+pub enum Place {
+    Package(String),
+    Dependency(String),
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vfs::{MemoryFS};
+    use vfs::MemoryFS;
 
     #[test]
     fn read_workspace_test() {
@@ -94,19 +118,29 @@ mod tests {
         fs.create_dir("/solp").unwrap();
         let root_conf = root_path.join(CARGO_CONFIG);
         let root_conf = root_conf.to_str().unwrap();
-        fs.create_file(root_conf).unwrap().write_all(WKS.as_bytes()).unwrap();
+        fs.create_file(root_conf)
+            .unwrap()
+            .write_all(WKS.as_bytes())
+            .unwrap();
 
         let ch1_conf = root_path.join("solv").join(CARGO_CONFIG);
-        fs.create_file(ch1_conf.to_str().unwrap()).unwrap().write_all(SOLV.as_bytes()).unwrap();
+        fs.create_file(ch1_conf.to_str().unwrap())
+            .unwrap()
+            .write_all(SOLV.as_bytes())
+            .unwrap();
 
         let ch1_conf = root_path.join("solp").join(CARGO_CONFIG);
-        fs.create_file(ch1_conf.to_str().unwrap()).unwrap().write_all(SOLP.as_bytes()).unwrap();
+        fs.create_file(ch1_conf.to_str().unwrap())
+            .unwrap()
+            .write_all(SOLP.as_bytes())
+            .unwrap();
 
         // Act
-        let result = read_workspace("/", fs);
+        let result = read_workspace_versions("/", fs);
 
         // Assert
-        assert!(result.is_ok())
+        assert!(result.is_ok());
+        assert_eq!(3, result.unwrap().len());
     }
 
     #[test]
@@ -117,7 +151,7 @@ mod tests {
         fs.create_dir(root_path.to_str().unwrap()).unwrap();
 
         // Act
-        let result = read_workspace("/", fs);
+        let result = read_workspace_versions("/", fs);
 
         // Assert
         assert!(result.is_err())
@@ -209,5 +243,4 @@ fnv = "1"
 solp = { path = "../solp/", version = "0.1.13" }
 
         "#;
-
 }
