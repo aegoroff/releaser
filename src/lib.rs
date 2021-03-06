@@ -69,7 +69,7 @@ pub fn update_configs<F: FileSystem>(configs: &Vec<CrateVersion>, fs: &F) -> Res
         let mut content = String::new();
         file.read_to_string(&mut content)?;
 
-        let mut doc = content.parse::<Document>().unwrap();
+        let mut doc = content.parse::<Document>()?;
 
         match &config.place {
             Place::Package(ver) => {
