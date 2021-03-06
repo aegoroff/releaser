@@ -1,3 +1,8 @@
+
+extern crate semver;
+extern crate toml;
+
+
 #[cfg(test)]
 mod tests {
     #[test]
