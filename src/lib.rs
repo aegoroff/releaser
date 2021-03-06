@@ -8,26 +8,29 @@ extern crate serde;
 extern crate toml;
 extern crate vfs;
 
+pub type AnyError = Box<dyn std::error::Error>;
+pub type Result<T> = core::result::Result<T, AnyError>;
+
 const CARGO_CONFIG: &str = "Cargo.toml";
 
-fn read_workspace<F: FileSystem>(path: &str, fs: F) {
+fn read_workspace<F: FileSystem>(path: &str, fs: F) -> Result<()> {
     let wks_path = PathBuf::from(&path).join(CARGO_CONFIG);
 
-    let mut wks_file = fs.open_file(wks_path.to_str().unwrap()).unwrap();
+    let mut wks_file = fs.open_file(wks_path.to_str().unwrap())?;
     let mut wc = String::new();
-    wks_file.read_to_string(&mut wc);
+    wks_file.read_to_string(&mut wc)?;
 
-    let wks: WorkspaceConfig = toml::from_str(&wc).unwrap();
+    let wks: WorkspaceConfig = toml::from_str(&wc)?;
     let all_members: HashSet<&String> = wks.workspace.members.iter().collect();
     for member in &wks.workspace.members {
         let crate_path = PathBuf::from(&path).join(member).join(CARGO_CONFIG);
         let crate_path = crate_path.to_str().unwrap();
 
-        let mut crt_file = fs.open_file(crate_path).unwrap();
+        let mut crt_file = fs.open_file(crate_path)?;
         let mut cc = String::new();
-        crt_file.read_to_string(&mut cc);
+        crt_file.read_to_string(&mut cc)?;
 
-        let crt: CrateConfig = toml::from_str(&cc).unwrap();
+        let crt: CrateConfig = toml::from_str(&cc)?;
         println!("crate: {} ver {}", &member, crt.package.version);
         crt.dependencies
             .iter()
@@ -41,6 +44,7 @@ fn read_workspace<F: FileSystem>(path: &str, fs: F) {
             })
             .count();
     }
+    Ok(())
 }
 
 #[derive(Deserialize)]
@@ -83,21 +87,21 @@ mod tests {
         // Arrange
         let root_path = PathBuf::from("/");
         let fs = MemoryFS::new();
-        fs.create_dir(root_path.to_str().unwrap());
-        fs.create_dir("/solv");
-        fs.create_dir("/solp");
+        fs.create_dir(root_path.to_str().unwrap()).unwrap();
+        fs.create_dir("/solv").unwrap();
+        fs.create_dir("/solp").unwrap();
         let root_conf = root_path.join(CARGO_CONFIG);
         let root_conf = root_conf.to_str().unwrap();
-        fs.create_file(root_conf).unwrap().write_all(WKS.as_bytes());
+        fs.create_file(root_conf).unwrap().write_all(WKS.as_bytes()).unwrap();
 
         let ch1_conf = root_path.join("solv").join(CARGO_CONFIG);
-        fs.create_file(ch1_conf.to_str().unwrap()).unwrap().write_all(SOLV.as_bytes());
+        fs.create_file(ch1_conf.to_str().unwrap()).unwrap().write_all(SOLV.as_bytes()).unwrap();
 
         let ch1_conf = root_path.join("solp").join(CARGO_CONFIG);
-        fs.create_file(ch1_conf.to_str().unwrap()).unwrap().write_all(SOLP.as_bytes());
+        fs.create_file(ch1_conf.to_str().unwrap()).unwrap().write_all(SOLP.as_bytes()).unwrap();
 
         // Act
-        read_workspace("/", fs);
+        read_workspace("/", fs).unwrap();
     }
 
     #[test]
