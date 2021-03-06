@@ -1,9 +1,41 @@
-use serde::{Deserialize};
-use std::collections::{HashMap};
+use serde::Deserialize;
+use std::collections::{HashMap, HashSet};
+use std::fs;
+use std::path::PathBuf;
 
 extern crate semver;
-extern crate toml;
 extern crate serde;
+extern crate toml;
+
+const CARGO_CONFIG: &str = "Cargo.toml";
+
+fn read_workspace(path: &str) {
+    let wks_path = PathBuf::from(&path).join(CARGO_CONFIG);
+    match fs::read_to_string(wks_path.to_str().unwrap()) {
+        Ok(wc) => {
+            let wks: WorkspaceConfig = toml::from_str(&wc).unwrap();
+            let all_members: HashSet<&String> = wks.workspace.members.iter().collect();
+            for member in &wks.workspace.members {
+                let crate_path = PathBuf::from(&path).join(member).join(CARGO_CONFIG);
+                let crate_path = crate_path.to_str().unwrap();
+                match fs::read_to_string(crate_path) {
+                    Ok(cc) => {
+                        let crt: CrateConfig = toml::from_str(&cc).unwrap();
+                        println!("crate: {} ver {}", &member, crt.package.version);
+                        crt.dependencies
+                            .iter()
+                            .filter(|(n, _)| all_members.contains(n))
+                            .map(|(_, v)| v)
+                            .inspect(|d| println!("{:#?}", *d))
+                            .count();
+                    }
+                    Err(e) => eprintln!("{} - {}", crate_path, e),
+                }
+            }
+        }
+        Err(e) => eprintln!("{} - {}", path, e),
+    }
+}
 
 #[derive(Deserialize)]
 struct WorkspaceConfig {
@@ -27,16 +59,22 @@ struct Package {
     version: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(untagged)]
-enum  Dependency {
+enum Dependency {
     Plain(String),
-    Object(HashMap<String, Dependency>)
+    Object(HashMap<String, Dependency>),
+    List(Vec<Dependency>),
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn read_workspace_test() {
+        read_workspace("/Users/egr/RustProjects/solv");
+    }
 
     #[test]
     fn toml_parse_workspace() {
