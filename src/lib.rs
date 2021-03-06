@@ -25,8 +25,13 @@ fn read_workspace(path: &str) {
                         crt.dependencies
                             .iter()
                             .filter(|(n, _)| all_members.contains(n))
-                            .map(|(_, v)| v)
-                            .inspect(|d| println!("{:#?}", *d))
+                            .map(|(n, v)| {
+                                if let Dependency::Object(m) = v {
+                                    if let Dependency::Plain(s) = m.get("version").unwrap() {
+                                        println!("  depends on: {} ver: {}", n, s);
+                                    }
+                                }
+                            })
                             .count();
                     }
                     Err(e) => eprintln!("{} - {}", crate_path, e),
