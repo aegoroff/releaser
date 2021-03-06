@@ -22,7 +22,7 @@ fn read_workspace<F: FileSystem>(path: &str, fs: F) -> Result<()> {
 
     let wks: WorkspaceConfig = toml::from_str(&wc)?;
     let all_members: HashSet<&String> = wks.workspace.members.iter().collect();
-    for member in &wks.workspace.members {
+    for member in all_members.iter() {
         let crate_path = PathBuf::from(&path).join(member).join(CARGO_CONFIG);
         let crate_path = crate_path.to_str().unwrap();
 
@@ -37,8 +37,10 @@ fn read_workspace<F: FileSystem>(path: &str, fs: F) -> Result<()> {
             .filter(|(n, _)| all_members.contains(n))
             .map(|(n, v)| {
                 if let Dependency::Object(m) = v {
-                    if let Dependency::Plain(s) = m.get("version").unwrap() {
-                        println!("  depends on: {} ver: {}", n, s);
+                    if let Some(d) = m.get("version") {
+                        if let Dependency::Plain(s) = d {
+                            println!("  depends on: {} ver: {}", n, s);
+                        }
                     }
                 }
             })
@@ -101,7 +103,24 @@ mod tests {
         fs.create_file(ch1_conf.to_str().unwrap()).unwrap().write_all(SOLP.as_bytes()).unwrap();
 
         // Act
-        read_workspace("/", fs).unwrap();
+        let result = read_workspace("/", fs);
+
+        // Assert
+        assert!(result.is_ok())
+    }
+
+    #[test]
+    fn read_empty_workspace_test() {
+        // Arrange
+        let root_path = PathBuf::from("/");
+        let fs = MemoryFS::new();
+        fs.create_dir(root_path.to_str().unwrap()).unwrap();
+
+        // Act
+        let result = read_workspace("/", fs);
+
+        // Assert
+        assert!(result.is_err())
     }
 
     #[test]
