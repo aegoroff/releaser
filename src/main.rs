@@ -4,36 +4,26 @@ use releaser::Increment;
 
 extern crate clap;
 
+macro_rules! command {
+    ($m:ident, $cmd:expr, $inc:ident) => {
+        if let Some(cmd) = $m.subcommand_matches($cmd) {
+            if let Some(path) = cmd.value_of("PATH") {
+                match workflow::release(path, Increment::$inc) {
+                    Ok(()) => {}
+                    Err(e) => eprintln!("Error: {}", e),
+                }
+            }
+        }
+    };
+}
+
 fn main() {
     let app = build_cli();
     let matches = app.get_matches();
 
-    if let Some(cmd) = matches.subcommand_matches("p") {
-        if let Some(path) = cmd.value_of("PATH") {
-            match workflow::release(path, Increment::Patch) {
-                Ok(()) => {}
-                Err(e) => eprintln!("Error: {}", e),
-            }
-        }
-    }
-
-    if let Some(cmd) = matches.subcommand_matches("mi") {
-        if let Some(path) = cmd.value_of("PATH") {
-            match workflow::release(path, Increment::Minor) {
-                Ok(()) => {}
-                Err(e) => eprintln!("Error: {}", e),
-            }
-        }
-    }
-
-    if let Some(cmd) = matches.subcommand_matches("ma") {
-        if let Some(path) = cmd.value_of("PATH") {
-            match workflow::release(path, Increment::Major) {
-                Ok(()) => {}
-                Err(e) => eprintln!("Error: {}", e),
-            }
-        }
-    }
+    command!(matches, "p", Patch);
+    command!(matches, "mi", Minor);
+    command!(matches, "ma", Major);
 }
 
 fn build_cli() -> App<'static, 'static> {
