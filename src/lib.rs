@@ -93,7 +93,11 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
     }
 }
 
-pub fn update_configs<F: FileSystem>(fs: &F, iter: VersionIter<F>) -> Result<()> {
+pub fn update_configs<F, I>(fs: &F, iter: I) -> Result<()>
+where
+    F: FileSystem,
+    I: Iterator<Item = CrateVersion>,
+{
     for config in iter {
         let mut file = fs.open_file(&config.path)?;
         let mut content = String::new();
