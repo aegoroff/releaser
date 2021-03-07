@@ -37,8 +37,13 @@ impl<'a, F: FileSystem> VersionIter<'a, F> {
 
         let wks: WorkspaceConfig = toml::from_str(&wc)?;
         let search: HashSet<String> = wks.workspace.members.iter().cloned().collect();
-        let members  = wks.workspace.members;
-        Ok(Self{search, members, root, fs})
+        let members = wks.workspace.members;
+        Ok(Self {
+            search,
+            members,
+            root,
+            fs,
+        })
     }
 }
 
@@ -50,39 +55,41 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
         let crate_path = self.root.join(member).join(CARGO_CONFIG);
         let crate_path = crate_path.to_str()?;
 
-        if let Ok(mut crt_file) = self.fs.open_file(crate_path) {
-            let mut cc = String::new();
-            let ok = crt_file.read_to_string(&mut cc).is_ok();
-            if !ok {
-                return None;
-            }
-            let crt: CrateConfig = toml::from_str(&cc).unwrap();
-
-            let mut places = vec![Place::Package(crt.package.version)];
-
-            let deps = crt
-                .dependencies
-                .iter()
-                .filter(|(n, _)| self.search.contains(*n))
-                .filter_map(|(n, v)| {
-                    if let Dependency::Object(m) = v {
-                        if let Some(d) = m.get(VERSION) {
-                            if let Dependency::Plain(s) = d {
-                                return Some(Place::Dependency(n.clone(), s.clone()));
-                            }
-                        }
-                    }
-                    None
-                });
-
-            places.extend(deps);
-            return  Some(CrateVersion {
-                path: String::from(crate_path),
-                places,
-            });
+        let file = self.fs.open_file(crate_path);
+        if file.is_err() {
+            return None;
         }
 
-        None
+        let mut file = file.unwrap();
+        let mut content = String::new();
+        let ok = file.read_to_string(&mut content).is_ok();
+        if !ok {
+            return None;
+        }
+        let conf: CrateConfig = toml::from_str(&content).unwrap();
+
+        let mut places = vec![Place::Package(conf.package.version)];
+
+        let deps = conf
+            .dependencies
+            .iter()
+            .filter(|(n, _)| self.search.contains(*n))
+            .filter_map(|(n, v)| {
+                if let Dependency::Object(m) = v {
+                    if let Some(d) = m.get(VERSION) {
+                        if let Dependency::Plain(s) = d {
+                            return Some(Place::Dependency(n.clone(), s.clone()));
+                        }
+                    }
+                }
+                None
+            });
+
+        places.extend(deps);
+        Some(CrateVersion {
+            path: String::from(crate_path),
+            places,
+        })
     }
 }
 
