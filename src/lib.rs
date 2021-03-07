@@ -16,56 +16,75 @@ pub type Result<T> = core::result::Result<T, AnyError>;
 
 const CARGO_CONFIG: &str = "Cargo.toml";
 
-fn read_workspace_versions<F: FileSystem>(path: &str, fs: &F) -> Result<Vec<CrateVersion>> {
-    let wks_path = PathBuf::from(&path).join(CARGO_CONFIG);
-
-    let mut wks_file = fs.open_file(wks_path.to_str().unwrap())?;
-    let mut wc = String::new();
-    wks_file.read_to_string(&mut wc)?;
-
-    let mut result = Vec::new();
-
-    let wks: WorkspaceConfig = toml::from_str(&wc)?;
-    let all_members: HashSet<&String> = wks.workspace.members.iter().collect();
-    for member in all_members.iter() {
-        let crate_path = PathBuf::from(&path).join(member).join(CARGO_CONFIG);
-        let crate_path = crate_path.to_str().unwrap();
-
-        let mut crt_file = fs.open_file(crate_path)?;
-        let mut cc = String::new();
-        crt_file.read_to_string(&mut cc)?;
-
-        let crt: CrateConfig = toml::from_str(&cc)?;
-
-        let mut places = vec![Place::Package(crt.package.version)];
-
-        let deps = crt
-            .dependencies
-            .iter()
-            .filter(|(n, _)| all_members.contains(*n))
-            .filter_map(|(n, v)| {
-                if let Dependency::Object(m) = v {
-                    if let Some(d) = m.get("version") {
-                        if let Dependency::Plain(s) = d {
-                            return Some(Place::Dependency(n.clone(), s.clone()));
-                        }
-                    }
-                }
-                None
-            });
-
-        places.extend(deps);
-        let v = CrateVersion {
-            path: String::from(crate_path),
-            places,
-        };
-        result.push(v);
-    }
-    Ok(result)
+pub struct VersionIter<'a, F: FileSystem> {
+    search: HashSet<String>,
+    members: Vec<String>,
+    root: PathBuf,
+    fs: &'a F,
 }
 
-pub fn update_configs<F: FileSystem>(configs: &Vec<CrateVersion>, fs: &F) -> Result<()> {
-    for config in configs {
+impl<'a, F: FileSystem> VersionIter<'a, F> {
+    pub fn new(path: &str, fs: &'a F) -> Result<Self> {
+        let root = PathBuf::from(&path);
+        let wks_path = root.join(CARGO_CONFIG);
+
+        let mut wks_file = fs.open_file(wks_path.to_str().unwrap())?;
+        let mut wc = String::new();
+        wks_file.read_to_string(&mut wc)?;
+
+        let wks: WorkspaceConfig = toml::from_str(&wc)?;
+        let search: HashSet<String> = wks.workspace.members.iter().cloned().collect();
+        let members  = wks.workspace.members;
+        Ok(Self{search, members, root, fs})
+    }
+}
+
+impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
+    type Item = CrateVersion;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let member = self.members.pop()?;
+        let crate_path = self.root.join(member).join(CARGO_CONFIG);
+        let crate_path = crate_path.to_str()?;
+
+        if let Ok(mut crt_file) = self.fs.open_file(crate_path) {
+            let mut cc = String::new();
+            let ok = crt_file.read_to_string(&mut cc).is_ok();
+            if !ok {
+                return None;
+            }
+            let crt: CrateConfig = toml::from_str(&cc).unwrap();
+
+            let mut places = vec![Place::Package(crt.package.version)];
+
+            let deps = crt
+                .dependencies
+                .iter()
+                .filter(|(n, _)| self.search.contains(*n))
+                .filter_map(|(n, v)| {
+                    if let Dependency::Object(m) = v {
+                        if let Some(d) = m.get("version") {
+                            if let Dependency::Plain(s) = d {
+                                return Some(Place::Dependency(n.clone(), s.clone()));
+                            }
+                        }
+                    }
+                    None
+                });
+
+            places.extend(deps);
+            return  Some(CrateVersion {
+                path: String::from(crate_path),
+                places,
+            });
+        }
+
+        None
+    }
+}
+
+pub fn update_configs<F: FileSystem>(fs: &F, iter: VersionIter<F>) -> Result<()> {
+    for config in iter {
         let mut file = fs.open_file(&config.path)?;
         let mut content = String::new();
         file.read_to_string(&mut content)?;
@@ -145,13 +164,13 @@ mod tests {
     fn read_workspace_test() {
         // Arrange
         let fs = new_file_system();
+        let it = VersionIter::new("/", &fs).unwrap();
 
         // Act
-        let result = read_workspace_versions("/", &fs);
+        let versions = it.count();
 
         // Assert
-        assert!(result.is_ok());
-        assert_eq!(2, result.unwrap().len());
+        assert_eq!(2, versions);
     }
 
     #[test]
@@ -162,7 +181,7 @@ mod tests {
         fs.create_dir(root_path.to_str().unwrap()).unwrap();
 
         // Act
-        let result = read_workspace_versions("/", &fs);
+        let result = VersionIter::new("/", &fs);
 
         // Assert
         assert!(result.is_err())
@@ -172,17 +191,16 @@ mod tests {
     fn update_workspace_test() {
         // Arrange
         let fs = new_file_system();
-        let configs = read_workspace_versions("/", &fs).unwrap();
+        let it = VersionIter::new("/", &fs).unwrap();
 
         // Act
-        let result = update_configs(&configs, &fs);
+        let result = update_configs(&fs, it);
 
         // Assert
         assert!(result.is_ok());
-        let configs = read_workspace_versions("/", &fs).unwrap();
-        let versions: Vec<&String> = configs
-            .iter()
-            .map(|v| &v.places)
+        let it = VersionIter::new("/", &fs).unwrap();
+        let versions: Vec<String> = it
+            .map(|v| v.places)
             .flatten()
             .map(|p| {
                 return match p {
