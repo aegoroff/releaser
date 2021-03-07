@@ -92,38 +92,54 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
     }
 }
 
-pub fn update_configs<F, I>(fs: &F, iter: I) -> Result<()>
+pub fn update_configs<F, I>(fs: &F, iter: I, incr: Increment) -> Result<()>
 where
     F: FileSystem,
     I: Iterator<Item = CrateVersion>,
 {
     for config in iter {
-        let mut file = fs.open_file(&config.path)?;
-        let mut content = String::new();
-        file.read_to_string(&mut content)?;
-
-        let mut doc = content.parse::<Document>()?;
-
-        for place in &config.places {
-            match place {
-                Place::Package(ver) => {
-                    let mut v = Version::parse(&ver)?;
-                    v.increment_patch();
-                    doc[PACK][VERSION] = value(v.to_string());
-                }
-                Place::Dependency(n, ver) => {
-                    let mut v = Version::parse(&ver)?;
-                    v.increment_patch();
-                    doc[DEPS][n][VERSION] = value(v.to_string());
-                }
-            }
-        }
-
-        let mut f = fs.create_file(&config.path)?;
-        let changed = doc.to_string_in_original_order();
-        f.write_all(changed.as_bytes())?;
+        update_config(fs, &config, incr)?
     }
     Ok(())
+}
+
+fn update_config<F>(fs: &F, config: &CrateVersion, incr: Increment) -> Result<()>
+where
+    F: FileSystem,
+{
+    let mut file = fs.open_file(&config.path)?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+
+    let mut doc = content.parse::<Document>()?;
+
+    for place in &config.places {
+        match place {
+            Place::Package(ver) => {
+                let v = increment(ver, incr)?;
+                doc[PACK][VERSION] = value(v);
+            }
+            Place::Dependency(n, ver) => {
+                let v = increment(ver, incr)?;
+                doc[DEPS][n][VERSION] = value(v);
+            }
+        }
+    }
+
+    let mut f = fs.create_file(&config.path)?;
+    let changed = doc.to_string_in_original_order();
+    f.write_all(changed.as_bytes())?;
+    Ok(())
+}
+
+fn increment(v: &String, i: Increment) -> Result<String> {
+    let mut v = Version::parse(v)?;
+    match i {
+        Increment::Major => v.increment_major(),
+        Increment::Minor => v.increment_minor(),
+        Increment::Patch => v.increment_patch(),
+    }
+    Ok(v.to_string())
 }
 
 #[derive(Deserialize)]
@@ -168,6 +184,13 @@ pub enum Place {
     Dependency(String, String),
 }
 
+#[derive(Copy, Clone)]
+pub enum Increment {
+    Major,
+    Minor,
+    Patch,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -201,28 +224,45 @@ mod tests {
     }
 
     #[test]
-    fn update_workspace_test() {
+    fn update_workspace_patch_test() {
         // Arrange
         let fs = new_file_system();
         let it = VersionIter::open("/", &fs).unwrap();
 
         // Act
-        let result = update_configs(&fs, it);
+        let result = update_configs(&fs, it, Increment::Patch);
 
         // Assert
         assert!(result.is_ok());
+        assert_updated_files(&fs, "0.1.14");
+    }
+
+    #[test]
+    fn update_workspace_minor_test() {
+        // Arrange
+        let fs = new_file_system();
         let it = VersionIter::open("/", &fs).unwrap();
-        let versions: Vec<String> = it
-            .map(|v| v.places)
-            .flatten()
-            .map(|p| {
-                return match p {
-                    Place::Package(s) => s,
-                    Place::Dependency(_, s) => s,
-                };
-            })
-            .collect();
-        assert_eq!(vec!["0.1.14", "0.1.14", "0.1.14"], versions)
+
+        // Act
+        let result = update_configs(&fs, it, Increment::Minor);
+
+        // Assert
+        assert!(result.is_ok());
+        assert_updated_files(&fs, "0.2.0");
+    }
+
+    #[test]
+    fn update_workspace_major_test() {
+        // Arrange
+        let fs = new_file_system();
+        let it = VersionIter::open("/", &fs).unwrap();
+
+        // Act
+        let result = update_configs(&fs, it, Increment::Major);
+
+        // Assert
+        assert!(result.is_ok());
+        assert_updated_files(&fs, "1.0.0");
     }
 
     #[test]
@@ -253,6 +293,21 @@ mod tests {
             assert!(o.contains_key(VERSION));
             assert!(o.contains_key("path"));
         }
+    }
+
+    fn assert_updated_files(fs: &MemoryFS, ver: &str) {
+        let it = VersionIter::open("/", fs).unwrap();
+        let versions: Vec<String> = it
+            .map(|v| v.places)
+            .flatten()
+            .map(|p| {
+                return match p {
+                    Place::Package(s) => s,
+                    Place::Dependency(_, s) => s,
+                };
+            })
+            .collect();
+        assert_eq!(vec![ver, ver, ver], versions)
     }
 
     fn new_file_system() -> MemoryFS {
