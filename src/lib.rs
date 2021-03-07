@@ -2,13 +2,16 @@ mod cargo;
 mod git;
 pub mod workflow;
 
+use petgraph::graphmap::DiGraphMap;
+use petgraph::visit::Topo;
 use semver::Version;
 use serde::Deserialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use toml_edit::{value, Document};
 use vfs::FileSystem;
 
+extern crate petgraph;
 extern crate semver;
 extern crate serde;
 extern crate toml;
@@ -24,10 +27,11 @@ const PACK: &str = "package";
 const DEPS: &str = "dependencies";
 
 pub struct VersionIter<'a, F: FileSystem> {
-    search: HashSet<String>,
+    search: HashMap<String, usize>,
     members: Vec<String>,
     root: PathBuf,
     fs: &'a F,
+    graph: DiGraphMap<usize, i32>,
 }
 
 impl<'a, F: FileSystem> VersionIter<'a, F> {
@@ -40,14 +44,45 @@ impl<'a, F: FileSystem> VersionIter<'a, F> {
         wks_file.read_to_string(&mut wc)?;
 
         let wks: WorkspaceConfig = toml::from_str(&wc)?;
-        let search: HashSet<String> = wks.workspace.members.iter().cloned().collect();
+        let search: HashMap<String, usize> = wks
+            .workspace
+            .members
+            .iter()
+            .cloned()
+            .enumerate()
+            .map(|(i, s)| (s, i))
+            .collect();
         let members = wks.workspace.members;
+
+        let graph = DiGraphMap::new();
         Ok(Self {
             search,
             members,
             root,
             fs,
+            graph,
         })
+    }
+
+    pub fn topo_sort(&self) -> Vec<String> {
+        let mut topo = Topo::new(&self.graph);
+
+        let reverted = self
+            .search
+            .iter()
+            .map(|(k, v)| (*v, k))
+            .collect::<HashMap<usize, &String>>();
+        let mut result = vec![];
+        loop {
+            match topo.next(&self.graph) {
+                Some(n) => {
+                    let s = reverted.get(&n).unwrap();
+                    result.push((*s).clone());
+                }
+                None => break,
+            }
+        }
+        result
     }
 }
 
@@ -72,12 +107,13 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
         }
         let conf: CrateConfig = toml::from_str(&content).unwrap();
 
+        let to = self.search.get(&conf.package.name).unwrap();
         let mut places = vec![Place::Package(conf.package.version)];
 
         let deps = conf
             .dependencies
             .iter()
-            .filter(|(n, _)| self.search.contains(*n))
+            .filter(|(n, _)| self.search.contains_key(*n))
             .filter_map(|(n, v)| {
                 if let Dependency::Object(m) = v {
                     let d = m.get(VERSION)?;
@@ -89,6 +125,14 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
             });
 
         places.extend(deps);
+
+        for place in places.iter() {
+            if let Place::Dependency(n, _) = place {
+                let from = self.search.get(n).unwrap();
+                self.graph.add_edge(*from, *to, -1);
+            }
+        }
+
         Some(CrateVersion {
             path: String::from(crate_path),
             places,
@@ -96,17 +140,20 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
     }
 }
 
-pub fn update_configs<F, I>(fs: &F, iter: I, incr: Increment) -> Result<Version>
+pub fn update_configs<F, I>(fs: &F, iter: &mut I, incr: Increment) -> Result<Version>
 where
     F: FileSystem,
     I: Iterator<Item = CrateVersion>,
 {
-    let mut result = Version::parse("0.0.0")?;
+    let result = Version::parse("0.0.0")?;
 
-    for config in iter {
-        let v = update_config(fs, &config, incr)?;
-        result = result.max(v);
-    }
+    let result = iter
+        .by_ref()
+        .map(|config| update_config(fs, &config, incr))
+        .filter(|v| v.is_ok())
+        .map(|r| r.unwrap())
+        .fold(result, |r, v| r.max(v));
+
     Ok(result)
 }
 
@@ -238,45 +285,57 @@ mod tests {
     fn update_workspace_patch_test() {
         // Arrange
         let fs = new_file_system();
-        let it = VersionIter::open("/", &fs).unwrap();
+        let mut it = VersionIter::open("/", &fs).unwrap();
 
         // Act
-        let result = update_configs(&fs, it, Increment::Patch);
+        let result = update_configs(&fs, &mut it, Increment::Patch);
 
         // Assert
         assert!(result.is_ok());
         assert_eq!("0.1.14", result.unwrap().to_string());
         assert_updated_files(&fs, "0.1.14");
+        assert_eq!(2, it.graph.node_count());
+        assert_eq!(1, it.graph.edge_count());
+        let sorted = it.topo_sort();
+        assert_eq!(vec!["solp", "solv"], sorted);
     }
 
     #[test]
     fn update_workspace_minor_test() {
         // Arrange
         let fs = new_file_system();
-        let it = VersionIter::open("/", &fs).unwrap();
+        let mut it = VersionIter::open("/", &fs).unwrap();
 
         // Act
-        let result = update_configs(&fs, it, Increment::Minor);
+        let result = update_configs(&fs, &mut it, Increment::Minor);
 
         // Assert
         assert!(result.is_ok());
         assert_eq!("0.2.0", result.unwrap().to_string());
         assert_updated_files(&fs, "0.2.0");
+        assert_eq!(2, it.graph.node_count());
+        assert_eq!(1, it.graph.edge_count());
+        let sorted = it.topo_sort();
+        assert_eq!(vec!["solp", "solv"], sorted);
     }
 
     #[test]
     fn update_workspace_major_test() {
         // Arrange
         let fs = new_file_system();
-        let it = VersionIter::open("/", &fs).unwrap();
+        let mut it = VersionIter::open("/", &fs).unwrap();
 
         // Act
-        let result = update_configs(&fs, it, Increment::Major);
+        let result = update_configs(&fs, &mut it, Increment::Major);
 
         // Assert
         assert!(result.is_ok());
         assert_eq!("1.0.0", result.unwrap().to_string());
         assert_updated_files(&fs, "1.0.0");
+        assert_eq!(2, it.graph.node_count());
+        assert_eq!(1, it.graph.edge_count());
+        let sorted = it.topo_sort();
+        assert_eq!(vec!["solp", "solv"], sorted);
     }
 
     #[test]

@@ -1,5 +1,5 @@
 use std::io;
-use std::process::{Command};
+use std::process::Command;
 
 const TOOL: &str = "git";
 
