@@ -108,12 +108,12 @@ where
         for place in &config.places {
             match place {
                 Place::Package(ver) => {
-                    let mut v = Version::parse(ver)?;
+                    let mut v = Version::parse(&ver)?;
                     v.increment_patch();
                     doc[PACK][VERSION] = value(v.to_string());
                 }
                 Place::Dependency(n, ver) => {
-                    let mut v = Version::parse(ver)?;
+                    let mut v = Version::parse(&ver)?;
                     v.increment_patch();
                     doc[DEPS][n][VERSION] = value(v.to_string());
                 }
