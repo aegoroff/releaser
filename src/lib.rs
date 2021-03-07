@@ -15,6 +15,9 @@ pub type AnyError = Box<dyn std::error::Error>;
 pub type Result<T> = core::result::Result<T, AnyError>;
 
 const CARGO_CONFIG: &str = "Cargo.toml";
+const VERSION: &str = "version";
+const PACK: &str = "package";
+const DEPS: &str = "dependencies";
 
 pub struct VersionIter<'a, F: FileSystem> {
     search: HashSet<String>,
@@ -63,7 +66,7 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
                 .filter(|(n, _)| self.search.contains(*n))
                 .filter_map(|(n, v)| {
                     if let Dependency::Object(m) = v {
-                        if let Some(d) = m.get("version") {
+                        if let Some(d) = m.get(VERSION) {
                             if let Dependency::Plain(s) = d {
                                 return Some(Place::Dependency(n.clone(), s.clone()));
                             }
@@ -96,12 +99,12 @@ pub fn update_configs<F: FileSystem>(fs: &F, iter: VersionIter<F>) -> Result<()>
                 Place::Package(ver) => {
                     let mut v = Version::parse(ver)?;
                     v.increment_patch();
-                    doc["package"]["version"] = value(v.to_string());
+                    doc[PACK][VERSION] = value(v.to_string());
                 }
                 Place::Dependency(n, ver) => {
                     let mut v = Version::parse(ver)?;
                     v.increment_patch();
-                    doc["dependencies"][n]["version"] = value(v.to_string());
+                    doc[DEPS][n][VERSION] = value(v.to_string());
                 }
             }
         }
@@ -237,7 +240,7 @@ mod tests {
         let solp = &cfg.dependencies["solp"];
         if let Dependency::Object(o) = solp {
             assert_eq!(2, o.len());
-            assert!(o.contains_key("version"));
+            assert!(o.contains_key(VERSION));
             assert!(o.contains_key("path"));
         }
     }
