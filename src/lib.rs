@@ -76,10 +76,9 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
             .filter(|(n, _)| self.search.contains(*n))
             .filter_map(|(n, v)| {
                 if let Dependency::Object(m) = v {
-                    if let Some(d) = m.get(VERSION) {
-                        if let Dependency::Plain(s) = d {
-                            return Some(Place::Dependency(n.clone(), s.clone()));
-                        }
+                    let d = m.get(VERSION)?;
+                    if let Dependency::Plain(s) = d {
+                        return Some(Place::Dependency(n.clone(), s.clone()));
                     }
                 }
                 None
