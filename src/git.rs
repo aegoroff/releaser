@@ -1,32 +1,38 @@
 use std::io;
-use std::process::{Child, Command};
+use std::process::{Command};
 
 const TOOL: &str = "git";
 
-pub fn commit(message: &str, path: &str) -> io::Result<Child> {
-    Command::new(TOOL)
+pub fn commit(message: &str, path: &str) -> io::Result<()> {
+    let mut child = Command::new(TOOL)
         .current_dir(path)
         .arg("commit")
         .arg("-a")
         .arg("-m")
         .arg(message)
-        .spawn()
+        .spawn()?;
+    child.wait()?;
+    Ok(())
 }
 
-pub fn create_tag(path: &str, tag: &str) -> io::Result<Child> {
-    Command::new(TOOL)
+pub fn create_tag(path: &str, tag: &str) -> io::Result<()> {
+    let mut child = Command::new(TOOL)
         .current_dir(path)
         .arg("tag")
         .arg(tag)
-        .spawn()
+        .spawn()?;
+    child.wait()?;
+    Ok(())
 }
 
-pub fn push_tag(path: &str, tag: &str) -> io::Result<Child> {
-    Command::new(TOOL)
+pub fn push_tag(path: &str, tag: &str) -> io::Result<()> {
+    let mut child = Command::new(TOOL)
         .current_dir(path)
         .arg("push")
         .arg("origin")
         .arg("tag")
         .arg(tag)
-        .spawn()
+        .spawn()?;
+    child.wait()?;
+    Ok(())
 }
