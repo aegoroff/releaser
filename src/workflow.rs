@@ -11,7 +11,8 @@ pub fn release(path: &str, incr: Increment) -> crate::Result<()> {
     let version = crate::update_configs(&root, it, incr)?;
 
     let commit_msg = format!("New release {}", version);
-    git::commit(&commit_msg, path)?;
+    let mut commit = git::commit(&commit_msg, path)?;
+    commit.wait()?;
 
     Ok(())
 }
