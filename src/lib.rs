@@ -36,11 +36,9 @@ fn read_workspace_versions<F: FileSystem>(path: &str, fs: &F) -> Result<Vec<Crat
         crt_file.read_to_string(&mut cc)?;
 
         let crt: CrateConfig = toml::from_str(&cc)?;
-        let v = CrateVersion {
-            path: String::from(crate_path),
-            place: Place::Package(crt.package.version),
-        };
-        result.push(v);
+
+        let mut places = vec![Place::Package(crt.package.version)];
+
         let deps = crt
             .dependencies
             .iter()
@@ -49,16 +47,19 @@ fn read_workspace_versions<F: FileSystem>(path: &str, fs: &F) -> Result<Vec<Crat
                 if let Dependency::Object(m) = v {
                     if let Some(d) = m.get("version") {
                         if let Dependency::Plain(s) = d {
-                            return Some(CrateVersion {
-                                path: String::from(crate_path),
-                                place: Place::Dependency(n.clone(), s.clone()),
-                            });
+                            return Some(Place::Dependency(n.clone(), s.clone()));
                         }
                     }
                 }
                 None
             });
-        result.extend(deps);
+
+        places.extend(deps);
+        let v = CrateVersion {
+            path: String::from(crate_path),
+            places,
+        };
+        result.push(v);
     }
     Ok(result)
 }
@@ -71,16 +72,18 @@ pub fn update_configs<F: FileSystem>(configs: &Vec<CrateVersion>, fs: &F) -> Res
 
         let mut doc = content.parse::<Document>()?;
 
-        match &config.place {
-            Place::Package(ver) => {
-                let mut v = Version::parse(ver)?;
-                v.increment_patch();
-                doc["package"]["version"] = value(v.to_string());
-            }
-            Place::Dependency(n, ver) => {
-                let mut v = Version::parse(ver)?;
-                v.increment_patch();
-                doc["dependencies"][n]["version"] = value(v.to_string());
+        for place in &config.places {
+            match place {
+                Place::Package(ver) => {
+                    let mut v = Version::parse(ver)?;
+                    v.increment_patch();
+                    doc["package"]["version"] = value(v.to_string());
+                }
+                Place::Dependency(n, ver) => {
+                    let mut v = Version::parse(ver)?;
+                    v.increment_patch();
+                    doc["dependencies"][n]["version"] = value(v.to_string());
+                }
             }
         }
 
@@ -121,10 +124,10 @@ enum Dependency {
     List(Vec<Dependency>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct CrateVersion {
     path: String,
-    place: Place,
+    places: Vec<Place>,
 }
 
 #[derive(Debug)]
@@ -148,7 +151,7 @@ mod tests {
 
         // Assert
         assert!(result.is_ok());
-        assert_eq!(3, result.unwrap().len());
+        assert_eq!(2, result.unwrap().len());
     }
 
     #[test]
@@ -179,8 +182,10 @@ mod tests {
         let configs = read_workspace_versions("/", &fs).unwrap();
         let versions: Vec<&String> = configs
             .iter()
-            .map(|v| {
-                return match &v.place {
+            .map(|v| &v.places)
+            .flatten()
+            .map(|p| {
+                return match p {
                     Place::Package(s) => s,
                     Place::Dependency(_, s) => s,
                 };
