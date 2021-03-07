@@ -27,7 +27,7 @@ pub struct VersionIter<'a, F: FileSystem> {
 }
 
 impl<'a, F: FileSystem> VersionIter<'a, F> {
-    pub fn new(path: &str, fs: &'a F) -> Result<Self> {
+    pub fn open(path: &str, fs: &'a F) -> Result<Self> {
         let root = PathBuf::from(&path);
         let wks_path = root.join(CARGO_CONFIG);
 
@@ -167,7 +167,7 @@ mod tests {
     fn read_workspace_test() {
         // Arrange
         let fs = new_file_system();
-        let it = VersionIter::new("/", &fs).unwrap();
+        let it = VersionIter::open("/", &fs).unwrap();
 
         // Act
         let versions = it.count();
@@ -184,7 +184,7 @@ mod tests {
         fs.create_dir(root_path.to_str().unwrap()).unwrap();
 
         // Act
-        let result = VersionIter::new("/", &fs);
+        let result = VersionIter::open("/", &fs);
 
         // Assert
         assert!(result.is_err())
@@ -194,14 +194,14 @@ mod tests {
     fn update_workspace_test() {
         // Arrange
         let fs = new_file_system();
-        let it = VersionIter::new("/", &fs).unwrap();
+        let it = VersionIter::open("/", &fs).unwrap();
 
         // Act
         let result = update_configs(&fs, it);
 
         // Assert
         assert!(result.is_ok());
-        let it = VersionIter::new("/", &fs).unwrap();
+        let it = VersionIter::open("/", &fs).unwrap();
         let versions: Vec<String> = it
             .map(|v| v.places)
             .flatten()
