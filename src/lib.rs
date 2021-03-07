@@ -1,3 +1,7 @@
+mod cargo;
+mod git;
+pub mod workflow;
+
 use semver::Version;
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
@@ -92,18 +96,21 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
     }
 }
 
-pub fn update_configs<F, I>(fs: &F, iter: I, incr: Increment) -> Result<()>
+pub fn update_configs<F, I>(fs: &F, iter: I, incr: Increment) -> Result<Version>
 where
     F: FileSystem,
     I: Iterator<Item = CrateVersion>,
 {
+    let mut result = Version::parse("0.0.0")?;
+
     for config in iter {
-        update_config(fs, &config, incr)?
+        let v = update_config(fs, &config, incr)?;
+        result = result.max(v);
     }
-    Ok(())
+    Ok(result)
 }
 
-fn update_config<F>(fs: &F, config: &CrateVersion, incr: Increment) -> Result<()>
+fn update_config<F>(fs: &F, config: &CrateVersion, incr: Increment) -> Result<Version>
 where
     F: FileSystem,
 {
@@ -113,15 +120,19 @@ where
 
     let mut doc = content.parse::<Document>()?;
 
+    let mut result = Version::parse("0.0.0")?;
+
     for place in &config.places {
         match place {
             Place::Package(ver) => {
                 let v = increment(ver, incr)?;
-                doc[PACK][VERSION] = value(v);
+                result = result.max(v);
+                doc[PACK][VERSION] = value(result.to_string());
             }
             Place::Dependency(n, ver) => {
                 let v = increment(ver, incr)?;
-                doc[DEPS][n][VERSION] = value(v);
+                result = result.max(v);
+                doc[DEPS][n][VERSION] = value(result.to_string());
             }
         }
     }
@@ -129,17 +140,17 @@ where
     let mut f = fs.create_file(&config.path)?;
     let changed = doc.to_string_in_original_order();
     f.write_all(changed.as_bytes())?;
-    Ok(())
+    Ok(result)
 }
 
-fn increment(v: &String, i: Increment) -> Result<String> {
+fn increment(v: &String, i: Increment) -> Result<Version> {
     let mut v = Version::parse(v)?;
     match i {
         Increment::Major => v.increment_major(),
         Increment::Minor => v.increment_minor(),
         Increment::Patch => v.increment_patch(),
     }
-    Ok(v.to_string())
+    Ok(v)
 }
 
 #[derive(Deserialize)]
@@ -234,6 +245,7 @@ mod tests {
 
         // Assert
         assert!(result.is_ok());
+        assert_eq!("0.1.14", result.unwrap().to_string());
         assert_updated_files(&fs, "0.1.14");
     }
 
@@ -248,6 +260,7 @@ mod tests {
 
         // Assert
         assert!(result.is_ok());
+        assert_eq!("0.2.0", result.unwrap().to_string());
         assert_updated_files(&fs, "0.2.0");
     }
 
@@ -262,6 +275,7 @@ mod tests {
 
         // Assert
         assert!(result.is_ok());
+        assert_eq!("1.0.0", result.unwrap().to_string());
         assert_updated_files(&fs, "1.0.0");
     }
 

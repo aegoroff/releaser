@@ -12,3 +12,4 @@ toml = "0.5"
 toml_edit = "0.2"
 serde = { version = "1.0", features = ["derive"] }
 vfs = "0.5"
+clap = "2"
