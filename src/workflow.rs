@@ -11,13 +11,17 @@ pub fn release(path: &str, incr: Increment) -> crate::Result<()> {
     let mut it = VersionIter::open("/", &root)?;
     let version = crate::update_configs(&root, &mut it, incr)?;
 
-    let commit_msg = format!("New release {}", version);
+    let ver = format!("v{}", version);
+    let commit_msg = format!("New release {}", &ver);
     git::commit(&commit_msg, path)?;
 
     let crates_to_publish = it.topo_sort();
     for publish in &crates_to_publish {
-        cargo::publish(path, publish)?;
+        while cargo::publish(path, publish).is_err() {}
     }
+
+    git::create_tag(path, &ver)?;
+    git::push_tag(path, &ver)?;
 
     Ok(())
 }
