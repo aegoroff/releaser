@@ -1,9 +1,9 @@
-use crate::git;
 use crate::cargo;
+use crate::git;
 use crate::{Increment, VersionIter};
 use std::path::PathBuf;
-use vfs::PhysicalFS;
 use std::{thread, time};
+use vfs::PhysicalFS;
 
 pub fn release(path: &str, incr: Increment) -> crate::Result<()> {
     let root_path = PathBuf::from(path);

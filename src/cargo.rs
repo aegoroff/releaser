@@ -1,6 +1,6 @@
 use std::io;
-use std::process::Command;
 use std::path::PathBuf;
+use std::process::Command;
 
 const TOOL: &str = "cargo";
 
