@@ -8,7 +8,7 @@ macro_rules! command {
     ($m:ident, $cmd:expr, $inc:ident) => {
         if let Some(cmd) = $m.subcommand_matches($cmd) {
             if let Some(path) = cmd.value_of("PATH") {
-                match workflow::release(path, Increment::$inc) {
+                match workflow::release_workspace(path, Increment::$inc) {
                     Ok(()) => {}
                     Err(e) => eprintln!("Error: {}", e),
                 }

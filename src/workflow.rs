@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::{thread, time};
 use vfs::PhysicalFS;
 
-pub fn release(path: &str, incr: Increment) -> crate::Result<()> {
+pub fn release_workspace(path: &str, incr: Increment) -> crate::Result<()> {
     let root_path = PathBuf::from(path);
     let root = PhysicalFS::new(root_path);
 

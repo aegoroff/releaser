@@ -94,21 +94,12 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
         let crate_path = self.root.join(member).join(CARGO_CONFIG);
         let crate_path = crate_path.to_str()?;
 
-        let file = self.fs.open_file(crate_path);
-        if file.is_err() {
+        let conf = CrateConfig::open(self.fs, crate_path).unwrap_or_default();
+        if conf.package.version.is_empty() {
             return None;
         }
 
-        let mut file = file.unwrap();
-        let mut content = String::new();
-        let ok = file.read_to_string(&mut content).is_ok();
-        if !ok {
-            return None;
-        }
-        let conf: CrateConfig = toml::from_str(&content).unwrap();
-
-        let to = self.search.get(&conf.package.name).unwrap();
-        let mut places = vec![Place::Package(conf.package.version)];
+        let mut item = conf.new_version(crate_path);
 
         let deps = conf
             .dependencies
@@ -124,19 +115,18 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
                 None
             });
 
-        places.extend(deps);
+        item.places.extend(deps);
 
-        for place in places.iter() {
+        let to = self.search.get(&conf.package.name).unwrap();
+
+        for place in item.places.iter() {
             if let Place::Dependency(n, _) = place {
                 let from = self.search.get(n).unwrap();
                 self.graph.add_edge(*from, *to, -1);
             }
         }
 
-        Some(CrateVersion {
-            path: String::from(crate_path),
-            places,
-        })
+        Some(item)
     }
 }
 
@@ -157,11 +147,11 @@ where
     Ok(result)
 }
 
-fn update_config<F>(fs: &F, config: &CrateVersion, incr: Increment) -> Result<Version>
+fn update_config<F>(fs: &F, version: &CrateVersion, incr: Increment) -> Result<Version>
 where
     F: FileSystem,
 {
-    let mut file = fs.open_file(&config.path)?;
+    let mut file = fs.open_file(&version.path)?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
 
@@ -169,7 +159,7 @@ where
 
     let mut result = Version::parse("0.0.0")?;
 
-    for place in &config.places {
+    for place in &version.places {
         match place {
             Place::Package(ver) => {
                 let v = increment(ver, incr)?;
@@ -184,7 +174,7 @@ where
         }
     }
 
-    let mut f = fs.create_file(&config.path)?;
+    let mut f = fs.create_file(&version.path)?;
     let changed = doc.to_string_in_original_order();
     f.write_all(changed.as_bytes())?;
     Ok(result)
@@ -214,6 +204,25 @@ struct Workspace {
 struct CrateConfig {
     package: Package,
     dependencies: HashMap<String, Dependency>,
+}
+
+impl CrateConfig {
+    pub fn open<F: FileSystem>(fs: &F, path: &str) -> Result<Self> {
+        let mut file = fs.open_file(path)?;
+        let mut content = String::new();
+        file.read_to_string(&mut content)?;
+        let conf: CrateConfig = toml::from_str(&content).unwrap();
+        Ok(conf)
+    }
+
+    pub fn new_version(&self, path: &str) -> CrateVersion {
+        let places = vec![Place::Package(self.package.version.clone())];
+
+        CrateVersion {
+            path: String::from(path),
+            places,
+        }
+    }
 }
 
 #[derive(Deserialize, Default)]
