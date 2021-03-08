@@ -496,17 +496,17 @@ a = { path = "../a/", version = "0.1.0" }
             .write_all(WKS.as_bytes())
             .unwrap();
 
-        let ch1_conf = root_path.join("solv").join(CARGO_CONFIG);
-        fs.create_file(ch1_conf.to_str().unwrap())
-            .unwrap()
-            .write_all(SOLV.as_bytes())
-            .unwrap();
+        let ch_fn = |c: &str, d: &str| {
+            let ch_conf = root_path.join(c).join(CARGO_CONFIG);
+            fs.create_file(ch_conf.to_str().unwrap())
+                .unwrap()
+                .write_all(d.as_bytes())
+                .unwrap();
+        };
 
-        let ch1_conf = root_path.join("solp").join(CARGO_CONFIG);
-        fs.create_file(ch1_conf.to_str().unwrap())
-            .unwrap()
-            .write_all(SOLP.as_bytes())
-            .unwrap();
+        ch_fn("solv", SOLV);
+        ch_fn("solp", SOLP);
+
         fs
     }
 
