@@ -1,6 +1,7 @@
-use crate::{cargo, CrateConfig, CARGO_CONFIG, update_config};
 use crate::git;
+use crate::{cargo, CrateConfig, CARGO_CONFIG};
 use crate::{Increment, VersionIter};
+use semver::Version;
 use std::path::PathBuf;
 use std::{thread, time};
 use vfs::PhysicalFS;
@@ -12,9 +13,7 @@ pub fn release_workspace(path: &str, incr: Increment) -> crate::Result<()> {
     let mut it = VersionIter::open("/", &root)?;
     let version = crate::update_configs(&root, &mut it, incr)?;
 
-    let ver = format!("v{}", version);
-    let commit_msg = format!("New release {}", &ver);
-    git::commit(&commit_msg, path)?;
+    let ver = commit_version(path, version)?;
 
     let minute = time::Duration::from_secs(60);
     let crates_to_publish = it.topo_sort();
@@ -42,11 +41,9 @@ pub fn release_crate(path: &str, incr: Increment) -> crate::Result<()> {
 
     let conf = CrateConfig::open(&root, crate_path)?;
     let ver = conf.new_version(crate_path);
-    let version = update_config(&root, &ver, incr)?;
+    let version = crate::update_config(&root, &ver, incr)?;
 
-    let ver = format!("v{}", version);
-    let commit_msg = format!("New release {}", &ver);
-    git::commit(&commit_msg, path)?;
+    let ver = commit_version(path, version)?;
 
     cargo::publish_current(path)?;
 
@@ -54,4 +51,11 @@ pub fn release_crate(path: &str, incr: Increment) -> crate::Result<()> {
     git::push_tag(path, &ver)?;
 
     Ok(())
+}
+
+fn commit_version(path: &str, version: Version) -> crate::Result<String> {
+    let ver = format!("v{}", version);
+    let commit_msg = format!("New release {}", &ver);
+    git::commit(&commit_msg, path)?;
+    Ok(ver)
 }
