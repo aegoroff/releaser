@@ -2,6 +2,7 @@ use clap::{App, Arg, ArgMatches, SubCommand};
 use releaser::workflow;
 use releaser::Increment;
 
+#[macro_use]
 extern crate clap;
 
 const PATH: &str = "PATH";
@@ -46,7 +47,7 @@ where
 
 fn build_cli() -> App<'static, 'static> {
     return App::new("releaser")
-        .version("0.1")
+        .version(crate_version!())
         .author("egoroff <egoroff@gmail.com>")
         .about("Rust releasing workspace tool")
         .subcommand(
