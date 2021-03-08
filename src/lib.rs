@@ -348,6 +348,97 @@ mod tests {
     }
 
     #[test]
+    fn update_complex_workspace_test() {
+        // Arrange
+        const W: &str = r#"
+[workspace]
+members = [ "a", "b", "c", "d" ]
+"#;
+        const A: &str = r#"
+[package]
+name = "a"
+version = "0.1.0"
+workspace = ".."
+
+[dependencies]
+x = "^0.8"
+        "#;
+
+        const B: &str = r#"
+[package]
+name = "b"
+version = "0.1.0"
+workspace = ".."
+
+[dependencies]
+x = "^0.8"
+d = { path = "../d/", version = "0.1.0" }
+        "#;
+
+        const C: &str = r#"
+[package]
+name = "c"
+version = "0.1.0"
+workspace = ".."
+
+[dependencies]
+x = "^0.8"
+b = { path = "../b/", version = "0.1.0" }
+        "#;
+
+        const D: &str = r#"
+[package]
+name = "d"
+version = "0.1.0"
+workspace = ".."
+
+[dependencies]
+x = "^0.8"
+a = { path = "../a/", version = "0.1.0" }
+        "#;
+
+        let root_path = PathBuf::from("/");
+        let fs = MemoryFS::new();
+        fs.create_dir(root_path.to_str().unwrap()).unwrap();
+        fs.create_dir("/a").unwrap();
+        fs.create_dir("/b").unwrap();
+        fs.create_dir("/c").unwrap();
+        fs.create_dir("/d").unwrap();
+        let root_conf = root_path.join(CARGO_CONFIG);
+        let root_conf = root_conf.to_str().unwrap();
+        fs.create_file(root_conf)
+            .unwrap()
+            .write_all(W.as_bytes())
+            .unwrap();
+
+        let ch_fn = |c: &str, d: &str| {
+            let ch_conf = root_path.join(c).join(CARGO_CONFIG);
+            fs.create_file(ch_conf.to_str().unwrap())
+                .unwrap()
+                .write_all(d.as_bytes())
+                .unwrap();
+        };
+
+        ch_fn("a", A);
+        ch_fn("b", B);
+        ch_fn("c", C);
+        ch_fn("d", D);
+
+        let mut it = VersionIter::open("/", &fs).unwrap();
+
+        // Act
+        let result = update_configs(&fs, &mut it, Increment::Minor);
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!("0.2.0", result.unwrap().to_string());
+        assert_eq!(4, it.graph.node_count());
+        assert_eq!(3, it.graph.edge_count());
+        let sorted = it.topo_sort();
+        assert_eq!(vec!["a", "d", "b", "c"], sorted);
+    }
+
+    #[test]
     fn toml_parse_workspace() {
         // Arrange
 
