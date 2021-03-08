@@ -1,4 +1,4 @@
-use crate::cargo;
+use crate::{cargo, CrateConfig, CARGO_CONFIG, update_config};
 use crate::git;
 use crate::{Increment, VersionIter};
 use std::path::PathBuf;
@@ -37,13 +37,18 @@ pub fn release_workspace(path: &str, incr: Increment) -> crate::Result<()> {
 pub fn release_crate(path: &str, incr: Increment) -> crate::Result<()> {
     let root_path = PathBuf::from(path);
     let root = PhysicalFS::new(root_path);
+    let crate_path = PathBuf::from("/").join(CARGO_CONFIG);
+    let crate_path = crate_path.to_str().unwrap_or_default();
 
-    let mut it = VersionIter::open("/", &root)?;
-    let version = crate::update_configs(&root, &mut it, incr)?;
+    let conf = CrateConfig::open(&root, crate_path)?;
+    let ver = conf.new_version(crate_path);
+    let version = update_config(&root, &ver, incr)?;
 
     let ver = format!("v{}", version);
     let commit_msg = format!("New release {}", &ver);
     git::commit(&commit_msg, path)?;
+
+    cargo::publish_current(path)?;
 
     git::create_tag(path, &ver)?;
     git::push_tag(path, &ver)?;

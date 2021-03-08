@@ -17,3 +17,12 @@ pub fn publish(path: &str, crt: &str) -> io::Result<()> {
     child.wait()?;
     Ok(())
 }
+
+pub fn publish_current(path: &str) -> io::Result<()> {
+    let mut child = Command::new(TOOL)
+        .current_dir(path)
+        .arg("publish")
+        .spawn()?;
+    child.wait()?;
+    Ok(())
+}

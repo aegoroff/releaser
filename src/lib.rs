@@ -147,7 +147,7 @@ where
     Ok(result)
 }
 
-fn update_config<F>(fs: &F, version: &CrateVersion, incr: Increment) -> Result<Version>
+pub fn update_config<F>(fs: &F, version: &CrateVersion, incr: Increment) -> Result<Version>
 where
     F: FileSystem,
 {
