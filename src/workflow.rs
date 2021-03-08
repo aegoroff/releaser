@@ -33,3 +33,20 @@ pub fn release_workspace(path: &str, incr: Increment) -> crate::Result<()> {
 
     Ok(())
 }
+
+pub fn release_crate(path: &str, incr: Increment) -> crate::Result<()> {
+    let root_path = PathBuf::from(path);
+    let root = PhysicalFS::new(root_path);
+
+    let mut it = VersionIter::open("/", &root)?;
+    let version = crate::update_configs(&root, &mut it, incr)?;
+
+    let ver = format!("v{}", version);
+    let commit_msg = format!("New release {}", &ver);
+    git::commit(&commit_msg, path)?;
+
+    git::create_tag(path, &ver)?;
+    git::push_tag(path, &ver)?;
+
+    Ok(())
+}
