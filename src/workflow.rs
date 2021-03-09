@@ -1,10 +1,13 @@
 use crate::git;
 use crate::{cargo, CrateConfig, CARGO_CONFIG};
 use crate::{Increment, VersionIter};
+use ansi_term::Colour::Green;
 use semver::Version;
 use std::path::PathBuf;
 use std::{thread, time};
 use vfs::PhysicalFS;
+
+extern crate ansi_term;
 
 pub fn release_workspace(path: &str, incr: Increment) -> crate::Result<()> {
     let root_path = PathBuf::from(path);
@@ -15,15 +18,21 @@ pub fn release_workspace(path: &str, incr: Increment) -> crate::Result<()> {
 
     let ver = commit_version(path, version)?;
 
-    let minute = time::Duration::from_secs(60);
+    let delay_seconds = 30;
+    let delay_str = format!("{}", delay_seconds);
+    let delay = time::Duration::from_secs(delay_seconds);
     let crates_to_publish = it.topo_sort();
     for (i, publish) in crates_to_publish.iter().enumerate() {
         cargo::publish(path, publish)?;
         // delay needed between crates to avoid publish failure in case of dependencies
         // crates.io index dont updated instantly
         if i < crates_to_publish.len() - 1 {
-            println!(" Waiting after publish {} ...", publish);
-            thread::sleep(minute);
+            println!(
+                " Waiting {} seconds after publish {} ...",
+                Green.bold().paint(&delay_str),
+                Green.bold().paint(publish)
+            );
+            thread::sleep(delay);
         }
     }
 
