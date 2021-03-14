@@ -2,8 +2,8 @@ mod cargo;
 mod git;
 pub mod workflow;
 
+use petgraph::algo::DfsSpace;
 use petgraph::graphmap::DiGraphMap;
-use petgraph::visit::Topo;
 use semver::Version;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -65,24 +65,20 @@ impl<'a, F: FileSystem> VersionIter<'a, F> {
     }
 
     pub fn topo_sort(&self) -> Vec<String> {
-        let mut topo = Topo::new(&self.graph);
-
         let reverted = self
             .search
             .iter()
             .map(|(k, v)| (*v, k))
             .collect::<HashMap<usize, &String>>();
-        let mut result = vec![];
-        loop {
-            match topo.next(&self.graph) {
-                Some(n) => {
-                    let s = reverted.get(&n).unwrap();
-                    result.push((*s).clone());
-                }
-                None => break,
-            }
-        }
-        result
+
+        let mut space = DfsSpace::new(&self.graph);
+        let sorted = petgraph::algo::toposort(&self.graph, Some(&mut space)).unwrap_or_default();
+
+        sorted
+            .iter()
+            .map(|g| *reverted.get(&g).unwrap())
+            .cloned()
+            .collect()
     }
 }
 
