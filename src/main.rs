@@ -1,5 +1,5 @@
 use clap::{App, Arg, ArgMatches, SubCommand};
-use releaser::workflow;
+use releaser::workflow::{Crate, Release, Workspace};
 use releaser::Increment;
 
 #[macro_use]
@@ -13,17 +13,21 @@ fn main() {
     let matches = app.get_matches();
 
     if let Some(cmd) = matches.subcommand_matches("w") {
-        release(cmd, workflow::release_workspace);
+        let delay_seconds = cmd.value_of("delay").unwrap_or("");
+        let delay_seconds: u64 = delay_seconds.parse().unwrap_or(20);
+        let r = Workspace::new(delay_seconds);
+        release(cmd, r);
     }
 
     if let Some(cmd) = matches.subcommand_matches("c") {
-        release(cmd, workflow::release_crate);
+        let r = Crate::new();
+        release(cmd, r);
     }
 }
 
-fn release<F>(cmd: &ArgMatches, action: F)
+fn release<R>(cmd: &ArgMatches, release: R)
 where
-    F: Fn(&str, Increment) -> releaser::Result<()>,
+    R: Release,
 {
     let path = cmd.value_of(PATH).unwrap();
     let incr = cmd.value_of(INCR).unwrap();
@@ -39,7 +43,7 @@ where
         return;
     }
 
-    match action(path, inc.unwrap()) {
+    match release.release(path, inc.unwrap()) {
         Ok(()) => {}
         Err(e) => eprintln!("Error: {}", e),
     }
@@ -65,6 +69,15 @@ fn build_cli() -> App<'static, 'static> {
                         .help("Sets workspace root path")
                         .required(true)
                         .index(2),
+                )
+                .arg(
+                    Arg::with_name("delay")
+                        .long("delay")
+                        .short("d")
+                        .takes_value(true)
+                        .default_value("20")
+                        .help("Delay in seconds between publish next workflow's crate")
+                        .required(false),
                 ),
         )
         .subcommand(
