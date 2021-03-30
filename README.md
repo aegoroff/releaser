@@ -1,5 +1,10 @@
 [![crates.io](https://img.shields.io/crates/v/releaser.svg)](https://crates.io/crates/releaser)
 
+# Installation
+Install Rust and then run:
+```
+cargo install releaser
+```
 # Rust workspace release procedure
 1. Read existing version from crate's toml file
 2. Increment version in all workspace's crate's toml files and it's dependencies
