@@ -12,17 +12,23 @@ fn main() {
     let app = build_cli();
     let matches = app.get_matches();
 
-    if let Some(cmd) = matches.subcommand_matches("w") {
-        let delay_seconds = cmd.value_of("delay").unwrap_or("");
-        let delay_seconds: u64 = delay_seconds.parse().unwrap_or(20);
-        let r = Workspace::new(delay_seconds);
-        release(cmd, r);
+    match matches.subcommand() {
+        ("w", Some(cmd)) => workspace(cmd),
+        ("c", Some(cmd)) => single_crate(cmd),
+        _ => {}
     }
+}
 
-    if let Some(cmd) = matches.subcommand_matches("c") {
-        let r = Crate::new();
-        release(cmd, r);
-    }
+fn workspace(cmd: &ArgMatches) {
+    let delay_seconds = cmd.value_of("delay").unwrap_or("");
+    let delay_seconds: u64 = delay_seconds.parse().unwrap_or(20);
+    let r = Workspace::new(delay_seconds);
+    release(cmd, r);
+}
+
+fn single_crate(cmd: &ArgMatches) {
+    let r = Crate::new();
+    release(cmd, r);
 }
 
 fn release<R>(cmd: &ArgMatches, release: R)
