@@ -20,3 +20,5 @@ jobs:
       run: cargo build
     - name: Run tests
       run: cargo test --verbose
+    - name: Run linter
+      run: cargo clippy
