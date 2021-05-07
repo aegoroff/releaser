@@ -65,6 +65,12 @@ impl Crate {
     }
 }
 
+impl Default for Crate {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Release for Crate {
     fn release(&self, path: &str, incr: Increment) -> crate::Result<()> {
         let root_path = PathBuf::from(path);

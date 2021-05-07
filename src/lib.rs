@@ -176,7 +176,7 @@ where
     Ok(result)
 }
 
-fn increment(v: &String, i: Increment) -> Result<Version> {
+fn increment(v: &str, i: Increment) -> Result<Version> {
     let mut v = Version::parse(v)?;
     match i {
         Increment::Major => v.increment_major(),
