@@ -56,7 +56,7 @@ where
 }
 
 fn build_cli() -> App<'static, 'static> {
-    return App::new("releaser")
+    return App::new(crate_name!())
         .version(crate_version!())
         .author("egoroff <egoroff@gmail.com>")
         .about("Rust releasing workspace tool")
