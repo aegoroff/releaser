@@ -1,22 +1,23 @@
-mod cargo;
-mod git;
-pub mod workflow;
-
-use petgraph::algo::DfsSpace;
-use petgraph::graphmap::DiGraphMap;
-use semver::Version;
-use serde::Deserialize;
-use std::collections::HashMap;
-use std::path::PathBuf;
-use toml_edit::{value, Document};
-use vfs::FileSystem;
-
 extern crate petgraph;
 extern crate semver;
 extern crate serde;
 extern crate toml;
 extern crate toml_edit;
 extern crate vfs;
+
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+use petgraph::algo::DfsSpace;
+use petgraph::graphmap::DiGraphMap;
+use semver::{BuildMetadata, Prerelease, Version};
+use serde::Deserialize;
+use toml_edit::{Document, value};
+use vfs::FileSystem;
+
+mod cargo;
+mod git;
+pub mod workflow;
 
 pub type AnyError = Box<dyn std::error::Error>;
 pub type Result<T> = core::result::Result<T, AnyError>;
@@ -179,11 +180,32 @@ where
 fn increment(v: &str, i: Increment) -> Result<Version> {
     let mut v = Version::parse(v)?;
     match i {
-        Increment::Major => v.increment_major(),
-        Increment::Minor => v.increment_minor(),
-        Increment::Patch => v.increment_patch(),
+        Increment::Major => increment_major(&mut v),
+        Increment::Minor => increment_minor(&mut v),
+        Increment::Patch => increment_patch(&mut v),
     }
     Ok(v)
+}
+
+fn increment_patch(v: &mut Version) {
+    v.patch += 1;
+    v.pre = Prerelease::EMPTY;
+    v.build = BuildMetadata::EMPTY;
+}
+
+fn increment_minor(v: &mut Version) {
+    v.minor += 1;
+    v.patch = 0;
+    v.pre = Prerelease::EMPTY;
+    v.build = BuildMetadata::EMPTY;
+}
+
+fn increment_major(v: &mut Version) {
+    v.major += 1;
+    v.minor = 0;
+    v.patch = 0;
+    v.pre = Prerelease::EMPTY;
+    v.build = BuildMetadata::EMPTY;
 }
 
 #[derive(Deserialize)]
@@ -256,8 +278,9 @@ pub enum Increment {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use vfs::MemoryFS;
+
+    use super::*;
 
     #[test]
     fn read_workspace_test() {
