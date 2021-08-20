@@ -77,7 +77,7 @@ impl<'a, F: FileSystem> VersionIter<'a, F> {
 
         sorted
             .iter()
-            .map(|g| *reverted.get(&g).unwrap())
+            .map(|g| *reverted.get(g).unwrap())
             .cloned()
             .collect()
     }
