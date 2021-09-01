@@ -1,9 +1,11 @@
-use clap::{App, Arg, ArgMatches, SubCommand};
-use releaser::workflow::{Crate, Release, Workspace};
-use releaser::Increment;
-
 #[macro_use]
 extern crate clap;
+
+use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+
+use releaser::Increment;
+use releaser::workflow::{Crate, Release, Workspace};
+
 
 const PATH: &str = "PATH";
 const INCR: &str = "INCR";
@@ -57,6 +59,7 @@ where
 
 fn build_cli() -> App<'static, 'static> {
     return App::new(crate_name!())
+        .setting(AppSettings::ArgRequiredElseHelp)
         .version(crate_version!())
         .author("egoroff <egoroff@gmail.com>")
         .about("Rust releasing workspace tool")
