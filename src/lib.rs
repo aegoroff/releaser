@@ -43,7 +43,6 @@ impl<'a, F: FileSystem> VersionIter<'a, F> {
         let mut wks_file = fs.open_file(wks_path.to_str().unwrap())?;
         let mut wc = String::new();
         wks_file.read_to_string(&mut wc)?;
-
         let wks: WorkspaceConfig = toml::from_str(&wc)?;
         let search: HashMap<String, usize> = wks
             .workspace
@@ -172,7 +171,7 @@ where
     }
 
     let mut f = fs.create_file(&version.path)?;
-    let changed = doc.to_string_in_original_order();
+    let changed = doc.to_string();
     f.write_all(changed.as_bytes())?;
     Ok(result)
 }
