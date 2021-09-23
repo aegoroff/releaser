@@ -1,13 +1,16 @@
-use crate::git;
-use crate::{cargo, CrateConfig, CARGO_CONFIG};
-use crate::{Increment, VersionIter};
+extern crate ansi_term;
+
+use std::{thread, time};
+use std::path::PathBuf;
+
 use ansi_term::Colour::Green;
 use semver::Version;
-use std::path::PathBuf;
-use std::{thread, time};
 use vfs::PhysicalFS;
 
-extern crate ansi_term;
+use crate::{cargo, CARGO_CONFIG, CrateConfig};
+use crate::{Increment, VersionIter};
+use crate::git;
+
 
 pub trait Release {
     fn release(&self, path: &str, incr: Increment) -> crate::Result<()>;
@@ -95,7 +98,7 @@ impl Release for Crate {
 
 fn commit_version(path: &str, version: Version) -> crate::Result<String> {
     let ver = format!("v{}", version);
-    let commit_msg = format!("New release {}", &ver);
+    let commit_msg = format!("changelog: {}", &ver);
     git::commit(&commit_msg, path)?;
     Ok(ver)
 }
