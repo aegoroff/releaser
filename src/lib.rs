@@ -75,8 +75,8 @@ impl<'a, F: FileSystem> VersionIter<'a, F> {
         let sorted = petgraph::algo::toposort(&self.graph, Some(&mut space)).unwrap_or_default();
 
         sorted
-            .iter()
-            .map(|g| *reverted.get(g).unwrap())
+            .into_iter()
+            .map(|g| *reverted.get(&g).unwrap())
             .cloned()
             .collect()
     }
@@ -99,8 +99,8 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
 
         let deps = conf
             .dependencies
-            .iter()
-            .filter(|(n, _)| self.search.contains_key(*n))
+            .into_iter()
+            .filter(|(n, _)| self.search.contains_key(n))
             .filter_map(|(n, v)| {
                 if let Dependency::Object(m) = v {
                     let d = m.get(VERSION)?;
