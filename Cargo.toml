@@ -1,6 +1,6 @@
 [package]
 name = "releaser"
-version = "0.4.3"
+version = "0.4.4"
 description = "Workspace releasing tool. All crates from workspace will be released on crates.io"
 authors = ["egoroff <egoroff@gmail.com>"]
 license = "MIT"
