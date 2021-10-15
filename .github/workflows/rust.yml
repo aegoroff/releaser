@@ -39,4 +39,4 @@ jobs:
       - name: Setup linter
         run: rustup component add clippy
       - name: Run linter
-        run: cargo clippy
+        run: cargo clippy -- -Dwarnings
