@@ -20,13 +20,10 @@ jobs:
         include:
           - build: linux
             os: ubuntu-latest
-            rust: ${{ matrix.rust }}
           - build: macos
             os: macos-latest
-            rust: ${{ matrix.rust }}
           - build: windows
             os: windows-latest
-            rust: ${{ matrix.rust }}
 
     steps:
       - uses: actions/checkout@v2
