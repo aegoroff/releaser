@@ -105,7 +105,7 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
                 if let Dependency::Object(m) = v {
                     let d = m.get(VERSION)?;
                     if let Dependency::Plain(s) = d {
-                        return Some(Place::Dependency(n.clone(), s.clone()));
+                        return Some(Place::Dependency(n, s.clone()));
                     }
                 }
                 None
