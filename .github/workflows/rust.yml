@@ -16,16 +16,17 @@ jobs:
     strategy:
       matrix:
         build: [ linux, macos, windows ]
+        rust: [ stable, nightly ]
         include:
           - build: linux
             os: ubuntu-latest
-            rust: stable
+            rust: ${{ matrix.rust }}
           - build: macos
             os: macos-latest
-            rust: stable
+            rust: ${{ matrix.rust }}
           - build: windows
             os: windows-latest
-            rust: stable
+            rust: ${{ matrix.rust }}
 
     steps:
       - uses: actions/checkout@v2
