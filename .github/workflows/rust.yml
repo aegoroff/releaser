@@ -27,6 +27,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Rust version
+        run: rustup -V
       - name: Build
         run: cargo build
       - name: Run tests
