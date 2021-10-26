@@ -1,3 +1,4 @@
+extern crate handlebars;
 extern crate petgraph;
 extern crate semver;
 extern crate serde;
@@ -15,6 +16,7 @@ use serde::Deserialize;
 use toml_edit::{Document, value};
 use vfs::FileSystem;
 
+mod brew;
 mod cargo;
 mod git;
 pub mod workflow;
@@ -246,6 +248,8 @@ impl CrateConfig {
 struct Package {
     name: String,
     version: String,
+    license: Option<String>,
+    description: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]

@@ -6,7 +6,6 @@ use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use releaser::Increment;
 use releaser::workflow::{Crate, Release, Workspace};
 
-
 const PATH: &str = "PATH";
 const INCR: &str = "INCR";
 

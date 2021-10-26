@@ -11,7 +11,6 @@ use crate::{cargo, CARGO_CONFIG, CrateConfig};
 use crate::{Increment, VersionIter};
 use crate::git;
 
-
 pub trait Release {
     fn release(&self, path: &str, incr: Increment) -> crate::Result<()>;
 }
