@@ -19,7 +19,15 @@ pub struct Package {
 }
 
 pub fn create_brew<T: Serialize>(data: &T) -> String {
-    let reg = Handlebars::new();
+    handlebars_helper!(lines: |count: i32| {
+        let mut i = 0;
+        while i < count {
+            println!("");
+            i += 1;
+        }
+    });
+    let mut reg = Handlebars::new();
+    reg.register_helper("lines", Box::new(lines));
     reg.render_template(TEMPLATE, data).unwrap()
 }
 
@@ -34,6 +42,7 @@ class {{ name }} < Formula
   license "{{ license }}"
   {{/if}}
   {{#if macos }}
+{{lines 1}}
   on_macos do
     if Hardware::CPU.intel?
     {{#with macos}}
@@ -44,6 +53,7 @@ class {{ name }} < Formula
   end
   {{/if}}
   {{#if linux }}
+{{lines 1}}
   on_linux do
     if Hardware::CPU.intel?
     {{#with linux}}
@@ -122,6 +132,7 @@ class Solv < Formula
   homepage ""
   version "v0.4.0"
   license "MIT"
+
   on_macos do
     if Hardware::CPU.intel?
       url "https://github.com/aegoroff/solt/releases/download/v1.0.7/solt_1.0.7_darwin_amd64.tar.gz"
@@ -164,6 +175,7 @@ class Solv < Formula
   homepage ""
   version "v0.4.0"
   license "MIT"
+
   on_linux do
     if Hardware::CPU.intel?
       url "https://github.com/aegoroff/solt/releases/download/v1.0.7/solt_1.0.7_linux_amd64.tar.gz"
@@ -210,12 +222,14 @@ class Solv < Formula
   homepage ""
   version "v0.4.0"
   license "MIT"
+
   on_macos do
     if Hardware::CPU.intel?
       url "https://github.com/aegoroff/solt/releases/download/v1.0.7/solt_1.0.7_darwin_amd64.tar.gz"
       sha256 "9a6c8144ed77cd5e2b88031109ac4285ca08e8c644f3d022a389359470721a7b"
     end
   end
+
   on_linux do
     if Hardware::CPU.intel?
       url "https://github.com/aegoroff/solt/releases/download/v1.0.7/solt_1.0.7_linux_amd64.tar.gz"

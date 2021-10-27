@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate handlebars;
 extern crate petgraph;
 extern crate semver;
