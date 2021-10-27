@@ -248,8 +248,6 @@ impl CrateConfig {
 struct Package {
     name: String,
     version: String,
-    license: Option<String>,
-    description: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
