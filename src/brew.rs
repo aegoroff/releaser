@@ -63,6 +63,9 @@ class {{ name }} < Formula
     end
   end
   {{/if}}
+{{#if (or linux macos)}}
+{{lines 1}}
+{{/if}}
 end
 "###;
 
@@ -139,6 +142,7 @@ class Solv < Formula
       sha256 "9a6c8144ed77cd5e2b88031109ac4285ca08e8c644f3d022a389359470721a7b"
     end
   end
+
 end
 "###,
             result
@@ -182,6 +186,7 @@ class Solv < Formula
       sha256 "fb5c2f5d41c7d3485898de9905736dc8c540a912dc95d3a55bd9360901689811"
     end
   end
+
 end
 "###,
             result
@@ -236,6 +241,7 @@ class Solv < Formula
       sha256 "fb5c2f5d41c7d3485898de9905736dc8c540a912dc95d3a55bd9360901689811"
     end
   end
+
 end
 "###,
             result
