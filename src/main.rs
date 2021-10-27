@@ -16,6 +16,7 @@ fn main() {
     match matches.subcommand() {
         ("w", Some(cmd)) => workspace(cmd),
         ("c", Some(cmd)) => single_crate(cmd),
+        ("b", Some(cmd)) => brew(cmd),
         _ => {}
     }
 }
@@ -32,9 +33,17 @@ fn single_crate(cmd: &ArgMatches) {
     release(cmd, r);
 }
 
+fn brew(cmd: &ArgMatches) {
+    let owner = cmd.value_of("owner").unwrap_or("");
+    let tap = cmd.value_of("tap").unwrap_or("");
+    let crate_path = cmd.value_of("crate").unwrap_or("");
+    let linux_path = cmd.value_of("linux").unwrap_or("");
+    let macos_path = cmd.value_of("macos").unwrap_or("");
+}
+
 fn release<R>(cmd: &ArgMatches, release: R)
-where
-    R: Release,
+    where
+        R: Release,
 {
     let path = cmd.value_of(PATH).unwrap();
     let incr = cmd.value_of(INCR).unwrap();
@@ -103,6 +112,51 @@ fn build_cli() -> App<'static, 'static> {
                         .help("Sets crate's root path")
                         .required(true)
                         .index(2),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("b")
+                .aliases(&["brew"])
+                .about("Publish brew into tap")
+                .arg(
+                    Arg::with_name("crate")
+                        .long("crate")
+                        .short("c")
+                        .takes_value(true)
+                        .help("Sets crate's path to publish")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("linux")
+                        .long("linux")
+                        .short("l")
+                        .takes_value(true)
+                        .help("Sets linux package path")
+                        .required(false),
+                )
+                .arg(
+                    Arg::with_name("macos")
+                        .long("macos")
+                        .short("m")
+                        .takes_value(true)
+                        .help("Sets Mac OS package path")
+                        .required(false),
+                )
+                .arg(
+                    Arg::with_name("owner")
+                        .long("owner")
+                        .short("o")
+                        .takes_value(true)
+                        .help("Brew tap owner")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("tap")
+                        .long("tap")
+                        .short("t")
+                        .takes_value(true)
+                        .help("Brew tap")
+                        .required(true),
                 ),
         );
 }
