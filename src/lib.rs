@@ -1,8 +1,10 @@
 #[macro_use]
 extern crate handlebars;
+extern crate hex;
 extern crate petgraph;
 extern crate semver;
 extern crate serde;
+extern crate sha2;
 extern crate toml;
 extern crate toml_edit;
 extern crate vfs;
@@ -20,6 +22,7 @@ use vfs::FileSystem;
 mod brew;
 mod cargo;
 mod git;
+mod hash;
 pub mod workflow;
 
 pub type AnyError = Box<dyn std::error::Error>;
