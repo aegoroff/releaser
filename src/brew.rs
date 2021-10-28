@@ -84,9 +84,7 @@ pub fn publish(_tap_uri: String, crate_path: &str, linux_path: &str, _macos_path
                 .next()
                 .unwrap_or_default();
 
-            let file = file
-                .to_str()
-                .unwrap();
+            let file = file.to_str().unwrap();
 
             let root_path = PathBuf::from(linux_path);
             let fs = PhysicalFS::new(root_path);
