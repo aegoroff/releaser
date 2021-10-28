@@ -8,7 +8,7 @@ pub fn calculate_sha256<F: FileSystem>(path: &str, fs: &F) -> Result<String, Vfs
     let mut reader = BufReader::new(file);
     let mut hasher = Sha256::new();
 
-    let mut buf = [0u8; 4096];
+    let mut buf = [0u8; 8192];
 
     loop {
         let r = reader.read(&mut buf);

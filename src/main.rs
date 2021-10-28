@@ -36,6 +36,8 @@ fn single_crate(cmd: &ArgMatches) {
 fn brew(cmd: &ArgMatches) {
     let owner = cmd.value_of("owner").unwrap_or("");
     let tap = cmd.value_of("tap").unwrap_or("");
+    let tap_uri = format!("https://github.com/{}/{}.git", owner, tap);
+
     let crate_path = cmd.value_of("crate").unwrap_or("");
     let linux_path = cmd.value_of("linux").unwrap_or("");
     let macos_path = cmd.value_of("macos").unwrap_or("");
