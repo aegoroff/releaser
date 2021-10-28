@@ -36,7 +36,7 @@ const DEPS: &str = "dependencies";
 pub struct VersionIter<'a, F: FileSystem> {
     search: HashMap<String, usize>,
     members: Vec<String>,
-    config: PathBuf,
+    workspace_config_path: PathBuf,
     fs: &'a F,
     graph: DiGraphMap<usize, i32>,
 }
@@ -61,7 +61,7 @@ impl<'a, F: FileSystem> VersionIter<'a, F> {
         Ok(Self {
             search,
             members,
-            config: path,
+            workspace_config_path: path,
             fs,
             graph,
         })
@@ -90,7 +90,7 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let member = self.members.pop()?;
-        let root = self.config.parent()?;
+        let root = self.workspace_config_path.parent()?;
         let config_path = root.join(member).join(CARGO_CONFIG);
         let config_path = config_path.to_str()?;
 
