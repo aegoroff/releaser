@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use ansi_term::Colour::Green;
 use semver::Version;
-use vfs::PhysicalFS;
+use vfs::{FileSystem, PhysicalFS};
 
 use crate::{cargo, CARGO_CONFIG, CrateConfig};
 use crate::{Increment, VersionIter};
@@ -27,11 +27,10 @@ impl Workspace {
 
 impl Release for Workspace {
     fn release(&self, path: &str, incr: Increment) -> crate::Result<()> {
-        let root_path = PathBuf::from(path);
-        let root = PhysicalFS::new(root_path);
+        let (fs, file_path_within_fs) = Crate::new_crate_config_source(path);
 
-        let mut it = VersionIter::open("/", &root)?;
-        let version = crate::update_configs(&root, &mut it, incr)?;
+        let mut it = VersionIter::open(file_path_within_fs, &fs)?;
+        let version = crate::update_configs(&fs, &mut it, incr)?;
 
         let ver = commit_version(path, version)?;
 
@@ -65,6 +64,13 @@ impl Crate {
     pub fn new() -> Self {
         Self {}
     }
+
+    pub fn new_crate_config_source(path: &str) -> (impl FileSystem, PathBuf) {
+        let root_path = PathBuf::from(path);
+        let fs = PhysicalFS::new(root_path);
+        let file_path_within_fs = PathBuf::from("/").join(CARGO_CONFIG);
+        (fs, file_path_within_fs)
+    }
 }
 
 impl Default for Crate {
@@ -75,14 +81,12 @@ impl Default for Crate {
 
 impl Release for Crate {
     fn release(&self, path: &str, incr: Increment) -> crate::Result<()> {
-        let root_path = PathBuf::from(path);
-        let root = PhysicalFS::new(root_path);
-        let crate_path = PathBuf::from("/").join(CARGO_CONFIG);
-        let crate_path = crate_path.to_str().unwrap_or_default();
+        let (fs, file_path_within_fs) = Self::new_crate_config_source(path);
+        let file_path_within_fs = file_path_within_fs.to_str().unwrap_or_default();
 
-        let conf = CrateConfig::open(&root, crate_path)?;
-        let ver = conf.new_version(crate_path);
-        let version = crate::update_config(&root, &ver, incr)?;
+        let conf = CrateConfig::open(&fs, file_path_within_fs)?;
+        let ver = conf.new_version(file_path_within_fs);
+        let version = crate::update_config(&fs, &ver, incr)?;
 
         let ver = commit_version(path, version)?;
 

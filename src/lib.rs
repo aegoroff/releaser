@@ -36,17 +36,14 @@ const DEPS: &str = "dependencies";
 pub struct VersionIter<'a, F: FileSystem> {
     search: HashMap<String, usize>,
     members: Vec<String>,
-    root: PathBuf,
+    config: PathBuf,
     fs: &'a F,
     graph: DiGraphMap<usize, i32>,
 }
 
 impl<'a, F: FileSystem> VersionIter<'a, F> {
-    pub fn open(path: &str, fs: &'a F) -> Result<Self> {
-        let root = PathBuf::from(&path);
-        let wks_path = root.join(CARGO_CONFIG);
-
-        let mut wks_file = fs.open_file(wks_path.to_str().unwrap())?;
+    pub fn open(path: PathBuf, fs: &'a F) -> Result<Self> {
+        let mut wks_file = fs.open_file(path.to_str().unwrap_or_default())?;
         let mut wc = String::new();
         wks_file.read_to_string(&mut wc)?;
         let wks: WorkspaceConfig = toml::from_str(&wc)?;
@@ -64,7 +61,7 @@ impl<'a, F: FileSystem> VersionIter<'a, F> {
         Ok(Self {
             search,
             members,
-            root,
+            config: path,
             fs,
             graph,
         })
@@ -93,15 +90,16 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let member = self.members.pop()?;
-        let crate_path = self.root.join(member).join(CARGO_CONFIG);
-        let crate_path = crate_path.to_str()?;
+        let root = self.config.parent()?;
+        let config_path = root.join(member).join(CARGO_CONFIG);
+        let config_path = config_path.to_str()?;
 
-        let conf = CrateConfig::open(self.fs, crate_path).unwrap_or_default();
+        let conf = CrateConfig::open(self.fs, config_path).unwrap_or_default();
         if conf.package.version.is_empty() {
             return None;
         }
 
-        let mut item = conf.new_version(crate_path);
+        let mut item = conf.new_version(config_path);
 
         let deps = conf
             .dependencies
@@ -293,7 +291,8 @@ mod tests {
     fn read_workspace_test() {
         // Arrange
         let fs = new_file_system();
-        let it = VersionIter::open("/", &fs).unwrap();
+        let conf = PathBuf::from("/").join(CARGO_CONFIG);
+        let it = VersionIter::open(conf, &fs).unwrap();
 
         // Act
         let versions = it.count();
@@ -308,9 +307,10 @@ mod tests {
         let root_path = PathBuf::from("/");
         let fs = MemoryFS::new();
         fs.create_dir(root_path.to_str().unwrap()).unwrap();
+        let conf = PathBuf::from("/").join(CARGO_CONFIG);
 
         // Act
-        let result = VersionIter::open("/", &fs);
+        let result = VersionIter::open(conf, &fs);
 
         // Assert
         assert!(result.is_err())
@@ -320,7 +320,8 @@ mod tests {
     fn update_workspace_patch_test() {
         // Arrange
         let fs = new_file_system();
-        let mut it = VersionIter::open("/", &fs).unwrap();
+        let conf = PathBuf::from("/").join(CARGO_CONFIG);
+        let mut it = VersionIter::open(conf, &fs).unwrap();
 
         // Act
         let result = update_configs(&fs, &mut it, Increment::Patch);
@@ -339,7 +340,8 @@ mod tests {
     fn update_workspace_minor_test() {
         // Arrange
         let fs = new_file_system();
-        let mut it = VersionIter::open("/", &fs).unwrap();
+        let conf = PathBuf::from("/").join(CARGO_CONFIG);
+        let mut it = VersionIter::open(conf, &fs).unwrap();
 
         // Act
         let result = update_configs(&fs, &mut it, Increment::Minor);
@@ -358,7 +360,8 @@ mod tests {
     fn update_workspace_major_test() {
         // Arrange
         let fs = new_file_system();
-        let mut it = VersionIter::open("/", &fs).unwrap();
+        let conf = PathBuf::from("/").join(CARGO_CONFIG);
+        let mut it = VersionIter::open(conf, &fs).unwrap();
 
         // Act
         let result = update_configs(&fs, &mut it, Increment::Major);
@@ -450,7 +453,8 @@ a = { path = "../a/", version = "0.1.0" }
         ch_fn("c", C);
         ch_fn("d", D);
 
-        let mut it = VersionIter::open("/", &fs).unwrap();
+        let conf = PathBuf::from("/").join(CARGO_CONFIG);
+        let mut it = VersionIter::open(conf, &fs).unwrap();
 
         // Act
         let result = update_configs(&fs, &mut it, Increment::Minor);
@@ -495,7 +499,7 @@ a = { path = "../a/", version = "0.1.0" }
     }
 
     fn assert_updated_files(fs: &MemoryFS, ver: &str) {
-        let it = VersionIter::open("/", fs).unwrap();
+        let it = VersionIter::open(PathBuf::from("/").join(CARGO_CONFIG), fs).unwrap();
         let versions: Vec<String> = it
             .map(|v| v.places)
             .flatten()

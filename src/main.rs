@@ -44,8 +44,8 @@ fn brew(cmd: &ArgMatches) {
 }
 
 fn release<R>(cmd: &ArgMatches, release: R)
-    where
-        R: Release,
+where
+    R: Release,
 {
     let path = cmd.value_of(PATH).unwrap();
     let incr = cmd.value_of(INCR).unwrap();
