@@ -80,8 +80,7 @@ pub fn publish(_tap_uri: String, crate_path: &str, linux_path: &str, _macos_path
                 .filter(|f| f.is_ok())
                 .map(|x| x.unwrap())
                 .map(|x| x.path())
-                .filter(|x| x.extension().is_some() && x.extension().unwrap().eq("gz"))
-                .next()
+                .find(|x| x.extension().is_some() && x.extension().unwrap().eq("gz"))
                 .unwrap_or_default();
 
             let file = file.to_str().unwrap();
