@@ -19,10 +19,10 @@ use serde::Deserialize;
 use toml_edit::{Document, value};
 use vfs::FileSystem;
 
-mod brew;
+pub mod brew;
 mod cargo;
 mod git;
-mod hash;
+pub mod hash;
 pub mod workflow;
 
 pub type AnyError = Box<dyn std::error::Error>;

@@ -3,6 +3,7 @@ extern crate clap;
 
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
+use releaser::brew;
 use releaser::Increment;
 use releaser::workflow::{Crate, Release, Workspace};
 
@@ -41,6 +42,7 @@ fn brew(cmd: &ArgMatches) {
     let crate_path = cmd.value_of("crate").unwrap_or("");
     let linux_path = cmd.value_of("linux").unwrap_or("");
     let macos_path = cmd.value_of("macos").unwrap_or("");
+    brew::publish(tap_uri, crate_path, linux_path, macos_path);
 }
 
 fn release<R>(cmd: &ArgMatches, release: R)
