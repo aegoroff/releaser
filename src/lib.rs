@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate handlebars;
 extern crate hex;
+extern crate itertools;
 extern crate petgraph;
 extern crate semver;
 extern crate serde;
@@ -23,6 +24,7 @@ pub mod brew;
 mod cargo;
 mod git;
 pub mod hash;
+mod resource;
 pub mod workflow;
 
 pub type AnyError = Box<dyn std::error::Error>;

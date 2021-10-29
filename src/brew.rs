@@ -7,6 +7,7 @@ use serde::Serialize;
 use vfs::PhysicalFS;
 
 use crate::hash;
+use crate::resource::Resource;
 use crate::workflow::Crate;
 use crate::CrateConfig;
 
@@ -70,8 +71,12 @@ class {{ formula }} < Formula
 end
 "###;
 
-// TODO: implement this
-pub fn publish(_tap_uri: String, crate_path: &str, linux_path: &str, macos_path: &str) {
+pub fn new_brew(
+    crate_path: &str,
+    linux_path: &str,
+    macos_path: &str,
+    base_uri: &str,
+) -> Option<String> {
     let (fs, file_in_fs) = Crate::new_crate_config_source(crate_path);
     let config = CrateConfig::open(&fs, file_in_fs.to_str().unwrap_or_default());
 
@@ -84,22 +89,25 @@ pub fn publish(_tap_uri: String, crate_path: &str, linux_path: &str, macos_path:
             homepage: None,
             version: c.package.version,
             license: c.package.license.unwrap_or_default(),
-            linux: new_binary_pkg(linux_path),
-            macos: new_binary_pkg(macos_path),
+            linux: new_binary_pkg(linux_path, base_uri),
+            macos: new_binary_pkg(macos_path, base_uri),
         };
-        create_brew(&brew);
+        Some(serialize_brew(&brew))
+    } else {
+        None
     }
 }
 
-fn new_binary_pkg(path: &str) -> Option<Package> {
+fn new_binary_pkg(path: &str, base_uri: &str) -> Option<Package> {
     let sha256 = calculate_sha256(path);
-    sha256.map(|h| Package {
-        url: String::new(),
+    let mut resource = Resource::new(base_uri)?;
+    sha256.map(|(h, f)| Package {
+        url: resource.append_path(f.to_str().unwrap()),
         hash: h,
     })
 }
 
-fn calculate_sha256(dir: &str) -> Option<String> {
+fn calculate_sha256(dir: &str) -> Option<(String, PathBuf)> {
     let dir_content = fs::read_dir(dir);
     if let Ok(d) = dir_content {
         let file = d
@@ -109,11 +117,10 @@ fn calculate_sha256(dir: &str) -> Option<String> {
             .find(|x| x.extension().is_some() && x.extension().unwrap().eq("gz"))
             .unwrap_or_default();
 
-        let file = file.to_str().unwrap();
-
         let root_path = PathBuf::from(dir);
         let fs = PhysicalFS::new(root_path);
-        Some(hash::calculate_sha256(file, &fs).unwrap_or_default())
+        let hash = hash::calculate_sha256(file.to_str().unwrap(), &fs).unwrap_or_default();
+        Some((hash, file))
     } else {
         None
     }
@@ -127,7 +134,7 @@ fn uppercase_first_letter(s: &str) -> String {
     }
 }
 
-fn create_brew<T: Serialize>(data: &T) -> String {
+fn serialize_brew<T: Serialize>(data: &T) -> String {
     handlebars_helper!(lines: |count: i32| {
         let mut i = 0;
         while i < count {
@@ -145,7 +152,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn create_brew_no_packages_test() {
+    fn serialize_brew_no_packages_test() {
         // Arrange
         let brew = Brew {
             formula: "Solv".to_string(),
@@ -159,7 +166,7 @@ mod tests {
         };
 
         // Act
-        let result = create_brew(&brew);
+        let result = serialize_brew(&brew);
 
         // Assert
         assert_eq!(
@@ -178,7 +185,7 @@ end
     }
 
     #[test]
-    fn create_brew_macos_test() {
+    fn serialize_brew_macos_test() {
         // Arrange
         let macos = Package {
             url: "https://github.com/aegoroff/solt/releases/download/v1.0.7/solt_1.0.7_darwin_amd64.tar.gz".to_string(),
@@ -196,7 +203,7 @@ end
         };
 
         // Act
-        let result = create_brew(&brew);
+        let result = serialize_brew(&brew);
 
         // Assert
         assert_eq!(
@@ -227,7 +234,7 @@ end
     }
 
     #[test]
-    fn create_brew_linux_test() {
+    fn serialize_brew_linux_test() {
         // Arrange
         let linux = Package {
             url: "https://github.com/aegoroff/solt/releases/download/v1.0.7/solt_1.0.7_linux_amd64.tar.gz".to_string(),
@@ -245,7 +252,7 @@ end
         };
 
         // Act
-        let result = create_brew(&brew);
+        let result = serialize_brew(&brew);
 
         // Assert
         assert_eq!(
@@ -276,7 +283,7 @@ end
     }
 
     #[test]
-    fn create_brew_all_test() {
+    fn serialize_brew_all_test() {
         // Arrange
         let macos = Package {
             url: "https://github.com/aegoroff/solt/releases/download/v1.0.7/solt_1.0.7_darwin_amd64.tar.gz".to_string(),
@@ -298,7 +305,7 @@ end
         };
 
         // Act
-        let result = create_brew(&brew);
+        let result = serialize_brew(&brew);
 
         // Assert
         assert_eq!(

@@ -2,6 +2,7 @@
 extern crate clap;
 
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use std::option::Option::Some;
 
 use releaser::brew;
 use releaser::workflow::{Crate, Release, Workspace};
@@ -35,14 +36,14 @@ fn single_crate(cmd: &ArgMatches) {
 }
 
 fn brew(cmd: &ArgMatches) {
-    let owner = cmd.value_of("owner").unwrap_or("");
-    let tap = cmd.value_of("tap").unwrap_or("");
-    let tap_uri = format!("https://github.com/{}/{}.git", owner, tap);
-
     let crate_path = cmd.value_of("crate").unwrap_or("");
     let linux_path = cmd.value_of("linux").unwrap_or("");
     let macos_path = cmd.value_of("macos").unwrap_or("");
-    brew::publish(tap_uri, crate_path, linux_path, macos_path);
+    let base_uri = cmd.value_of("base").unwrap_or("");
+    let b = brew::new_brew(crate_path, linux_path, macos_path, base_uri);
+    if let Some(b) = b {
+        println!("{}", b);
+    }
 }
 
 fn release<R>(cmd: &ArgMatches, release: R)
@@ -147,19 +148,11 @@ fn build_cli() -> App<'static, 'static> {
                         .required(false),
                 )
                 .arg(
-                    Arg::with_name("owner")
-                        .long("owner")
-                        .short("o")
+                    Arg::with_name("base")
+                        .long("base")
+                        .short("b")
                         .takes_value(true)
-                        .help("Brew tap owner")
-                        .required(true),
-                )
-                .arg(
-                    Arg::with_name("tap")
-                        .long("tap")
-                        .short("t")
-                        .takes_value(true)
-                        .help("Brew tap")
+                        .help("Base URI of downloaded artifacts")
                         .required(true),
                 ),
         );
