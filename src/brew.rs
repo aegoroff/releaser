@@ -101,9 +101,12 @@ pub fn new_brew(
 fn new_binary_pkg(path: &str, base_uri: &str) -> Option<Package> {
     let sha256 = calculate_sha256(path);
     let mut resource = Resource::new(base_uri)?;
-    sha256.map(|(h, f)| Package {
-        url: resource.append_path(f.to_str().unwrap()),
-        hash: h,
+    sha256.map(|(h, f)| {
+        let file = f.file_name().unwrap().to_str().unwrap();
+        Package {
+            url: resource.append_path(file),
+            hash: h,
+        }
     })
 }
 
