@@ -155,6 +155,39 @@ mod tests {
     use super::*;
 
     #[test]
+    fn uppercase_first_letter_test() {
+        // Arrange
+
+        // Act
+        let r = uppercase_first_letter("test");
+
+        // Assert
+        assert_eq!(r, "Test");
+    }
+
+    #[test]
+    fn uppercase_first_letter_test_already_uppercased() {
+        // Arrange
+
+        // Act
+        let r = uppercase_first_letter("Test");
+
+        // Assert
+        assert_eq!(r, "Test");
+    }
+
+    #[test]
+    fn uppercase_first_letter_test_empty_string() {
+        // Arrange
+
+        // Act
+        let r = uppercase_first_letter("");
+
+        // Assert
+        assert_eq!(r, "");
+    }
+
+    #[test]
     fn serialize_brew_no_packages_test() {
         // Arrange
         let brew = Brew {
