@@ -1,15 +1,15 @@
 extern crate ansi_term;
 
-use std::{thread, time};
 use std::path::PathBuf;
+use std::{thread, time};
 
 use ansi_term::Colour::Green;
 use semver::Version;
 use vfs::{FileSystem, PhysicalFS};
 
-use crate::{cargo, CARGO_CONFIG, CrateConfig};
-use crate::{Increment, VersionIter};
 use crate::git;
+use crate::{cargo, CrateConfig, CARGO_CONFIG};
+use crate::{Increment, VersionIter};
 
 pub trait Release {
     fn release(&self, path: &str, incr: Increment) -> crate::Result<()>;

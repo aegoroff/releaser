@@ -4,8 +4,8 @@ extern crate clap;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 use releaser::brew;
-use releaser::Increment;
 use releaser::workflow::{Crate, Release, Workspace};
+use releaser::Increment;
 
 const PATH: &str = "PATH";
 const INCR: &str = "INCR";

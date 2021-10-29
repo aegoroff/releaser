@@ -1,13 +1,14 @@
 use std::fs;
+use std::option::Option::Some;
 use std::path::PathBuf;
 
 use handlebars::Handlebars;
 use serde::Serialize;
 use vfs::PhysicalFS;
 
-use crate::CrateConfig;
 use crate::hash;
 use crate::workflow::Crate;
+use crate::CrateConfig;
 
 #[derive(Serialize, Default)]
 pub struct Brew {
@@ -70,43 +71,51 @@ end
 "###;
 
 // TODO: implement this
-pub fn publish(_tap_uri: String, crate_path: &str, linux_path: &str, _macos_path: &str) {
+pub fn publish(_tap_uri: String, crate_path: &str, linux_path: &str, macos_path: &str) {
     let (fs, file_in_fs) = Crate::new_crate_config_source(crate_path);
     let config = CrateConfig::open(&fs, file_in_fs.to_str().unwrap_or_default());
-    let linux_dir = fs::read_dir(linux_path);
-    match linux_dir {
-        Ok(d) => {
-            let file = d
-                .filter(|f| f.is_ok())
-                .map(|x| x.unwrap())
-                .map(|x| x.path())
-                .find(|x| x.extension().is_some() && x.extension().unwrap().eq("gz"))
-                .unwrap_or_default();
 
-            let file = file.to_str().unwrap();
-
-            let root_path = PathBuf::from(linux_path);
-            let fs = PhysicalFS::new(root_path);
-            hash::calculate_sha256(file, &fs).unwrap_or_default();
-        }
-        Err(_) => {}
+    if let Ok(c) = config {
+        let name = c.package.name;
+        let brew = Brew {
+            formula: uppercase_first_letter(&name),
+            name,
+            description: c.package.description.unwrap_or_default(),
+            homepage: None,
+            version: c.package.version,
+            license: c.package.license.unwrap_or_default(),
+            linux: new_binary_pkg(linux_path),
+            macos: new_binary_pkg(macos_path),
+        };
+        create_brew(&brew);
     }
-    match config {
-        Ok(c) => {
-            let name = c.package.name;
-            let brew = Brew {
-                formula: uppercase_first_letter(&name),
-                name,
-                description: c.package.description.unwrap_or_default(),
-                homepage: None,
-                version: c.package.version,
-                license: c.package.license.unwrap_or_default(),
-                linux: None,
-                macos: None,
-            };
-            create_brew(&brew);
-        }
-        Err(_) => {}
+}
+
+fn new_binary_pkg(path: &str) -> Option<Package> {
+    let sha256 = calculate_sha256(path);
+    sha256.map(|h| Package {
+        url: String::new(),
+        hash: h,
+    })
+}
+
+fn calculate_sha256(dir: &str) -> Option<String> {
+    let dir_content = fs::read_dir(dir);
+    if let Ok(d) = dir_content {
+        let file = d
+            .filter(|f| f.is_ok())
+            .map(|x| x.unwrap())
+            .map(|x| x.path())
+            .find(|x| x.extension().is_some() && x.extension().unwrap().eq("gz"))
+            .unwrap_or_default();
+
+        let file = file.to_str().unwrap();
+
+        let root_path = PathBuf::from(dir);
+        let fs = PhysicalFS::new(root_path);
+        Some(hash::calculate_sha256(file, &fs).unwrap_or_default())
+    } else {
+        None
     }
 }
 

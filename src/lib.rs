@@ -16,7 +16,7 @@ use petgraph::algo::DfsSpace;
 use petgraph::graphmap::DiGraphMap;
 use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
-use toml_edit::{Document, value};
+use toml_edit::{value, Document};
 use vfs::FileSystem;
 
 pub mod brew;
