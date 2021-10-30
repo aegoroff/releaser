@@ -54,7 +54,7 @@ fn brew(cmd: &ArgMatches) {
                 let result = std::fs::write(path, b);
                 match result {
                     Ok(_) => {}
-                    Err(e) => println!("{}", e)
+                    Err(e) => println!("{}", e),
                 }
             }
         }
