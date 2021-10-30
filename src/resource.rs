@@ -25,7 +25,13 @@ impl Resource {
                     .filter(|x| !x.is_empty())
                     .map(|x| x.trim_matches('/'))
                     .join("/");
-                self.url.set_path(&p);
+
+                if path.len() > 1 && &path[path.len() - 1..path.len()] == "/" {
+                    let p = p + "/";
+                    self.url.set_path(&p);
+                } else {
+                    self.url.set_path(&p);
+                }
                 self.url.to_string()
             }
         }
@@ -59,50 +65,32 @@ mod tests {
     }
 
     #[test]
-    fn create_path_correct_as_expected() {
+    fn append_path_tests() {
         // Arrange
-        let mut r = Resource::new("http://localhost").unwrap();
+        let cases = vec![
+            (("http://localhost", "/x"), "http://localhost/x"),
+            (("http://localhost", "/x/"), "http://localhost/x/"),
+            (("http://localhost/", "/x/"), "http://localhost/x/"),
+            (("http://localhost/", "x/y"), "http://localhost/x/y"),
+            (("http://localhost/", "/x/y"), "http://localhost/x/y"),
+            (("http://localhost/x", "/y"), "http://localhost/x/y"),
+            (("http://localhost/x/", "/y"), "http://localhost/x/y"),
+            (("http://localhost/x/", "y"), "http://localhost/x/y"),
+            (("https://github.com/aegoroff/dirstat/releases/download/v1.0.7/", "dirstat_1.0.7_darwin_amd64.tar.gz"), "https://github.com/aegoroff/dirstat/releases/download/v1.0.7/dirstat_1.0.7_darwin_amd64.tar.gz"),
+            (("https://github.com/aegoroff/dirstat/releases/download/v1.0.7", "dirstat_1.0.7_darwin_amd64.tar.gz"), "https://github.com/aegoroff/dirstat/releases/download/v1.0.7/dirstat_1.0.7_darwin_amd64.tar.gz"),
+        ];
 
         // Act
-        let r = r.append_path("/x");
+        for (validator, input, expected) in table_test!(cases) {
+            let (base, path) = input;
+            let mut r = Resource::new(base).unwrap();
+            let actual = r.append_path(path);
 
-        // Assert
-        assert_eq!("http://localhost/x", r);
-    }
-
-    #[test]
-    fn create_path_base_no_trailed_slash_as_expected() {
-        // Arrange
-        let mut r = Resource::new("http://localhost/x").unwrap();
-
-        // Act
-        let r = r.append_path("/y");
-
-        // Assert
-        assert_eq!("http://localhost/x/y", r);
-    }
-
-    #[test]
-    fn create_path_base_trailed_slash_as_expected() {
-        // Arrange
-        let mut r = Resource::new("http://localhost/x/").unwrap();
-
-        // Act
-        let r = r.append_path("/y");
-
-        // Assert
-        assert_eq!("http://localhost/x/y", r);
-    }
-
-    #[test]
-    fn create_path_base_trailed_slash_append_plain_as_expected() {
-        // Arrange
-        let mut r = Resource::new("http://localhost/x/").unwrap();
-
-        // Act
-        let r = r.append_path("y");
-
-        // Assert
-        assert_eq!("http://localhost/x/y", r);
+            validator
+                .given(&format!("base: {} path: {}", base, path))
+                .when("append_path")
+                .then(&format!("it should be {:#?}", expected))
+                .assert_eq(expected, &actual);
+        }
     }
 }

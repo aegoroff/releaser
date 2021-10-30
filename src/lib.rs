@@ -27,6 +27,14 @@ pub mod hash;
 mod resource;
 pub mod workflow;
 
+#[cfg(test)] // <-- not needed in integration tests
+#[macro_use]
+extern crate spectral;
+
+#[cfg(test)] // <-- not needed in integration tests
+#[macro_use]
+extern crate table_test;
+
 pub type AnyError = Box<dyn std::error::Error>;
 pub type Result<T> = core::result::Result<T, AnyError>;
 

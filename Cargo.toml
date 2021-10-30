@@ -23,3 +23,7 @@ sha2 = "0.9.8"
 hex = "0.4.3"
 url = "2.2.2"
 itertools = "0.10.1"
+
+[dev-dependencies]
+table-test = "0.2.1"
+spectral = "0.6.0"
