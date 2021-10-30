@@ -5,6 +5,7 @@ use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use std::option::Option::Some;
 
 use releaser::brew;
+use releaser::scoop;
 use releaser::workflow::{Crate, Release, Workspace};
 use releaser::Increment;
 
@@ -19,6 +20,7 @@ fn main() {
         ("w", Some(cmd)) => workspace(cmd),
         ("c", Some(cmd)) => single_crate(cmd),
         ("b", Some(cmd)) => brew(cmd),
+        ("s", Some(cmd)) => scoop(cmd),
         _ => {}
     }
 }
@@ -46,7 +48,20 @@ fn brew(cmd: &ArgMatches) {
     let crate_path = cmd.value_of("crate").unwrap_or("");
     let base_uri = cmd.value_of("base").unwrap_or("");
     let b = brew::new_brew(crate_path, linux_path, macos_path, base_uri);
-    if let Some(b) = b {
+    output_string(cmd, b)
+}
+
+fn scoop(cmd: &ArgMatches) {
+    let exe_name = cmd.value_of("exe").unwrap_or("");
+    let binary_path = cmd.value_of("binary").unwrap_or("");
+    let crate_path = cmd.value_of("crate").unwrap_or("");
+    let base_uri = cmd.value_of("base").unwrap_or("");
+    let scoop = scoop::new_scoop(crate_path, binary_path, exe_name, base_uri);
+    output_string(cmd, scoop)
+}
+
+fn output_string(cmd: &ArgMatches, s: Option<String>) {
+    if let Some(b) = s {
         let output_path = cmd.value_of("output");
         match output_path {
             None => println!("{}", b),
@@ -161,6 +176,51 @@ fn build_cli() -> App<'static, 'static> {
                         .takes_value(true)
                         .help("Sets Mac OS package path")
                         .required(false),
+                )
+                .arg(
+                    Arg::with_name("base")
+                        .long("base")
+                        .short("b")
+                        .takes_value(true)
+                        .help("Base URI of downloaded artifacts")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("output")
+                        .long("output")
+                        .short("u")
+                        .takes_value(true)
+                        .help("File path to save result to. If not set result will be written into stdout")
+                        .required(false),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("s")
+                .aliases(&["scoop"])
+                .about("Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)")
+                .arg(
+                    Arg::with_name("crate")
+                        .long("crate")
+                        .short("c")
+                        .takes_value(true)
+                        .help("Sets crate's path to get formula's data")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("binary")
+                        .long("binary")
+                        .short("i")
+                        .takes_value(true)
+                        .help("Sets binary package path")
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("exe")
+                        .long("exe")
+                        .short("e")
+                        .takes_value(true)
+                        .help("Sets windows executable name")
+                        .required(true),
                 )
                 .arg(
                     Arg::with_name("base")

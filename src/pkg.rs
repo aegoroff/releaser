@@ -1,9 +1,9 @@
-use std::path::PathBuf;
-use std::fs;
-use vfs::PhysicalFS;
 use crate::hash;
 use crate::resource::Resource;
 use serde::Serialize;
+use std::fs;
+use std::path::PathBuf;
+use vfs::PhysicalFS;
 
 #[derive(Serialize, Default)]
 pub struct Package {

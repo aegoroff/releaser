@@ -3,10 +3,10 @@ use std::option::Option::Some;
 use handlebars::Handlebars;
 use serde::Serialize;
 
-use crate::{pkg};
+use crate::pkg;
+use crate::pkg::Package;
 use crate::workflow::Crate;
 use crate::CrateConfig;
-use crate::pkg::Package;
 
 #[derive(Serialize, Default)]
 pub struct Brew {

@@ -24,9 +24,10 @@ pub mod brew;
 mod cargo;
 mod git;
 pub mod hash;
-mod resource;
-pub mod workflow;
 mod pkg;
+mod resource;
+pub mod scoop;
+pub mod workflow;
 
 #[cfg(test)] // <-- not needed in integration tests
 #[macro_use]
