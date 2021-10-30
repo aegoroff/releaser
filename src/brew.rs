@@ -39,6 +39,7 @@ class {{ formula }} < Formula
   {{#if license }}
   license "{{ license }}"
   {{/if}}
+  bottle :unneeded
   {{#if macos }}
 {{lines 1}}
   on_macos do
@@ -215,6 +216,7 @@ class Solv < Formula
   homepage ""
   version "v0.4.0"
   license "MIT"
+  bottle :unneeded
 end
 "###,
             result
@@ -252,6 +254,7 @@ class Solv < Formula
   homepage ""
   version "v0.4.0"
   license "MIT"
+  bottle :unneeded
 
   on_macos do
     if Hardware::CPU.intel?
@@ -301,6 +304,7 @@ class Solv < Formula
   homepage ""
   version "v0.4.0"
   license "MIT"
+  bottle :unneeded
 
   on_linux do
     if Hardware::CPU.intel?
@@ -354,6 +358,7 @@ class Solv < Formula
   homepage ""
   version "v0.4.0"
   license "MIT"
+  bottle :unneeded
 
   on_macos do
     if Hardware::CPU.intel?
