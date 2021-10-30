@@ -123,7 +123,7 @@ fn calculate_sha256(dir: &str) -> Option<(String, PathBuf)> {
 
         let root_path = PathBuf::from(dir);
         let fs = PhysicalFS::new(root_path);
-        let hash = hash::calculate_sha256(file.to_str().unwrap(), &fs).unwrap_or_default();
+        let hash = hash::calculate_sha256(file.file_name().unwrap_or_default().to_str().unwrap(), &fs).unwrap_or_default();
         Some((hash, file))
     } else {
         None
