@@ -103,8 +103,9 @@ fn new_binary_pkg(path: &str, base_uri: &str) -> Option<Package> {
     let mut resource = Resource::new(base_uri)?;
     sha256.map(|(h, f)| {
         let file = f.file_name().unwrap().to_str().unwrap();
+        resource.append_path(file);
         Package {
-            url: resource.append_path(file),
+            url: resource.to_string(),
             hash: h,
         }
     })

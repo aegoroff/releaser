@@ -1,6 +1,7 @@
 extern crate url;
 
 use self::url::Url;
+use core::fmt;
 use itertools::Itertools;
 
 pub struct Resource {
@@ -16,9 +17,12 @@ impl Resource {
         }
     }
 
-    pub fn append_path(&mut self, path: &str) -> String {
+    pub fn append_path(&mut self, path: &str) {
         match self.url.path_segments() {
-            None => self.url.join(path).unwrap().to_string(),
+            None => {
+                let r = self.url.join(path);
+                if r.is_ok() {}
+            }
             Some(segments) => {
                 let p = segments
                     .chain(std::iter::once(path))
@@ -32,15 +36,21 @@ impl Resource {
                 } else {
                     self.url.set_path(&p);
                 }
-                self.url.to_string()
             }
         }
+    }
+}
+
+impl std::fmt::Display for Resource {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.url)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use spectral::prelude::*;
 
     #[test]
     fn new_correct_some() {
@@ -50,7 +60,7 @@ mod tests {
         let r = Resource::new("http://localhost");
 
         // Assert
-        assert!(r.is_some());
+        assert_that!(r.is_some()).is_true();
     }
 
     #[test]
@@ -61,7 +71,7 @@ mod tests {
         let r = Resource::new("http/localhost");
 
         // Assert
-        assert!(r.is_none());
+        assert_that!(r.is_none()).is_true();
     }
 
     #[test]
@@ -84,7 +94,8 @@ mod tests {
         for (validator, input, expected) in table_test!(cases) {
             let (base, path) = input;
             let mut r = Resource::new(base).unwrap();
-            let actual = r.append_path(path);
+            r.append_path(path);
+            let actual = r.to_string();
 
             validator
                 .given(&format!("base: {} path: {}", base, path))
