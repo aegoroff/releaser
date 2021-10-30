@@ -154,6 +154,14 @@ fn build_cli() -> App<'static, 'static> {
                         .takes_value(true)
                         .help("Base URI of downloaded artifacts")
                         .required(true),
+                )
+                .arg(
+                    Arg::with_name("output")
+                        .long("output")
+                        .short("u")
+                        .takes_value(true)
+                        .help("File path to save result to. If not set result wiil be written into stdout")
+                        .required(false),
                 ),
         );
 }
