@@ -285,7 +285,7 @@ pub enum Place {
     Dependency(String, String),
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Increment {
     Major,
     Minor,
@@ -297,6 +297,7 @@ mod tests {
     use vfs::MemoryFS;
 
     use super::*;
+    use spectral::prelude::*;
 
     #[test]
     fn read_workspace_test() {
@@ -309,7 +310,7 @@ mod tests {
         let versions = it.count();
 
         // Assert
-        assert_eq!(2, versions);
+        assert_that!(versions).is_equal_to(2);
     }
 
     #[test]
@@ -324,67 +325,60 @@ mod tests {
         let result = VersionIter::open(conf, &fs);
 
         // Assert
-        assert!(result.is_err())
+        assert_that!(result.is_err()).is_true();
     }
 
     #[test]
-    fn update_workspace_patch_test() {
+    fn update_workspace_version_change_tests() {
+        // Arrange
+        let cases = vec![
+            (Increment::Patch, "0.1.14"),
+            (Increment::Minor, "0.2.0"),
+            (Increment::Major, "1.0.0"),
+        ];
+
+        // Act
+        for (validator, input, expected) in table_test!(cases) {
+            let fs = new_file_system();
+            let conf = PathBuf::from("/").join(CARGO_CONFIG);
+            let mut it = VersionIter::open(conf, &fs).unwrap();
+            let actual = update_configs(&fs, &mut it, input).unwrap().to_string();
+
+            validator
+                .given(&format!("Increment: {:#?}", input))
+                .when("update_configs")
+                .then(&format!("it should be {}", expected))
+                .assert_eq(expected, &actual);
+        }
+    }
+
+    #[test]
+    fn version_iter_topo_sort_test() {
         // Arrange
         let fs = new_file_system();
         let conf = PathBuf::from("/").join(CARGO_CONFIG);
         let mut it = VersionIter::open(conf, &fs).unwrap();
+        let actual = update_configs(&fs, &mut it, Increment::Minor);
 
         // Act
-        let result = update_configs(&fs, &mut it, Increment::Patch);
+        let sorted = it.topo_sort();
 
         // Assert
-        assert!(result.is_ok());
-        assert_eq!("0.1.14", result.unwrap().to_string());
-        assert_updated_files(&fs, "0.1.14");
-        assert_eq!(2, it.graph.node_count());
-        assert_eq!(1, it.graph.edge_count());
-        let sorted = it.topo_sort();
+        assert_that!(actual).is_ok();
         assert_eq!(vec!["solp", "solv"], sorted);
-    }
 
-    #[test]
-    fn update_workspace_minor_test() {
-        // Arrange
-        let fs = new_file_system();
-        let conf = PathBuf::from("/").join(CARGO_CONFIG);
-        let mut it = VersionIter::open(conf, &fs).unwrap();
-
-        // Act
-        let result = update_configs(&fs, &mut it, Increment::Minor);
-
-        // Assert
-        assert!(result.is_ok());
-        assert_eq!("0.2.0", result.unwrap().to_string());
-        assert_updated_files(&fs, "0.2.0");
-        assert_eq!(2, it.graph.node_count());
-        assert_eq!(1, it.graph.edge_count());
-        let sorted = it.topo_sort();
-        assert_eq!(vec!["solp", "solv"], sorted);
-    }
-
-    #[test]
-    fn update_workspace_major_test() {
-        // Arrange
-        let fs = new_file_system();
-        let conf = PathBuf::from("/").join(CARGO_CONFIG);
-        let mut it = VersionIter::open(conf, &fs).unwrap();
-
-        // Act
-        let result = update_configs(&fs, &mut it, Increment::Major);
-
-        // Assert
-        assert!(result.is_ok());
-        assert_eq!("1.0.0", result.unwrap().to_string());
-        assert_updated_files(&fs, "1.0.0");
-        assert_eq!(2, it.graph.node_count());
-        assert_eq!(1, it.graph.edge_count());
-        let sorted = it.topo_sort();
-        assert_eq!(vec!["solp", "solv"], sorted);
+        let it = VersionIter::open(PathBuf::from("/").join(CARGO_CONFIG), &fs).unwrap();
+        let versions: Vec<String> = it
+            .map(|v| v.places)
+            .flatten()
+            .map(|p| {
+                return match p {
+                    Place::Package(s) => s,
+                    Place::Dependency(_, s) => s,
+                };
+            })
+            .collect();
+        assert_eq!(vec!["0.2.0", "0.2.0", "0.2.0"], versions)
     }
 
     #[test]
@@ -507,21 +501,6 @@ a = { path = "../a/", version = "0.1.0" }
             assert!(o.contains_key(VERSION));
             assert!(o.contains_key("path"));
         }
-    }
-
-    fn assert_updated_files(fs: &MemoryFS, ver: &str) {
-        let it = VersionIter::open(PathBuf::from("/").join(CARGO_CONFIG), fs).unwrap();
-        let versions: Vec<String> = it
-            .map(|v| v.places)
-            .flatten()
-            .map(|p| {
-                return match p {
-                    Place::Package(s) => s,
-                    Place::Dependency(_, s) => s,
-                };
-            })
-            .collect();
-        assert_eq!(vec![ver, ver, ver], versions)
     }
 
     fn new_file_system() -> MemoryFS {
