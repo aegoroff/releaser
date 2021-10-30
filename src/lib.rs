@@ -26,6 +26,7 @@ mod git;
 pub mod hash;
 mod resource;
 pub mod workflow;
+mod pkg;
 
 #[cfg(test)] // <-- not needed in integration tests
 #[macro_use]
