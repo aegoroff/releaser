@@ -86,7 +86,7 @@ pub fn new_brew(
             formula: uppercase_first_letter(&name),
             name,
             description: c.package.description.unwrap_or_default(),
-            homepage: None,
+            homepage: c.package.homepage,
             version: c.package.version,
             license: c.package.license.unwrap_or_default(),
             linux: new_binary_pkg(linux_path, base_uri),

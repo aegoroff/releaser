@@ -254,6 +254,7 @@ struct Package {
     version: String,
     description: Option<String>,
     license: Option<String>,
+    homepage: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
