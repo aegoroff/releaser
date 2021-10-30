@@ -39,6 +39,11 @@ fn brew(cmd: &ArgMatches) {
     let crate_path = cmd.value_of("crate").unwrap_or("");
     let linux_path = cmd.value_of("linux").unwrap_or("");
     let macos_path = cmd.value_of("macos").unwrap_or("");
+
+    if linux_path.is_empty() && macos_path.is_empty() {
+        return;
+    }
+
     let base_uri = cmd.value_of("base").unwrap_or("");
     let b = brew::new_brew(crate_path, linux_path, macos_path, base_uri);
     if let Some(b) = b {
