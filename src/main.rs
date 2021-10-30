@@ -36,7 +36,6 @@ fn single_crate(cmd: &ArgMatches) {
 }
 
 fn brew(cmd: &ArgMatches) {
-    let crate_path = cmd.value_of("crate").unwrap_or("");
     let linux_path = cmd.value_of("linux").unwrap_or("");
     let macos_path = cmd.value_of("macos").unwrap_or("");
 
@@ -44,10 +43,21 @@ fn brew(cmd: &ArgMatches) {
         return;
     }
 
+    let crate_path = cmd.value_of("crate").unwrap_or("");
     let base_uri = cmd.value_of("base").unwrap_or("");
     let b = brew::new_brew(crate_path, linux_path, macos_path, base_uri);
     if let Some(b) = b {
-        println!("{}", b);
+        let output_path = cmd.value_of("output");
+        match output_path {
+            None => println!("{}", b),
+            Some(path) => {
+                let result = std::fs::write(path, b);
+                match result {
+                    Ok(_) => {}
+                    Err(e) => println!("{}", e)
+                }
+            }
+        }
     }
 }
 
