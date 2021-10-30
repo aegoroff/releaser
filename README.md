@@ -81,7 +81,7 @@ only)
 Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)
 
 USAGE:
-    releaser.exe b [OPTIONS] --base <base> --crate <crate>
+    releaser b [OPTIONS] --base <base> --crate <crate>
 
 FLAGS:
     -h, --help       Prints help information
@@ -92,5 +92,21 @@ OPTIONS:
     -c, --crate <crate>      Sets crate's path to get formula's data
     -l, --linux <linux>      Sets linux package path
     -m, --macos <macos>      Sets Mac OS package path
+    -u, --output <output>    File path to save result to. If not set result will be written into stdout
+```
+Creating scoop package manager JSON definition file to publish it into a bucket (Windows only)
+```
+USAGE:
+    releaser s [OPTIONS] --base <base> --binary <binary> --crate <crate> --exe <exe>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -b, --base <base>        Base URI of downloaded artifacts
+    -i, --binary <binary>    Sets 64-bit binary package path
+    -c, --crate <crate>      Sets crate's path to get formula's data
+    -e, --exe <exe>          Sets Windows executable name
     -u, --output <output>    File path to save result to. If not set result will be written into stdout
 ```

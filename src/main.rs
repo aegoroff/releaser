@@ -211,7 +211,7 @@ fn build_cli() -> App<'static, 'static> {
                         .long("binary")
                         .short("i")
                         .takes_value(true)
-                        .help("Sets binary package path")
+                        .help("Sets 64-bit binary package path")
                         .required(true),
                 )
                 .arg(
@@ -219,7 +219,7 @@ fn build_cli() -> App<'static, 'static> {
                         .long("exe")
                         .short("e")
                         .takes_value(true)
-                        .help("Sets windows executable name")
+                        .help("Sets Windows executable name")
                         .required(true),
                 )
                 .arg(
