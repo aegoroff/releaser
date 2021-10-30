@@ -137,13 +137,13 @@ fn build_cli() -> App<'static, 'static> {
         .subcommand(
             SubCommand::with_name("b")
                 .aliases(&["brew"])
-                .about("Publish brew into tap")
+                .about("Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)")
                 .arg(
                     Arg::with_name("crate")
                         .long("crate")
                         .short("c")
                         .takes_value(true)
-                        .help("Sets crate's path to publish")
+                        .help("Sets crate's path to get formula's data")
                         .required(true),
                 )
                 .arg(
@@ -175,7 +175,7 @@ fn build_cli() -> App<'static, 'static> {
                         .long("output")
                         .short("u")
                         .takes_value(true)
-                        .help("File path to save result to. If not set result wiil be written into stdout")
+                        .help("File path to save result to. If not set result will be written into stdout")
                         .required(false),
                 ),
         );

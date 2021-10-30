@@ -29,13 +29,15 @@ Command line syntax:
 Rust releasing workspace tool
 
 USAGE:
-    releaser [SUBCOMMAND]
+    releaser.exe [SUBCOMMAND]
 
 FLAGS:
     -h, --help       Prints help information
     -V, --version    Prints version information
 
 SUBCOMMANDS:
+    b       Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux
+            only)
     c       Release single crate specified by path
     help    Prints this message or the help of the given subcommand(s)
     w       Release workspace specified by path
@@ -72,4 +74,23 @@ FLAGS:
 ARGS:
     <INCR>    Version increment. One of the following: major, minor or patch
     <PATH>    Sets crate's root path
+```
+Creating brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux
+only)
+```
+Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)
+
+USAGE:
+    releaser.exe b [OPTIONS] --base <base> --crate <crate>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+OPTIONS:
+    -b, --base <base>        Base URI of downloaded artifacts
+    -c, --crate <crate>      Sets crate's path to get formula's data
+    -l, --linux <linux>      Sets linux package path
+    -m, --macos <macos>      Sets Mac OS package path
+    -u, --output <output>    File path to save result to. If not set result will be written into stdout
 ```
