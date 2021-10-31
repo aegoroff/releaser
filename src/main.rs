@@ -63,6 +63,7 @@ fn scoop(cmd: &ArgMatches) {
 enum ErrorCode {
     NoOutputProduced = 1,
     FileWriteError = 2,
+    ReleaseError = 3,
 }
 
 fn output_string(cmd: &ArgMatches, s: Option<String>) {
@@ -77,7 +78,7 @@ fn output_string(cmd: &ArgMatches, s: Option<String>) {
                     match result {
                         Ok(_) => {}
                         Err(e) => {
-                            println!("{}", e);
+                            eprintln!("{}", e);
                             std::process::exit(ErrorCode::FileWriteError as i32);
                         }
                     }
@@ -107,7 +108,10 @@ where
 
     match release.release(path, inc.unwrap()) {
         Ok(()) => {}
-        Err(e) => eprintln!("Error: {}", e),
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            std::process::exit(ErrorCode::ReleaseError as i32);
+        }
     }
 }
 
