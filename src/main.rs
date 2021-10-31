@@ -158,7 +158,7 @@ fn build_cli() -> App<'static, 'static> {
                         .long("crate")
                         .short("c")
                         .takes_value(true)
-                        .help("Sets crate's path to get formula's data")
+                        .help("Sets crate's path where Cargo.toml located")
                         .required(true),
                 )
                 .arg(
@@ -166,7 +166,7 @@ fn build_cli() -> App<'static, 'static> {
                         .long("linux")
                         .short("l")
                         .takes_value(true)
-                        .help("Sets linux package path")
+                        .help("Sets Linux package directory path")
                         .required(false),
                 )
                 .arg(
@@ -174,7 +174,7 @@ fn build_cli() -> App<'static, 'static> {
                         .long("macos")
                         .short("m")
                         .takes_value(true)
-                        .help("Sets Mac OS package path")
+                        .help("Sets Mac OS package directory path")
                         .required(false),
                 )
                 .arg(
@@ -203,7 +203,7 @@ fn build_cli() -> App<'static, 'static> {
                         .long("crate")
                         .short("c")
                         .takes_value(true)
-                        .help("Sets crate's path to get formula's data")
+                        .help("Sets crate's path where Cargo.toml located")
                         .required(true),
                 )
                 .arg(
@@ -211,7 +211,7 @@ fn build_cli() -> App<'static, 'static> {
                         .long("binary")
                         .short("i")
                         .takes_value(true)
-                        .help("Sets 64-bit binary package path")
+                        .help("Sets 64-bit binary package directory path")
                         .required(true),
                 )
                 .arg(

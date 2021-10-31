@@ -3,7 +3,7 @@
 
 # Installation
 Install Rust and then run:
-```
+```shell
 cargo install releaser
 ```
 # Rust workspace release procedure
@@ -23,8 +23,7 @@ cargo install releaser
 5. Run **cargo publish --manifest-path …**
 6. Push git tag
 
-Command line syntax:
---------------------
+# Command line syntax:
 ```
 Rust releasing workspace tool
 
@@ -89,9 +88,9 @@ FLAGS:
 
 OPTIONS:
     -b, --base <base>        Base URI of downloaded artifacts
-    -c, --crate <crate>      Sets crate's path to get formula's data
-    -l, --linux <linux>      Sets linux package path
-    -m, --macos <macos>      Sets Mac OS package path
+    -c, --crate <crate>      Sets crate's path where Cargo.toml located
+    -l, --linux <linux>      Sets Linux package directory path
+    -m, --macos <macos>      Sets Mac OS package directory path
     -u, --output <output>    File path to save result to. If not set result will be written into stdout
 ```
 Creating scoop package manager JSON definition file to publish it into a bucket (Windows only)
@@ -105,8 +104,8 @@ FLAGS:
 
 OPTIONS:
     -b, --base <base>        Base URI of downloaded artifacts
-    -i, --binary <binary>    Sets 64-bit binary package path
-    -c, --crate <crate>      Sets crate's path to get formula's data
+    -i, --binary <binary>    Sets 64-bit binary package directory path
+    -c, --crate <crate>      Sets crate's path where Cargo.toml located
     -e, --exe <exe>          Sets Windows executable name
     -u, --output <output>    File path to save result to. If not set result will be written into stdout
 ```
