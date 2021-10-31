@@ -1,6 +1,7 @@
 use crate::hash;
 use crate::resource::Resource;
 use serde::Serialize;
+use std::ffi::OsStr;
 use std::fs;
 use std::path::PathBuf;
 use vfs::PhysicalFS;
@@ -34,11 +35,21 @@ fn calculate_sha256(dir: &str) -> Option<(String, PathBuf)> {
             .find(|x| x.extension().is_some() && x.extension().unwrap().eq("gz"))
             .unwrap_or_default();
 
+        let file_name: &OsStr;
+        match file.file_name() {
+            None => return None,
+            Some(f) => file_name = f,
+        }
+
         let root_path = PathBuf::from(dir);
         let fs = PhysicalFS::new(root_path);
-        let hash =
-            hash::calculate_sha256(file.file_name().unwrap_or_default().to_str().unwrap(), &fs)
-                .unwrap_or_default();
+        let hash = hash::calculate_sha256(
+            file_name
+                .to_str()
+                .expect("Correct file name expected but was invalid UTF-8 file name"),
+            &fs,
+        )
+        .unwrap_or_default();
         Some((hash, file))
     } else {
         None

@@ -83,7 +83,12 @@ pub fn new_brew(
             linux: pkg::new_binary_pkg(linux_path, base_uri),
             macos: pkg::new_binary_pkg(macos_path, base_uri),
         };
-        Some(serialize_brew(&brew))
+
+        if brew.linux.is_none() && brew.macos.is_none() {
+            None
+        } else {
+            Some(serialize_brew(&brew))
+        }
     } else {
         None
     }
