@@ -14,7 +14,7 @@ pub struct Scoop {
 #[derive(Serialize, Default)]
 pub struct Architecture {
     #[serde(rename(serialize = "64bit"))]
-    pub bin64bit: Binary,
+    pub x64: Binary,
 }
 
 #[derive(Serialize, Default)]
@@ -34,11 +34,11 @@ pub fn new_scoop(
     let config = CrateConfig::open(&fs, file_in_fs.to_str().unwrap_or_default());
 
     let binary = pkg::new_binary_pkg(binary_path, base_uri);
-    let pkg: Binary;
+    let x64pkg: Binary;
     match binary {
         None => return None,
         Some(p) => {
-            pkg = Binary {
+            x64pkg = Binary {
                 url: p.url,
                 hash: Some(p.hash),
                 bin: vec![executable_name.to_string()],
@@ -52,7 +52,7 @@ pub fn new_scoop(
             homepage: c.package.homepage,
             version: c.package.version,
             license: c.package.license.unwrap_or_default(),
-            architecture: Architecture { bin64bit: pkg },
+            architecture: Architecture { x64: x64pkg },
         };
         let result = serde_json::to_string_pretty(&scoop);
         match result {
