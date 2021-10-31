@@ -60,16 +60,27 @@ fn scoop(cmd: &ArgMatches) {
     output_string(cmd, scoop)
 }
 
+enum ErrorCode {
+    NoOutputProduced = 1,
+    FileWriteError = 2,
+}
+
 fn output_string(cmd: &ArgMatches, s: Option<String>) {
-    if let Some(b) = s {
-        let output_path = cmd.value_of("output");
-        match output_path {
-            None => println!("{}", b),
-            Some(path) => {
-                let result = std::fs::write(path, b);
-                match result {
-                    Ok(_) => {}
-                    Err(e) => println!("{}", e),
+    match s {
+        None => std::process::exit(ErrorCode::NoOutputProduced as i32),
+        Some(b) => {
+            let output_path = cmd.value_of("output");
+            match output_path {
+                None => println!("{}", b),
+                Some(path) => {
+                    let result = std::fs::write(path, b);
+                    match result {
+                        Ok(_) => {}
+                        Err(e) => {
+                            println!("{}", e);
+                            std::process::exit(ErrorCode::FileWriteError as i32);
+                        }
+                    }
                 }
             }
         }
