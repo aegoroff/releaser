@@ -5,6 +5,7 @@ use serde::Serialize;
 #[derive(Serialize, Default)]
 pub struct Scoop {
     pub description: String,
+    #[serde(rename(serialize = "64bit"), skip_serializing_if = "Option::is_none")]
     pub homepage: Option<String>,
     pub version: String,
     pub license: String,
