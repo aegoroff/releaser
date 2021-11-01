@@ -1,10 +1,10 @@
 use std::io::{BufReader, Read};
 
 use sha2::{Digest, Sha256};
-use vfs::{FileSystem, VfsError};
+use vfs::{VfsError, VfsPath};
 
-pub fn calculate_sha256<F: FileSystem>(path: &str, fs: &F) -> Result<String, VfsError> {
-    let file = fs.open_file(path)?;
+pub fn calculate_sha256(path: &VfsPath) -> Result<String, VfsError> {
+    let file = path.open_file()?;
     let mut reader = BufReader::new(file);
     let mut hasher = Sha256::new();
 
@@ -29,8 +29,6 @@ pub fn calculate_sha256<F: FileSystem>(path: &str, fs: &F) -> Result<String, Vfs
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
     use vfs::MemoryFS;
 
     use super::*;
@@ -38,18 +36,17 @@ mod tests {
     #[test]
     fn calculate_sha256_test() {
         // Arrange
-        let root_path = PathBuf::from("/");
-        let fs = MemoryFS::new();
-        fs.create_dir(root_path.to_str().unwrap()).unwrap();
-        let file_path = root_path.join("file.txt");
-        let file_path = file_path.to_str().unwrap();
-        fs.create_file(file_path)
+        let root: VfsPath = MemoryFS::new().into();
+        let file_path = root.join("file.txt");
+        let file_path = file_path.unwrap();
+        file_path
+            .create_file()
             .unwrap()
             .write_all("123".as_bytes())
             .unwrap();
 
         // Act
-        let hash = calculate_sha256(file_path, &fs).unwrap();
+        let hash = calculate_sha256(&file_path).unwrap();
 
         // Assert
         assert_eq!(

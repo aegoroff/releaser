@@ -1,10 +1,7 @@
 use crate::hash;
 use crate::resource::Resource;
 use serde::Serialize;
-use std::ffi::OsStr;
-use std::fs;
-use std::path::PathBuf;
-use vfs::PhysicalFS;
+use vfs::VfsPath;
 
 #[derive(Serialize, Default)]
 pub struct Package {
@@ -12,12 +9,11 @@ pub struct Package {
     pub hash: String,
 }
 
-pub fn new_binary_pkg(path: &str, base_uri: &str) -> Option<Package> {
+pub fn new_binary_pkg(path: &VfsPath, base_uri: &str) -> Option<Package> {
     let sha256 = calculate_sha256(path);
     let mut resource = Resource::new(base_uri)?;
     sha256.map(|(h, f)| {
-        let file = f.file_name().unwrap().to_str().unwrap();
-        resource.append_path(file);
+        resource.append_path(&f);
         Package {
             url: resource.to_string(),
             hash: h,
@@ -25,33 +21,46 @@ pub fn new_binary_pkg(path: &str, base_uri: &str) -> Option<Package> {
     })
 }
 
-fn calculate_sha256(dir: &str) -> Option<(String, PathBuf)> {
-    let dir_content = fs::read_dir(dir);
-    if let Ok(d) = dir_content {
-        let file = d
-            .filter(|f| f.is_ok())
-            .map(|x| x.unwrap())
-            .map(|x| x.path())
-            .find(|x| x.extension().is_some() && x.extension().unwrap().eq("gz"))
-            .unwrap_or_default();
+fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
+    let file_name = match path.read_dir() {
+        Ok(it) => it
+            .filter(|x| x.extension().is_some())
+            .find(|x| x.extension().unwrap().eq("gz")),
+        Err(_) => None,
+    };
 
-        let file_name: &OsStr;
-        match file.file_name() {
-            None => return None,
-            Some(f) => file_name = f,
+    match file_name {
+        None => None,
+        Some(f) => {
+            let hash = hash::calculate_sha256(&f).unwrap_or_default();
+            Some((hash, f.as_str().to_string()))
         }
+    }
+}
 
-        let root_path = PathBuf::from(dir);
-        let fs = PhysicalFS::new(root_path);
-        let hash = hash::calculate_sha256(
-            file_name
-                .to_str()
-                .expect("Correct file name expected but was invalid UTF-8 file name"),
-            &fs,
-        )
-        .unwrap_or_default();
-        Some((hash, file))
-    } else {
-        None
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use spectral::prelude::*;
+    use vfs::MemoryFS;
+
+    #[test]
+    fn new_binary_pkg_gz_file_exists_test() {
+        // Arrange
+        let root: VfsPath = MemoryFS::new().into();
+        let file_path = root.join("f.tar.gz").unwrap();
+        file_path
+            .create_file()
+            .unwrap()
+            .write_all("123".as_bytes())
+            .unwrap();
+
+        // Act
+        let p = new_binary_pkg(&root, "http://x").unwrap();
+
+        // Assert
+        assert_that!(p.hash.as_str())
+            .is_equal_to("a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3");
+        assert_that!(p.url.as_str()).is_equal_to("http://x/f.tar.gz");
     }
 }

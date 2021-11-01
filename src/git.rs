@@ -3,7 +3,7 @@ use std::process::Command;
 
 const TOOL: &str = "git";
 
-pub fn commit(message: &str, path: &str) -> io::Result<()> {
+pub fn commit(path: &str, message: &str) -> io::Result<()> {
     let mut child = Command::new(TOOL)
         .current_dir(path)
         .arg("commit")

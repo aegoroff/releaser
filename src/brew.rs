@@ -2,6 +2,8 @@ use std::option::Option::Some;
 
 use handlebars::Handlebars;
 use serde::Serialize;
+use std::path::PathBuf;
+use vfs::PhysicalFS;
 
 use crate::pkg;
 use crate::pkg::Package;
@@ -68,11 +70,16 @@ pub fn new_brew(
     macos_path: &str,
     base_uri: &str,
 ) -> Option<String> {
-    let (fs, file_in_fs) = Crate::new_crate_config_source(crate_path);
-    let config = CrateConfig::open(&fs, file_in_fs.to_str().unwrap_or_default());
+    let conf_fs = PhysicalFS::new(PathBuf::from(crate_path));
+    let crate_conf = Crate::open(conf_fs).unwrap();
+    let config = CrateConfig::open(&crate_conf);
 
     if let Ok(c) = config {
         let name = c.package.name;
+
+        let linux_root = PhysicalFS::new(PathBuf::from(linux_path)).into();
+        let macos_root = PhysicalFS::new(PathBuf::from(macos_path)).into();
+
         let brew = Brew {
             formula: uppercase_first_letter(&name),
             name,
@@ -80,8 +87,8 @@ pub fn new_brew(
             homepage: c.package.homepage,
             version: c.package.version,
             license: c.package.license.unwrap_or_default(),
-            linux: pkg::new_binary_pkg(linux_path, base_uri),
-            macos: pkg::new_binary_pkg(macos_path, base_uri),
+            linux: pkg::new_binary_pkg(&linux_root, base_uri),
+            macos: pkg::new_binary_pkg(&macos_root, base_uri),
         };
 
         if brew.linux.is_none() && brew.macos.is_none() {

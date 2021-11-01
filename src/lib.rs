@@ -11,14 +11,13 @@ extern crate toml_edit;
 extern crate vfs;
 
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 use petgraph::algo::DfsSpace;
 use petgraph::graphmap::DiGraphMap;
 use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
 use toml_edit::{value, Document};
-use vfs::FileSystem;
+use vfs::VfsPath;
 
 pub mod brew;
 mod cargo;
@@ -45,17 +44,16 @@ const VERSION: &str = "version";
 const PACK: &str = "package";
 const DEPS: &str = "dependencies";
 
-pub struct VersionIter<'a, F: FileSystem> {
+pub struct VersionIter<'a> {
     search: HashMap<String, usize>,
     members: Vec<String>,
-    workspace_config_path: PathBuf,
-    fs: &'a F,
+    workspace_config_path: &'a VfsPath,
     graph: DiGraphMap<usize, i32>,
 }
 
-impl<'a, F: FileSystem> VersionIter<'a, F> {
-    pub fn open(path: PathBuf, fs: &'a F) -> Result<Self> {
-        let mut wks_file = fs.open_file(path.to_str().unwrap_or_default())?;
+impl<'a> VersionIter<'a> {
+    pub fn open(path: &'a VfsPath) -> Result<Self> {
+        let mut wks_file = path.open_file()?;
         let mut wc = String::new();
         wks_file.read_to_string(&mut wc)?;
         let wks: WorkspaceConfig = toml::from_str(&wc)?;
@@ -74,7 +72,6 @@ impl<'a, F: FileSystem> VersionIter<'a, F> {
             search,
             members,
             workspace_config_path: path,
-            fs,
             graph,
         })
     }
@@ -97,21 +94,21 @@ impl<'a, F: FileSystem> VersionIter<'a, F> {
     }
 }
 
-impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
+impl<'a> Iterator for VersionIter<'a> {
     type Item = CrateVersion;
 
     fn next(&mut self) -> Option<Self::Item> {
         let member = self.members.pop()?;
         let root = self.workspace_config_path.parent()?;
-        let config_path = root.join(member).join(CARGO_CONFIG);
-        let config_path = config_path.to_str()?;
+        let config_path = root.join(&member).unwrap().join(CARGO_CONFIG);
+        let config_path = config_path.unwrap();
 
-        let conf = CrateConfig::open(self.fs, config_path).unwrap_or_default();
+        let conf = CrateConfig::open(&config_path).unwrap_or_default();
         if conf.package.version.is_empty() {
             return None;
         }
 
-        let mut item = conf.new_version(config_path);
+        let mut item = conf.new_version(member);
 
         let deps = conf
             .dependencies
@@ -142,16 +139,15 @@ impl<'a, F: FileSystem> Iterator for VersionIter<'a, F> {
     }
 }
 
-pub fn update_configs<F, I>(fs: &F, iter: &mut I, incr: Increment) -> Result<Version>
+pub fn update_configs<I>(path: &VfsPath, iter: &mut I, incr: Increment) -> Result<Version>
 where
-    F: FileSystem,
     I: Iterator<Item = CrateVersion>,
 {
     let result = Version::parse("0.0.0")?;
 
     let result = iter
         .by_ref()
-        .map(|config| update_config(fs, &config, incr))
+        .map(|config| update_config(path, &config, incr))
         .filter(|v| v.is_ok())
         .map(|r| r.unwrap())
         .fold(result, |r, v| r.max(v));
@@ -159,11 +155,18 @@ where
     Ok(result)
 }
 
-pub fn update_config<F>(fs: &F, version: &CrateVersion, incr: Increment) -> Result<Version>
-where
-    F: FileSystem,
-{
-    let mut file = fs.open_file(&version.path)?;
+pub fn update_config(path: &VfsPath, version: &CrateVersion, incr: Increment) -> Result<Version> {
+    let working_config_path: &VfsPath;
+    let member_config_path: VfsPath;
+    if version.path.is_empty() {
+        working_config_path = path;
+    } else {
+        let parent = path.parent().unwrap();
+        member_config_path = parent.join(&version.path)?.join(CARGO_CONFIG)?;
+        working_config_path = &member_config_path;
+    }
+
+    let mut file = working_config_path.open_file()?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
 
@@ -186,7 +189,7 @@ where
         }
     }
 
-    let mut f = fs.create_file(&version.path)?;
+    let mut f = working_config_path.create_file()?;
     let changed = doc.to_string();
     f.write_all(changed.as_bytes())?;
     Ok(result)
@@ -240,21 +243,18 @@ struct CrateConfig {
 }
 
 impl CrateConfig {
-    pub fn open<F: FileSystem>(fs: &F, path: &str) -> Result<Self> {
-        let mut file = fs.open_file(path)?;
+    pub fn open(path: &VfsPath) -> Result<Self> {
+        let mut file = path.open_file()?;
         let mut content = String::new();
         file.read_to_string(&mut content)?;
         let conf: CrateConfig = toml::from_str(&content).unwrap();
         Ok(conf)
     }
 
-    pub fn new_version(&self, path: &str) -> CrateVersion {
+    pub fn new_version(&self, path: String) -> CrateVersion {
         let places = vec![Place::Package(self.package.version.clone())];
 
-        CrateVersion {
-            path: String::from(path),
-            places,
-        }
+        CrateVersion { places, path }
     }
 }
 
@@ -296,7 +296,8 @@ pub enum Increment {
 
 #[cfg(test)]
 mod tests {
-    use vfs::MemoryFS;
+    use std::path::PathBuf;
+    use vfs::{FileSystem, MemoryFS};
 
     use super::*;
     use spectral::prelude::*;
@@ -305,8 +306,9 @@ mod tests {
     fn read_workspace_test() {
         // Arrange
         let fs = new_file_system();
-        let conf = PathBuf::from("/").join(CARGO_CONFIG);
-        let it = VersionIter::open(conf, &fs).unwrap();
+        let root: VfsPath = fs.into();
+        let conf = root.join(CARGO_CONFIG).unwrap();
+        let it = VersionIter::open(&conf).unwrap();
 
         // Act
         let versions = it.count();
@@ -321,10 +323,11 @@ mod tests {
         let root_path = PathBuf::from("/");
         let fs = MemoryFS::new();
         fs.create_dir(root_path.to_str().unwrap()).unwrap();
-        let conf = PathBuf::from("/").join(CARGO_CONFIG);
+        let root: VfsPath = fs.into();
+        let conf = root.join(CARGO_CONFIG).unwrap();
 
         // Act
-        let result = VersionIter::open(conf, &fs);
+        let result = VersionIter::open(&conf);
 
         // Assert
         assert_that!(result.is_err()).is_true();
@@ -342,9 +345,10 @@ mod tests {
         // Act
         for (validator, input, expected) in table_test!(cases) {
             let fs = new_file_system();
-            let conf = PathBuf::from("/").join(CARGO_CONFIG);
-            let mut it = VersionIter::open(conf, &fs).unwrap();
-            let actual = update_configs(&fs, &mut it, input).unwrap().to_string();
+            let root: VfsPath = fs.into();
+            let conf = root.join(CARGO_CONFIG).unwrap();
+            let mut it = VersionIter::open(&conf).unwrap();
+            let actual = update_configs(&conf, &mut it, input).unwrap().to_string();
 
             validator
                 .given(&format!("Increment: {:#?}", input))
@@ -358,18 +362,20 @@ mod tests {
     fn version_iter_topo_sort_test() {
         // Arrange
         let fs = new_file_system();
-        let conf = PathBuf::from("/").join(CARGO_CONFIG);
-        let mut it = VersionIter::open(conf, &fs).unwrap();
-        let actual = update_configs(&fs, &mut it, Increment::Minor);
+        let root: VfsPath = fs.into();
+        let conf = root.join(CARGO_CONFIG).unwrap();
+        let mut it = VersionIter::open(&conf).unwrap();
+        let actual = update_configs(&conf, &mut it, Increment::Minor);
 
         // Act
         let sorted = it.topo_sort();
 
         // Assert
         assert_that!(actual).is_ok();
+        assert_that!(actual.unwrap().minor).is_equal_to(2);
         assert_eq!(vec!["solp", "solv"], sorted);
 
-        let it = VersionIter::open(PathBuf::from("/").join(CARGO_CONFIG), &fs).unwrap();
+        let it = VersionIter::open(&conf).unwrap();
         let versions: Vec<String> = it
             .map(|v| v.places)
             .flatten()
@@ -460,11 +466,12 @@ a = { path = "../a/", version = "0.1.0" }
         ch_fn("c", C);
         ch_fn("d", D);
 
-        let conf = PathBuf::from("/").join(CARGO_CONFIG);
-        let mut it = VersionIter::open(conf, &fs).unwrap();
+        let root: VfsPath = fs.into();
+        let conf = root.join(CARGO_CONFIG).unwrap();
+        let mut it = VersionIter::open(&conf).unwrap();
 
         // Act
-        let result = update_configs(&fs, &mut it, Increment::Minor);
+        let result = update_configs(&conf, &mut it, Increment::Minor);
 
         // Assert
         assert!(result.is_ok());
