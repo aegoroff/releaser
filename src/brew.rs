@@ -5,9 +5,9 @@ use serde::Serialize;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};
 
-use crate::{new_cargo_config_path, pkg};
 use crate::pkg::Package;
 use crate::CrateConfig;
+use crate::{new_cargo_config_path, pkg};
 
 #[derive(Serialize, Default)]
 pub struct Brew {

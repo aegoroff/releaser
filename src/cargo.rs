@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[cfg(test)]
-use mockall::{automock, mock, predicate::*};
+use mockall::{automock, predicate::*};
 
 const TOOL: &str = "cargo";
 

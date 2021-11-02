@@ -1,4 +1,4 @@
-use crate::{pkg, CrateConfig, new_cargo_config_path};
+use crate::{new_cargo_config_path, pkg, CrateConfig};
 use serde::Serialize;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};

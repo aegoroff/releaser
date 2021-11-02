@@ -19,7 +19,7 @@ use vfs::{VfsPath, VfsResult};
 
 pub mod brew;
 pub mod cargo;
-mod git;
+pub mod git;
 pub mod hash;
 mod pkg;
 mod resource;

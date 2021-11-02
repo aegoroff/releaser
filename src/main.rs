@@ -8,6 +8,7 @@ use vfs::{PhysicalFS, VfsPath};
 
 use releaser::brew;
 use releaser::cargo::Cargo;
+use releaser::git::Git;
 use releaser::scoop;
 use releaser::workflow::{Crate, Release, Workspace};
 use releaser::Increment;
@@ -31,12 +32,12 @@ fn main() {
 fn workspace(cmd: &ArgMatches) {
     let delay_seconds = cmd.value_of("delay").unwrap_or("");
     let delay_seconds: u64 = delay_seconds.parse().unwrap_or(20);
-    let r = Workspace::new(delay_seconds, Cargo::default());
+    let r = Workspace::new(delay_seconds, Cargo::default(), Git::default());
     release(cmd, r);
 }
 
 fn single_crate(cmd: &ArgMatches) {
-    let r = Crate::new(Cargo::default());
+    let r = Crate::new(Cargo::default(), Git::default());
     release(cmd, r);
 }
 
