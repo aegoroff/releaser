@@ -3,6 +3,8 @@ use crate::resource::Resource;
 use serde::Serialize;
 use vfs::VfsPath;
 
+const PKG_EXTENSION: &'static str = "gz";
+
 #[derive(Serialize, Default)]
 pub struct Package {
     pub url: String,
@@ -25,7 +27,7 @@ fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
     let file_name = match path.read_dir() {
         Ok(it) => it
             .filter(|x| x.extension().is_some())
-            .find(|x| x.extension().unwrap().eq("gz")),
+            .find(|x| x.extension().unwrap().eq(PKG_EXTENSION)),
         Err(_) => None,
     };
 
