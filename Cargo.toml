@@ -28,3 +28,4 @@ itertools = "0.10.1"
 [dev-dependencies]
 table-test = "0.2.1"
 spectral = "0.6.0"
+mockall = "0.10.2"

@@ -4,12 +4,13 @@ use std::{thread, time};
 
 use ansi_term::Colour::Green;
 use semver::Version;
-use vfs::{VfsPath, VfsResult};
+use vfs::{VfsPath};
 
-use crate::git;
+use crate::{git, new_cargo_config_path};
 use crate::version_iter::VersionIter;
 use crate::Increment;
-use crate::{cargo, CrateConfig, CARGO_CONFIG};
+use crate::{CrateConfig};
+use crate::cargo::Publisher;
 
 pub trait Release {
     /// Releases crate or workspace
@@ -18,19 +19,20 @@ pub trait Release {
     fn release(&self, root: VfsPath, incr: Increment) -> crate::Result<()>;
 }
 
-pub struct Workspace {
+pub struct Workspace<P: Publisher> {
     delay_seconds: u64,
+    publisher: P,
 }
 
-impl Workspace {
-    pub fn new(delay_seconds: u64) -> Self {
-        Self { delay_seconds }
+impl<P: Publisher> Workspace<P> {
+    pub fn new(delay_seconds: u64, publisher: P) -> Self {
+        Self { delay_seconds, publisher }
     }
 }
 
-impl Release for Workspace {
+impl<P: Publisher> Release for Workspace<P> {
     fn release(&self, root: VfsPath, incr: Increment) -> crate::Result<()> {
-        let crate_conf = Crate::open(&root).unwrap();
+        let crate_conf = new_cargo_config_path(&root).unwrap();
 
         let mut it = VersionIter::open(&crate_conf)?;
         let version = crate::update_configs(&crate_conf, &mut it, incr)?;
@@ -41,7 +43,7 @@ impl Release for Workspace {
         let delay = time::Duration::from_secs(self.delay_seconds);
         let crates_to_publish = it.topo_sort();
         for (i, publish) in crates_to_publish.iter().enumerate() {
-            cargo::publish(root.as_str(), publish)?;
+            self.publisher.publish(root.as_str(), publish)?;
             // delay needed between crates to avoid publish failure in case of dependencies
             // crates.io index dont updated instantly
             if i < crates_to_publish.len() - 1 {
@@ -61,27 +63,20 @@ impl Release for Workspace {
     }
 }
 
-pub struct Crate {}
+#[derive(Default)]
+pub struct Crate<P: Publisher> {
+    publisher: P,
+}
 
-impl Crate {
-    pub fn new() -> Self {
-        Self {}
-    }
-
-    pub fn open(root: &VfsPath) -> VfsResult<VfsPath> {
-        root.join(CARGO_CONFIG)
+impl<P: Publisher> Crate<P> {
+    pub fn new(publisher: P) -> Self {
+        Self { publisher }
     }
 }
 
-impl Default for Crate {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Release for Crate {
+impl<P: Publisher> Release for Crate<P> {
     fn release(&self, root: VfsPath, incr: Increment) -> crate::Result<()> {
-        let crate_conf = Crate::open(&root).unwrap();
+        let crate_conf = new_cargo_config_path(&root).unwrap();
 
         let conf = CrateConfig::open(&crate_conf)?;
         let ver = conf.new_version(String::new());
@@ -89,7 +84,7 @@ impl Release for Crate {
 
         let ver = commit_version(root.as_str(), version)?;
 
-        cargo::publish_current(root.as_str())?;
+        self.publisher.publish_current(root.as_str())?;
 
         git::create_tag(root.as_str(), &ver)?;
         git::push_tag(root.as_str(), &ver)?;

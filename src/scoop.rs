@@ -1,5 +1,4 @@
-use crate::workflow::Crate;
-use crate::{pkg, CrateConfig};
+use crate::{pkg, CrateConfig, new_cargo_config_path};
 use serde::Serialize;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};
@@ -34,7 +33,7 @@ pub fn new_scoop(
     base_uri: &str,
 ) -> Option<String> {
     let crate_root: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
-    let crate_conf = Crate::open(&crate_root).unwrap();
+    let crate_conf = new_cargo_config_path(&crate_root).unwrap();
     let config = CrateConfig::open(&crate_conf);
 
     let bin_root = PhysicalFS::new(PathBuf::from(binary_path)).into();

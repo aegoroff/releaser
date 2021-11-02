@@ -5,9 +5,8 @@ use serde::Serialize;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};
 
-use crate::pkg;
+use crate::{new_cargo_config_path, pkg};
 use crate::pkg::Package;
-use crate::workflow::Crate;
 use crate::CrateConfig;
 
 #[derive(Serialize, Default)]
@@ -71,7 +70,7 @@ pub fn new_brew(
     base_uri: &str,
 ) -> Option<String> {
     let crate_root: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
-    let crate_conf = Crate::open(&crate_root).unwrap();
+    let crate_conf = new_cargo_config_path(&crate_root).unwrap();
     let config = CrateConfig::open(&crate_conf);
 
     if let Ok(c) = config {

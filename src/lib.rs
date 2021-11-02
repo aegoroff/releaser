@@ -15,10 +15,10 @@ use std::collections::HashMap;
 use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
 use toml_edit::{value, Document};
-use vfs::VfsPath;
+use vfs::{VfsPath, VfsResult};
 
 pub mod brew;
-mod cargo;
+pub mod cargo;
 mod git;
 pub mod hash;
 mod pkg;
@@ -28,12 +28,15 @@ mod version_iter;
 pub mod workflow;
 
 #[cfg(test)] // <-- not needed in integration tests
-#[macro_use]
 extern crate spectral;
 
 #[cfg(test)] // <-- not needed in integration tests
 #[macro_use]
 extern crate table_test;
+
+#[cfg(test)] // <-- not needed in integration tests
+#[macro_use]
+extern crate mockall;
 
 pub type AnyError = Box<dyn std::error::Error>;
 pub type Result<T> = core::result::Result<T, AnyError>;
@@ -107,6 +110,10 @@ fn increment(v: &str, i: Increment) -> Result<Version> {
         Increment::Patch => increment_patch(&mut v),
     }
     Ok(v)
+}
+
+pub fn new_cargo_config_path(root: &VfsPath) -> VfsResult<VfsPath> {
+    root.join(CARGO_CONFIG)
 }
 
 fn increment_patch(v: &mut Version) {
