@@ -129,8 +129,7 @@ mod tests {
     #[test]
     fn read_workspace_test() {
         // Arrange
-        let fs = new_file_system();
-        let root: VfsPath = fs.into();
+        let root = new_file_system();
         let conf = root.join(CARGO_CONFIG).unwrap();
         let it = VersionIter::open(&conf).unwrap();
 
@@ -152,8 +151,7 @@ mod tests {
 
         // Act
         for (validator, input, expected) in table_test!(cases) {
-            let fs = new_file_system();
-            let root: VfsPath = fs.into();
+            let root = new_file_system();
             let conf = root.join(CARGO_CONFIG).unwrap();
             let mut it = VersionIter::open(&conf).unwrap();
             let actual = update_configs(&conf, &mut it, input).unwrap().to_string();
@@ -169,8 +167,7 @@ mod tests {
     #[test]
     fn version_iter_topo_sort_test() {
         // Arrange
-        let fs = new_file_system();
-        let root: VfsPath = fs.into();
+        let root: VfsPath = new_file_system();
         let conf = root.join(CARGO_CONFIG).unwrap();
         let mut it = VersionIter::open(&conf).unwrap();
         let actual = update_configs(&conf, &mut it, Increment::Minor);
@@ -247,23 +244,22 @@ x = "^0.8"
 a = { path = "../a/", version = "0.1.0" }
         "#;
 
-        let root_path = PathBuf::from("/");
-        let fs = MemoryFS::new();
-        fs.create_dir(root_path.to_str().unwrap()).unwrap();
-        fs.create_dir("/a").unwrap();
-        fs.create_dir("/b").unwrap();
-        fs.create_dir("/c").unwrap();
-        fs.create_dir("/d").unwrap();
-        let root_conf = root_path.join(CARGO_CONFIG);
-        let root_conf = root_conf.to_str().unwrap();
-        fs.create_file(root_conf)
+        let root = VfsPath::new(MemoryFS::new());
+        root.join("a").unwrap().create_dir().unwrap();
+        root.join("b").unwrap().create_dir().unwrap();
+        root.join("c").unwrap().create_dir().unwrap();
+        root.join("d").unwrap().create_dir().unwrap();
+        let root_conf = root.join(CARGO_CONFIG).unwrap();
+        root_conf
+            .create_file()
             .unwrap()
             .write_all(W.as_bytes())
             .unwrap();
 
         let ch_fn = |c: &str, d: &str| {
-            let ch_conf = root_path.join(c).join(CARGO_CONFIG);
-            fs.create_file(ch_conf.to_str().unwrap())
+            let ch_conf = root.join(c).unwrap().join(CARGO_CONFIG).unwrap();
+            ch_conf
+                .create_file()
                 .unwrap()
                 .write_all(d.as_bytes())
                 .unwrap();
@@ -274,7 +270,6 @@ a = { path = "../a/", version = "0.1.0" }
         ch_fn("c", C);
         ch_fn("d", D);
 
-        let root: VfsPath = fs.into();
         let conf = root.join(CARGO_CONFIG).unwrap();
         let mut it = VersionIter::open(&conf).unwrap();
 
@@ -290,22 +285,22 @@ a = { path = "../a/", version = "0.1.0" }
         assert_eq!(vec!["a", "d", "b", "c"], sorted);
     }
 
-    fn new_file_system() -> MemoryFS {
-        let root_path = PathBuf::from("/");
-        let fs = MemoryFS::new();
-        fs.create_dir(root_path.to_str().unwrap()).unwrap();
-        fs.create_dir("/solv").unwrap();
-        fs.create_dir("/solp").unwrap();
-        let root_conf = root_path.join(CARGO_CONFIG);
-        let root_conf = root_conf.to_str().unwrap();
-        fs.create_file(root_conf)
+    fn new_file_system() -> VfsPath {
+        let root = VfsPath::new(MemoryFS::new());
+
+        root.join("solv").unwrap().create_dir().unwrap();
+        root.join("solp").unwrap().create_dir().unwrap();
+        root.join(CARGO_CONFIG)
+            .unwrap()
+            .create_file()
             .unwrap()
             .write_all(WKS.as_bytes())
             .unwrap();
 
         let ch_fn = |c: &str, d: &str| {
-            let ch_conf = root_path.join(c).join(CARGO_CONFIG);
-            fs.create_file(ch_conf.to_str().unwrap())
+            let ch_conf = root.join(c).unwrap().join(CARGO_CONFIG).unwrap();
+            ch_conf
+                .create_file()
                 .unwrap()
                 .write_all(d.as_bytes())
                 .unwrap();
@@ -314,7 +309,7 @@ a = { path = "../a/", version = "0.1.0" }
         ch_fn("solv", SOLV);
         ch_fn("solp", SOLP);
 
-        fs
+        root
     }
 
     const WKS: &str = r#"
