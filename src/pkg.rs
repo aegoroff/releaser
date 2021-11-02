@@ -33,7 +33,7 @@ fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
         None => None,
         Some(f) => {
             let hash = hash::calculate_sha256(&f).unwrap_or_default();
-            Some((hash, f.as_str().to_string()))
+            Some((hash, f.filename()))
         }
     }
 }

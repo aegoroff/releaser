@@ -1,7 +1,6 @@
 use crate::{new_cargo_config_path, pkg, CrateConfig};
 use serde::Serialize;
-use std::path::PathBuf;
-use vfs::{PhysicalFS, VfsPath};
+use vfs::VfsPath;
 
 #[derive(Serialize, Default)]
 pub struct Scoop {
@@ -27,18 +26,14 @@ pub struct Binary {
 }
 
 pub fn new_scoop(
-    crate_path: &str,
-    binary_path: &str,
+    crate_path: VfsPath,
+    binary_path: VfsPath,
     executable_name: &str,
     base_uri: &str,
 ) -> Option<String> {
-    let crate_root: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
-    let crate_conf = new_cargo_config_path(&crate_root).unwrap();
+    let crate_conf = new_cargo_config_path(&crate_path).unwrap();
     let config = CrateConfig::open(&crate_conf);
-
-    let bin_root = PhysicalFS::new(PathBuf::from(binary_path)).into();
-
-    let binary = pkg::new_binary_pkg(&bin_root, base_uri);
+    let binary = pkg::new_binary_pkg(&binary_path, base_uri);
     let x64pkg: Binary;
     match binary {
         None => return None,
@@ -67,4 +62,104 @@ pub fn new_scoop(
     } else {
         None
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::CARGO_CONFIG;
+    use spectral::prelude::*;
+    use vfs::MemoryFS;
+
+    #[test]
+    fn new_scoop_all_correct() {
+        // Arrange
+        let root: VfsPath = new_file_system();
+        let binary_path = root.join("x64").unwrap();
+
+        // Act
+        let result = new_scoop(root, binary_path, "solv.exe", "http://localhost");
+
+        // Assert
+        assert_that!(result).is_some();
+        assert_that!(result.unwrap().as_str()).is_equal_to(
+            r###"{
+  "description": "Microsoft Visual Studio solution parsing library",
+  "64bit": "https://github.com/aegoroff/solv",
+  "version": "0.1.13",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "http://localhost/solv.tar.gz",
+      "hash": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+      "bin": [
+        "solv.exe"
+      ]
+    }
+  }
+}"###,
+        )
+    }
+
+    #[test]
+    fn new_scoop_binary_path_not_exist() {
+        // Arrange
+        let root: VfsPath = new_file_system();
+        let binary_path = root.join("x86").unwrap();
+
+        // Act
+        let result = new_scoop(root, binary_path, "solv.exe", "http://localhost");
+
+        // Assert
+        assert_that!(result).is_none();
+    }
+
+    fn new_file_system() -> VfsPath {
+        let root = VfsPath::new(MemoryFS::new());
+
+        root.join("x64").unwrap().create_dir().unwrap();
+        root.join(CARGO_CONFIG)
+            .unwrap()
+            .create_file()
+            .unwrap()
+            .write_all(CONFIG.as_bytes())
+            .unwrap();
+
+        root.join("x64")
+            .unwrap()
+            .join("solv.tar.gz")
+            .unwrap()
+            .create_file()
+            .unwrap()
+            .write_all("123".as_bytes())
+            .unwrap();
+
+        root
+    }
+
+    const CONFIG: &str = r#"
+[package]
+name = "solp"
+description = "Microsoft Visual Studio solution parsing library"
+repository = "https://github.com/aegoroff/solv"
+homepage = "https://github.com/aegoroff/solv"
+version = "0.1.13"
+authors = ["egoroff <egoroff@gmail.com>"]
+edition = "2018"
+license = "MIT"
+workspace = ".."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies] # <-- We added this and everything after!
+lalrpop = "0.19"
+
+[dependencies]
+lalrpop-util = "0.19"
+regex = "1"
+jwalk = "0.6"
+phf = { version = "0.8", features = ["macros"] }
+itertools = "0.10"
+
+        "#;
 }

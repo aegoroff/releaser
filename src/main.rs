@@ -60,6 +60,10 @@ fn scoop(cmd: &ArgMatches) {
     let binary_path = cmd.value_of("binary").unwrap_or("");
     let crate_path = cmd.value_of("crate").unwrap_or("");
     let base_uri = cmd.value_of("base").unwrap_or("");
+
+    let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
+    let binary_path: VfsPath = PhysicalFS::new(PathBuf::from(binary_path)).into();
+
     let scoop = scoop::new_scoop(crate_path, binary_path, exe_name, base_uri);
     output_string(cmd, scoop)
 }
