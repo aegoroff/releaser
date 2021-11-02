@@ -7,8 +7,9 @@ use semver::Version;
 use vfs::{VfsPath, VfsResult};
 
 use crate::git;
+use crate::version_iter::VersionIter;
+use crate::Increment;
 use crate::{cargo, CrateConfig, CARGO_CONFIG};
-use crate::{Increment, VersionIter};
 
 pub trait Release {
     /// Releases crate or workspace
