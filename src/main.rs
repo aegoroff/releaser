@@ -3,6 +3,8 @@ extern crate clap;
 
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use std::option::Option::Some;
+use std::path::PathBuf;
+use vfs::{PhysicalFS, VfsPath};
 
 use releaser::brew;
 use releaser::scoop;
@@ -106,7 +108,8 @@ where
         return;
     }
 
-    match release.release(path, inc.unwrap()) {
+    let r: VfsPath = PhysicalFS::new(PathBuf::from(path)).into();
+    match release.release(r, inc.unwrap()) {
         Ok(()) => {}
         Err(e) => {
             eprintln!("Error: {}", e);

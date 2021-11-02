@@ -2,7 +2,7 @@ use crate::workflow::Crate;
 use crate::{pkg, CrateConfig};
 use serde::Serialize;
 use std::path::PathBuf;
-use vfs::PhysicalFS;
+use vfs::{PhysicalFS, VfsPath};
 
 #[derive(Serialize, Default)]
 pub struct Scoop {
@@ -33,8 +33,8 @@ pub fn new_scoop(
     executable_name: &str,
     base_uri: &str,
 ) -> Option<String> {
-    let conf_fs = PhysicalFS::new(PathBuf::from(crate_path));
-    let crate_conf = Crate::open(conf_fs).unwrap();
+    let crate_root: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
+    let crate_conf = Crate::open(&crate_root).unwrap();
     let config = CrateConfig::open(&crate_conf);
 
     let bin_root = PhysicalFS::new(PathBuf::from(binary_path)).into();
