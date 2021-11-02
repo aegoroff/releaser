@@ -6,12 +6,12 @@ use ansi_term::Colour::Green;
 use semver::Version;
 use vfs::VfsPath;
 
-use crate::cargo::Publisher;
-use crate::git::Vcs;
 use crate::new_cargo_config_path;
 use crate::version_iter::VersionIter;
 use crate::CrateConfig;
 use crate::Increment;
+use crate::Publisher;
+use crate::Vcs;
 
 pub trait Release {
     /// Releases crate or workspace
@@ -105,4 +105,146 @@ fn commit_version(vcs: &impl Vcs, path: &str, version: Version) -> crate::Result
     let commit_msg = format!("changelog: {}", &ver);
     vcs.commit(path, &commit_msg)?;
     Ok(ver)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::MockVcs;
+    use crate::{MockPublisher, CARGO_CONFIG};
+    use mockall::predicate::*;
+    use spectral::prelude::*;
+    use std::path::PathBuf;
+    use vfs::{FileSystem, MemoryFS};
+
+    #[test]
+    fn release_workspace() {
+        // Arrange
+        let fs = new_file_system();
+        let root: VfsPath = fs.into();
+        let mut mock_pub = MockPublisher::new();
+        let mut mock_vcs = MockVcs::new();
+
+        mock_vcs
+            .expect_commit()
+            .with(eq(""), eq("changelog: v0.2.0"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        mock_pub
+            .expect_publish()
+            .with(eq(""), eq("solp"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        mock_pub
+            .expect_publish()
+            .with(eq(""), eq("solv"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        mock_vcs
+            .expect_create_tag()
+            .with(eq(""), eq("v0.2.0"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        mock_vcs
+            .expect_push_tag()
+            .with(eq(""), eq("v0.2.0"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        let w = Workspace::new(0, mock_pub, mock_vcs);
+
+        // Act
+        let r = w.release(root, Increment::Minor);
+
+        // Assert
+        assert_that!(r).is_ok();
+    }
+
+    fn new_file_system() -> MemoryFS {
+        let root_path = PathBuf::from("/");
+        let fs = MemoryFS::new();
+        fs.create_dir(root_path.to_str().unwrap()).unwrap();
+        fs.create_dir("/solv").unwrap();
+        fs.create_dir("/solp").unwrap();
+        let root_conf = root_path.join(CARGO_CONFIG);
+        let root_conf = root_conf.to_str().unwrap();
+        fs.create_file(root_conf)
+            .unwrap()
+            .write_all(WKS.as_bytes())
+            .unwrap();
+
+        let ch_fn = |c: &str, d: &str| {
+            let ch_conf = root_path.join(c).join(CARGO_CONFIG);
+            fs.create_file(ch_conf.to_str().unwrap())
+                .unwrap()
+                .write_all(d.as_bytes())
+                .unwrap();
+        };
+
+        ch_fn("solv", SOLV);
+        ch_fn("solp", SOLP);
+
+        fs
+    }
+
+    const WKS: &str = r#"
+[workspace]
+
+members = [
+    "solv",
+    "solp",
+]
+        "#;
+
+    const SOLP: &str = r#"
+[package]
+name = "solp"
+description = "Microsoft Visual Studio solution parsing library"
+repository = "https://github.com/aegoroff/solv"
+version = "0.1.13"
+authors = ["egoroff <egoroff@gmail.com>"]
+edition = "2018"
+license = "MIT"
+workspace = ".."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies] # <-- We added this and everything after!
+lalrpop = "0.19"
+
+[dependencies]
+lalrpop-util = "0.19"
+regex = "1"
+jwalk = "0.6"
+phf = { version = "0.8", features = ["macros"] }
+itertools = "0.10"
+
+        "#;
+
+    const SOLV: &str = r#"
+[package]
+name = "solv"
+description = "Microsoft Visual Studio solution validator"
+repository = "https://github.com/aegoroff/solv"
+version = "0.1.13"
+authors = ["egoroff <egoroff@gmail.com>"]
+edition = "2018"
+license = "MIT"
+workspace = ".."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+prettytable-rs = "^0.8"
+ansi_term = "0.12"
+humantime = "2.1"
+clap = "2"
+fnv = "1"
+solp = { path = "../solp/", version = "0.1.13" }
+
+        "#;
 }

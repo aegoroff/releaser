@@ -1,17 +1,9 @@
 use std::io;
 use std::process::Command;
 
-#[cfg(test)]
-use mockall::{automock, predicate::*};
+use crate::Vcs;
 
 const TOOL: &str = "git";
-
-#[cfg_attr(test, automock)]
-pub trait Vcs {
-    fn commit(&self, path: &str, message: &str) -> io::Result<()>;
-    fn create_tag(&self, path: &str, tag: &str) -> io::Result<()>;
-    fn push_tag(&self, path: &str, tag: &str) -> io::Result<()>;
-}
 
 #[derive(Default)]
 pub struct Git {}

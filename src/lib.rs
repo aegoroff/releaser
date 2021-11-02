@@ -11,6 +11,7 @@ extern crate toml_edit;
 extern crate vfs;
 
 use std::collections::HashMap;
+use std::io;
 
 use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
@@ -38,6 +39,9 @@ extern crate table_test;
 #[macro_use]
 extern crate mockall;
 
+#[cfg(test)]
+use mockall::{automock, predicate::*};
+
 pub type AnyError = Box<dyn std::error::Error>;
 pub type Result<T> = core::result::Result<T, AnyError>;
 
@@ -45,6 +49,19 @@ const CARGO_CONFIG: &str = "Cargo.toml";
 const VERSION: &str = "version";
 const PACK: &str = "package";
 const DEPS: &str = "dependencies";
+
+#[cfg_attr(test, automock)]
+pub trait Publisher {
+    fn publish(&self, path: &str, crt: &str) -> io::Result<()>;
+    fn publish_current(&self, path: &str) -> io::Result<()>;
+}
+
+#[cfg_attr(test, automock)]
+pub trait Vcs {
+    fn commit(&self, path: &str, message: &str) -> io::Result<()>;
+    fn create_tag(&self, path: &str, tag: &str) -> io::Result<()>;
+    fn push_tag(&self, path: &str, tag: &str) -> io::Result<()>;
+}
 
 pub fn update_configs<I>(path: &VfsPath, iter: &mut I, incr: Increment) -> Result<Version>
 where

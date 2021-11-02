@@ -1,17 +1,9 @@
+use crate::Publisher;
 use std::io;
 use std::path::PathBuf;
 use std::process::Command;
 
-#[cfg(test)]
-use mockall::{automock, predicate::*};
-
 const TOOL: &str = "cargo";
-
-#[cfg_attr(test, automock)]
-pub trait Publisher {
-    fn publish(&self, path: &str, crt: &str) -> io::Result<()>;
-    fn publish_current(&self, path: &str) -> io::Result<()>;
-}
 
 #[derive(Default)]
 pub struct Cargo {}
