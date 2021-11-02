@@ -209,9 +209,12 @@ pub struct CrateVersion {
     places: Vec<Place>,
 }
 
+/// Place defines where to find version
 #[derive(Debug)]
 pub enum Place {
+    /// Find version in package metadata (i.e. `package` section)
     Package(String),
+    /// Find version in dependencies (i.e. `dependencies` section)
     Dependency(String, String),
 }
 
