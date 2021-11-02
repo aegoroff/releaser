@@ -164,6 +164,47 @@ mod tests {
         assert_that!(r).is_ok();
     }
 
+    #[test]
+    fn release_crate() {
+        // Arrange
+        let fs = new_file_system();
+        let root: VfsPath = fs.into();
+        let mut mock_pub = MockPublisher::new();
+        let mut mock_vcs = MockVcs::new();
+
+        mock_vcs
+            .expect_commit()
+            .with(eq("/solp"), eq("changelog: v0.2.0"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        mock_pub
+            .expect_publish_current()
+            .with(eq("/solp"))
+            .times(1)
+            .returning(|_| Ok(()));
+
+        mock_vcs
+            .expect_create_tag()
+            .with(eq("/solp"), eq("v0.2.0"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        mock_vcs
+            .expect_push_tag()
+            .with(eq("/solp"), eq("v0.2.0"))
+            .times(1)
+            .returning(|_, _| Ok(()));
+
+        let c = Crate::new(mock_pub, mock_vcs);
+
+        // Act
+        let r = c.release(root.join("solp").unwrap(), Increment::Minor);
+
+        // Assert
+        assert_that!(r).is_ok();
+    }
+
     fn new_file_system() -> MemoryFS {
         let root_path = PathBuf::from("/");
         let fs = MemoryFS::new();
