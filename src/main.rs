@@ -51,6 +51,11 @@ fn brew(cmd: &ArgMatches) {
 
     let crate_path = cmd.value_of("crate").unwrap_or("");
     let base_uri = cmd.value_of("base").unwrap_or("");
+
+    let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
+    let linux_path: VfsPath = PhysicalFS::new(PathBuf::from(linux_path)).into();
+    let macos_path: VfsPath = PhysicalFS::new(PathBuf::from(macos_path)).into();
+
     let b = brew::new_brew(crate_path, linux_path, macos_path, base_uri);
     output_string(cmd, b)
 }

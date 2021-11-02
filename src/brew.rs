@@ -2,8 +2,7 @@ use std::option::Option::Some;
 
 use handlebars::Handlebars;
 use serde::Serialize;
-use std::path::PathBuf;
-use vfs::{PhysicalFS, VfsPath};
+use vfs::VfsPath;
 
 use crate::pkg::Package;
 use crate::CrateConfig;
@@ -64,20 +63,16 @@ end
 "###;
 
 pub fn new_brew(
-    crate_path: &str,
-    linux_path: &str,
-    macos_path: &str,
+    crate_path: VfsPath,
+    linux_path: VfsPath,
+    macos_path: VfsPath,
     base_uri: &str,
 ) -> Option<String> {
-    let crate_root: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
-    let crate_conf = new_cargo_config_path(&crate_root).unwrap();
+    let crate_conf = new_cargo_config_path(&crate_path).unwrap();
     let config = CrateConfig::open(&crate_conf);
 
     if let Ok(c) = config {
         let name = c.package.name;
-
-        let linux_root = PhysicalFS::new(PathBuf::from(linux_path)).into();
-        let macos_root = PhysicalFS::new(PathBuf::from(macos_path)).into();
 
         let brew = Brew {
             formula: uppercase_first_letter(&name),
@@ -86,8 +81,8 @@ pub fn new_brew(
             homepage: c.package.homepage,
             version: c.package.version,
             license: c.package.license.unwrap_or_default(),
-            linux: pkg::new_binary_pkg(&linux_root, base_uri),
-            macos: pkg::new_binary_pkg(&macos_root, base_uri),
+            linux: pkg::new_binary_pkg(&linux_path, base_uri),
+            macos: pkg::new_binary_pkg(&macos_path, base_uri),
         };
 
         if brew.linux.is_none() && brew.macos.is_none() {
@@ -124,6 +119,9 @@ fn serialize_brew<T: Serialize>(data: &T) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::CARGO_CONFIG;
+    use spectral::prelude::*;
+    use vfs::MemoryFS;
 
     #[test]
     fn uppercase_first_letter_test() {
@@ -348,4 +346,91 @@ end
             result
         )
     }
+
+    #[test]
+    fn new_brew_all_correct() {
+        // Arrange
+        let root: VfsPath = new_file_system();
+        let linux_path = root.join("linux").unwrap();
+        let macos_path = root.join("macos").unwrap();
+
+        // Act
+        let result = new_brew(root, linux_path, macos_path, "http://localhost");
+
+        // Assert
+        assert_that!(result).is_some();
+        let r = result.unwrap();
+        assert_that!(r.as_str()).contains("http://localhost/linux-solv.tar.gz");
+        assert_that!(r.as_str()).contains("http://localhost/macos-solv.tar.gz");
+    }
+
+    #[test]
+    fn new_brew_no_binaries() {
+        // Arrange
+        let root: VfsPath = new_file_system();
+        let linux_path = root.join("linux1").unwrap();
+        let macos_path = root.join("macos1").unwrap();
+
+        // Act
+        let result = new_brew(root, linux_path, macos_path, "http://localhost");
+
+        // Assert
+        assert_that!(result).is_none();
+    }
+
+    fn new_file_system() -> VfsPath {
+        let root = VfsPath::new(MemoryFS::new());
+
+        root.join("linux").unwrap().create_dir().unwrap();
+        root.join("macos").unwrap().create_dir().unwrap();
+        root.join(CARGO_CONFIG)
+            .unwrap()
+            .create_file()
+            .unwrap()
+            .write_all(CONFIG.as_bytes())
+            .unwrap();
+
+        root.join("linux")
+            .unwrap()
+            .join("linux-solv.tar.gz")
+            .unwrap()
+            .create_file()
+            .unwrap()
+            .write_all("123".as_bytes())
+            .unwrap();
+
+        root.join("macos")
+            .unwrap()
+            .join("macos-solv.tar.gz")
+            .unwrap()
+            .create_file()
+            .unwrap()
+            .write_all("321".as_bytes())
+            .unwrap();
+
+        root
+    }
+
+    const CONFIG: &str = r#"
+[package]
+name = "solv"
+description = "Microsoft Visual Studio solution validator"
+repository = "https://github.com/aegoroff/solv"
+homepage = "https://github.com/aegoroff/solv"
+version = "0.1.13"
+authors = ["egoroff <egoroff@gmail.com>"]
+edition = "2018"
+license = "MIT"
+workspace = ".."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+prettytable-rs = "^0.8"
+ansi_term = "0.12"
+humantime = "2.1"
+clap = "2"
+fnv = "1"
+solp = { path = "../solp/", version = "0.1.13" }
+        "#;
 }
