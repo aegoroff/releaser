@@ -3,7 +3,7 @@ use crate::resource::Resource;
 use serde::Serialize;
 use vfs::VfsPath;
 
-const PKG_EXTENSION: &'static str = "gz";
+const PKG_EXTENSION: &str = "gz";
 
 #[derive(Serialize, Default)]
 pub struct Package {
