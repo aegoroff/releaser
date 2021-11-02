@@ -10,7 +10,7 @@ use releaser::brew;
 use releaser::cargo::Cargo;
 use releaser::git::Git;
 use releaser::scoop;
-use releaser::workflow::{Crate, Release, Workspace};
+use releaser::workflow::{Crate, Releasable, Release, Workspace};
 use releaser::Increment;
 
 const PATH: &str = "PATH";
@@ -101,9 +101,9 @@ fn output_string(cmd: &ArgMatches, s: Option<String>) {
     }
 }
 
-fn release<R>(cmd: &ArgMatches, release: R)
+fn release<'a, R>(cmd: &'a ArgMatches, release: R)
 where
-    R: Release,
+    R: Release<'a>,
 {
     let path = cmd.value_of(PATH).unwrap();
     let incr = cmd.value_of(INCR).unwrap();
@@ -120,10 +120,11 @@ where
     }
 
     let r: VfsPath = PhysicalFS::new(PathBuf::from(path)).into();
-    match release.release(r, inc.unwrap()) {
+    let root = Releasable::new(path, r);
+    match release.release(root, inc.unwrap()) {
         Ok(()) => {}
         Err(e) => {
-            eprintln!("Error: {}", e);
+            eprintln!("Path:\t{}\nError:\t{}", path, e);
             std::process::exit(ErrorCode::ReleaseError as i32);
         }
     }

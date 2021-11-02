@@ -13,11 +13,25 @@ use crate::Increment;
 use crate::Publisher;
 use crate::Vcs;
 
-pub trait Release {
+pub struct Releasable<'a> {
+    real_path: &'a str,
+    virtual_path: VfsPath,
+}
+
+impl<'a> Releasable<'a> {
+    pub fn new(real_path: &'a str, virtual_path: VfsPath) -> Self {
+        Self {
+            virtual_path,
+            real_path,
+        }
+    }
+}
+
+pub trait Release<'a> {
     /// Releases crate or workspace
     /// * `root` - path to folder where crate's or workspace's Cargo.toml located
     /// * `incr` - Version increment (major, minor or patch)
-    fn release(&self, root: VfsPath, incr: Increment) -> crate::Result<()>;
+    fn release(&self, root: Releasable<'a>, incr: Increment) -> crate::Result<()>;
 }
 
 pub struct Workspace<P: Publisher, V: Vcs> {
@@ -36,20 +50,20 @@ impl<P: Publisher, V: Vcs> Workspace<P, V> {
     }
 }
 
-impl<P: Publisher, V: Vcs> Release for Workspace<P, V> {
-    fn release(&self, root: VfsPath, incr: Increment) -> crate::Result<()> {
-        let crate_conf = new_cargo_config_path(&root).unwrap();
+impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
+    fn release(&self, root: Releasable<'a>, incr: Increment) -> crate::Result<()> {
+        let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
 
         let mut it = VersionIter::open(&crate_conf)?;
         let version = crate::update_configs(&crate_conf, &mut it, incr)?;
 
-        let ver = commit_version(&self.vcs, root.as_str(), version)?;
+        let ver = commit_version(&self.vcs, root.real_path, version)?;
 
         let delay_str = format!("{}", self.delay_seconds);
         let delay = time::Duration::from_secs(self.delay_seconds);
         let crates_to_publish = it.topo_sort();
         for (i, publish) in crates_to_publish.iter().enumerate() {
-            self.publisher.publish(root.as_str(), publish)?;
+            self.publisher.publish(root.real_path, publish)?;
             // delay needed between crates to avoid publish failure in case of dependencies
             // crates.io index dont updated instantly
             if i < crates_to_publish.len() - 1 {
@@ -62,8 +76,8 @@ impl<P: Publisher, V: Vcs> Release for Workspace<P, V> {
             }
         }
 
-        self.vcs.create_tag(root.as_str(), &ver)?;
-        self.vcs.push_tag(root.as_str(), &ver)?;
+        self.vcs.create_tag(root.real_path, &ver)?;
+        self.vcs.push_tag(root.real_path, &ver)?;
 
         Ok(())
     }
@@ -81,20 +95,20 @@ impl<P: Publisher, V: Vcs> Crate<P, V> {
     }
 }
 
-impl<P: Publisher, V: Vcs> Release for Crate<P, V> {
-    fn release(&self, root: VfsPath, incr: Increment) -> crate::Result<()> {
-        let crate_conf = new_cargo_config_path(&root).unwrap();
+impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
+    fn release(&self, root: Releasable<'a>, incr: Increment) -> crate::Result<()> {
+        let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
 
         let conf = CrateConfig::open(&crate_conf)?;
         let ver = conf.new_version(String::new());
         let version = crate::update_config(&crate_conf, &ver, incr)?;
 
-        let ver = commit_version(&self.vcs, root.as_str(), version)?;
+        let ver = commit_version(&self.vcs, root.real_path, version)?;
 
-        self.publisher.publish_current(root.as_str())?;
+        self.publisher.publish_current(root.real_path)?;
 
-        self.vcs.create_tag(root.as_str(), &ver)?;
-        self.vcs.push_tag(root.as_str(), &ver)?;
+        self.vcs.create_tag(root.real_path, &ver)?;
+        self.vcs.push_tag(root.real_path, &ver)?;
 
         Ok(())
     }
@@ -125,38 +139,39 @@ mod tests {
 
         mock_vcs
             .expect_commit()
-            .with(eq(""), eq("changelog: v0.2.0"))
+            .with(eq("/x"), eq("changelog: v0.2.0"))
             .times(1)
             .returning(|_, _| Ok(()));
 
         mock_pub
             .expect_publish()
-            .with(eq(""), eq("solp"))
+            .with(eq("/x"), eq("solp"))
             .times(1)
             .returning(|_, _| Ok(()));
 
         mock_pub
             .expect_publish()
-            .with(eq(""), eq("solv"))
+            .with(eq("/x"), eq("solv"))
             .times(1)
             .returning(|_, _| Ok(()));
 
         mock_vcs
             .expect_create_tag()
-            .with(eq(""), eq("v0.2.0"))
+            .with(eq("/x"), eq("v0.2.0"))
             .times(1)
             .returning(|_, _| Ok(()));
 
         mock_vcs
             .expect_push_tag()
-            .with(eq(""), eq("v0.2.0"))
+            .with(eq("/x"), eq("v0.2.0"))
             .times(1)
             .returning(|_, _| Ok(()));
 
         let w = Workspace::new(0, mock_pub, mock_vcs);
+        let releasable = Releasable::new("/x", root);
 
         // Act
-        let r = w.release(root, Increment::Minor);
+        let r = w.release(releasable, Increment::Minor);
 
         // Assert
         assert_that!(r).is_ok();
@@ -171,32 +186,34 @@ mod tests {
 
         mock_vcs
             .expect_commit()
-            .with(eq("/solp"), eq("changelog: v0.2.0"))
+            .with(eq("/x"), eq("changelog: v0.2.0"))
             .times(1)
             .returning(|_, _| Ok(()));
 
         mock_pub
             .expect_publish_current()
-            .with(eq("/solp"))
+            .with(eq("/x"))
             .times(1)
             .returning(|_| Ok(()));
 
         mock_vcs
             .expect_create_tag()
-            .with(eq("/solp"), eq("v0.2.0"))
+            .with(eq("/x"), eq("v0.2.0"))
             .times(1)
             .returning(|_, _| Ok(()));
 
         mock_vcs
             .expect_push_tag()
-            .with(eq("/solp"), eq("v0.2.0"))
+            .with(eq("/x"), eq("v0.2.0"))
             .times(1)
             .returning(|_, _| Ok(()));
 
         let c = Crate::new(mock_pub, mock_vcs);
 
+        let releasable = Releasable::new("/x", root.join("solp").unwrap());
+
         // Act
-        let r = c.release(root.join("solp").unwrap(), Increment::Minor);
+        let r = c.release(releasable, Increment::Minor);
 
         // Assert
         assert_that!(r).is_ok();
