@@ -55,7 +55,7 @@ class {{ formula }} < Formula
 {{#if (or linux macos)}}
 {{lines 1}}
   def install
-    bin.install "{{ name }}"
+    bin.install Dir["*"]
   end
 {{lines 1}}
 {{/if}}
@@ -229,7 +229,7 @@ class Solv < Formula
   end
 
   def install
-    bin.install "solv"
+    bin.install Dir["*"]
   end
 
 end
@@ -278,7 +278,7 @@ class Solv < Formula
   end
 
   def install
-    bin.install "solv"
+    bin.install Dir["*"]
   end
 
 end
@@ -338,7 +338,7 @@ class Solv < Formula
   end
 
   def install
-    bin.install "solv"
+    bin.install Dir["*"]
   end
 
 end
