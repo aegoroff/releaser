@@ -167,7 +167,7 @@ struct Workspace {
 #[derive(Deserialize, Default)]
 struct CrateConfig {
     package: Package,
-    dependencies: HashMap<String, Dependency>,
+    dependencies: Option<HashMap<String, Dependency>>,
 }
 
 impl CrateConfig {
@@ -248,10 +248,11 @@ mod tests {
         let cfg: CrateConfig = toml::from_str(SOLV).unwrap();
 
         // Assert
+        let deps = cfg.dependencies.unwrap();
         assert_eq!("solv", cfg.package.name);
         assert_eq!("0.1.13", cfg.package.version);
-        assert_eq!(6, cfg.dependencies.len());
-        let solp = &cfg.dependencies["solp"];
+        assert_eq!(6, deps.len());
+        let solp = &deps["solp"];
         if let Dependency::Object(o) = solp {
             assert_eq!(2, o.len());
             assert!(o.contains_key(VERSION));
