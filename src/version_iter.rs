@@ -72,7 +72,7 @@ impl<'a> Iterator for VersionIter<'a> {
         let mut item = conf.new_version(member);
 
         let deps = conf
-            .dependencies
+            .dependencies?
             .into_iter()
             .filter(|(n, _)| self.search.contains_key(n))
             .filter_map(|(n, v)| {
@@ -200,9 +200,6 @@ members = [ "a", "b", "c", "d" ]
 name = "a"
 version = "0.1.0"
 workspace = ".."
-
-[dependencies]
-x = "^0.8"
         "#;
 
         const B: &str = r#"
