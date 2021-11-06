@@ -33,11 +33,10 @@ extern crate spectral;
 
 #[cfg(test)] // <-- not needed in integration tests
 #[macro_use]
-extern crate table_test;
+extern crate mockall;
 
 #[cfg(test)] // <-- not needed in integration tests
-#[macro_use]
-extern crate mockall;
+extern crate rstest;
 
 #[cfg(test)]
 use mockall::{automock, predicate::*};

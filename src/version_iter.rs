@@ -108,6 +108,7 @@ mod tests {
     use super::*;
     use crate::version_iter::VersionIter;
     use crate::{update_configs, Increment};
+    use rstest::*;
     use spectral::prelude::*;
 
     #[test]
@@ -140,28 +141,21 @@ mod tests {
         assert_that!(versions).is_equal_to(2);
     }
 
-    #[test]
-    fn update_workspace_version_change_tests() {
+    #[rstest]
+    #[case::patch(Increment::Patch, "0.1.14")]
+    #[case::minor(Increment::Minor, "0.2.0")]
+    #[case::major(Increment::Major, "1.0.0")]
+    fn update_workspace_version_change_tests(#[case] incr: Increment, #[case] expected: String) {
         // Arrange
-        let cases = vec![
-            (Increment::Patch, "0.1.14"),
-            (Increment::Minor, "0.2.0"),
-            (Increment::Major, "1.0.0"),
-        ];
+        let root = new_file_system();
+        let conf = root.join(CARGO_CONFIG).unwrap();
+        let mut it = VersionIter::open(&conf).unwrap();
 
         // Act
-        for (validator, input, expected) in table_test!(cases) {
-            let root = new_file_system();
-            let conf = root.join(CARGO_CONFIG).unwrap();
-            let mut it = VersionIter::open(&conf).unwrap();
-            let actual = update_configs(&conf, &mut it, input).unwrap().to_string();
+        let actual = update_configs(&conf, &mut it, incr).unwrap().to_string();
 
-            validator
-                .given(&format!("Increment: {:#?}", input))
-                .when("update_configs")
-                .then(&format!("it should be {}", expected))
-                .assert_eq(expected, &actual);
-        }
+        // Assert
+        assert_that!(actual).is_equal_to(expected);
     }
 
     #[test]
