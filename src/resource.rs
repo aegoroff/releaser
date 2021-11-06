@@ -78,15 +78,25 @@ mod tests {
 
     #[rstest]
     #[case("http://localhost", "/x", "http://localhost/x")]
+    #[trace]
     #[case("http://localhost", "/x/", "http://localhost/x/")]
+    #[trace]
     #[case("http://localhost/", "/x/", "http://localhost/x/")]
+    #[trace]
     #[case("http://localhost/", "x/y", "http://localhost/x/y")]
+    #[trace]
     #[case("http://localhost/", "/x/y", "http://localhost/x/y")]
+    #[trace]
     #[case("http://localhost/x", "/y", "http://localhost/x/y")]
+    #[trace]
     #[case("http://localhost/x/", "/y", "http://localhost/x/y")]
+    #[trace]
     #[case("http://localhost/x/", "y", "http://localhost/x/y")]
+    #[trace]
     #[case::real_slashed_base("https://github.com/aegoroff/dirstat/releases/download/v1.0.7/", "dirstat_1.0.7_darwin_amd64.tar.gz", "https://github.com/aegoroff/dirstat/releases/download/v1.0.7/dirstat_1.0.7_darwin_amd64.tar.gz")]
+    #[trace]
     #[case::real_slashless_base("https://github.com/aegoroff/dirstat/releases/download/v1.0.7", "dirstat_1.0.7_darwin_amd64.tar.gz", "https://github.com/aegoroff/dirstat/releases/download/v1.0.7/dirstat_1.0.7_darwin_amd64.tar.gz")]
+    #[trace]
     fn append_path_tests(#[case] base: &str, #[case] path: &str, #[case] expected: &str) {
         // Arrange
         let mut r = Resource::new(base).unwrap();
