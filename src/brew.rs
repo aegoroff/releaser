@@ -120,6 +120,7 @@ fn serialize_brew<T: Serialize>(data: &T) -> String {
 mod tests {
     use super::*;
     use crate::CARGO_CONFIG;
+    use rstest::*;
     use spectral::prelude::*;
     use vfs::MemoryFS;
 
@@ -347,10 +348,9 @@ end
         )
     }
 
-    #[test]
-    fn new_brew_all_correct() {
+    #[rstest]
+    fn new_brew_all_correct(root: VfsPath) {
         // Arrange
-        let root: VfsPath = new_file_system();
         let linux_path = root.join("linux").unwrap();
         let macos_path = root.join("macos").unwrap();
 
@@ -364,10 +364,9 @@ end
         assert_that!(r.as_str()).contains("http://localhost/macos-solv.tar.gz");
     }
 
-    #[test]
-    fn new_brew_no_binaries() {
+    #[rstest]
+    fn new_brew_no_binaries(root: VfsPath) {
         // Arrange
-        let root: VfsPath = new_file_system();
         let linux_path = root.join("linux1").unwrap();
         let macos_path = root.join("macos1").unwrap();
 
@@ -378,7 +377,8 @@ end
         assert_that!(result).is_none();
     }
 
-    fn new_file_system() -> VfsPath {
+    #[fixture]
+    fn root() -> VfsPath {
         let root = VfsPath::new(MemoryFS::new());
 
         root.join("linux").unwrap().create_dir().unwrap();

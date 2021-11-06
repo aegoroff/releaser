@@ -127,13 +127,13 @@ mod tests {
     use crate::MockVcs;
     use crate::{MockPublisher, CARGO_CONFIG};
     use mockall::predicate::*;
+    use rstest::*;
     use spectral::prelude::*;
     use vfs::MemoryFS;
 
-    #[test]
-    fn release_workspace() {
+    #[rstest]
+    fn release_workspace(root: VfsPath) {
         // Arrange
-        let root: VfsPath = new_file_system();
         let mut mock_pub = MockPublisher::new();
         let mut mock_vcs = MockVcs::new();
 
@@ -177,10 +177,9 @@ mod tests {
         assert_that!(r).is_ok();
     }
 
-    #[test]
-    fn release_crate() {
+    #[rstest]
+    fn release_crate(root: VfsPath) {
         // Arrange
-        let root: VfsPath = new_file_system();
         let mut mock_pub = MockPublisher::new();
         let mut mock_vcs = MockVcs::new();
 
@@ -219,7 +218,8 @@ mod tests {
         assert_that!(r).is_ok();
     }
 
-    fn new_file_system() -> VfsPath {
+    #[fixture]
+    fn root() -> VfsPath {
         let root = VfsPath::new(MemoryFS::new());
 
         root.join("solv").unwrap().create_dir().unwrap();
