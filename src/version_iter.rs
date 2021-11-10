@@ -87,11 +87,11 @@ impl<'a> Iterator for VersionIter<'a> {
 
         item.places.extend(deps);
 
-        let to = self.search.get(&conf.package.name).unwrap();
+        let to = self.search.get(&conf.package.name)?;
 
         for place in item.places.iter() {
             if let Place::Dependency(n, _) = place {
-                let from = self.search.get(n).unwrap();
+                let from = self.search.get(n)?;
                 self.graph.add_edge(*from, *to, -1);
             }
         }
