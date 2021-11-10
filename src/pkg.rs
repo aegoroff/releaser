@@ -29,15 +29,10 @@ fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
             .filter(|x| x.extension().is_some())
             .find(|x| x.extension().unwrap().eq(PKG_EXTENSION)),
         Err(_) => None,
-    };
+    }?;
 
-    match file_name {
-        None => None,
-        Some(f) => {
-            let hash = hash::calculate_sha256(&f).unwrap_or_default();
-            Some((hash, f.filename()))
-        }
-    }
+    let hash = hash::calculate_sha256(&file_name).unwrap_or_default();
+    Some((hash, file_name.filename()))
 }
 
 #[cfg(test)]

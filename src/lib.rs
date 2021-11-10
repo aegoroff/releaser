@@ -33,11 +33,10 @@ extern crate spectral;
 
 #[cfg(test)] // <-- not needed in integration tests
 #[macro_use]
-extern crate table_test;
+extern crate mockall;
 
 #[cfg(test)] // <-- not needed in integration tests
-#[macro_use]
-extern crate mockall;
+extern crate rstest;
 
 #[cfg(test)]
 use mockall::{automock, predicate::*};
@@ -228,6 +227,24 @@ pub enum Increment {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::*;
+    use spectral::prelude::*;
+
+    #[rstest]
+    #[case::patch(Increment::Patch, "0.1.2")]
+    #[case::minor(Increment::Minor, "0.2.0")]
+    #[case::major(Increment::Major, "1.0.0")]
+    #[trace]
+    fn increment_tests(#[case] incr: Increment, #[case] expected: &str) {
+        // Arrange
+        let v = "0.1.1";
+
+        // Act
+        let actual = increment(v, incr).unwrap();
+
+        // Assert
+        assert_that!(actual).is_equal_to(Version::parse(expected).unwrap());
+    }
 
     #[test]
     fn toml_parse_workspace() {

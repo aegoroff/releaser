@@ -87,11 +87,11 @@ impl<'a> Iterator for VersionIter<'a> {
 
         item.places.extend(deps);
 
-        let to = self.search.get(&conf.package.name).unwrap();
+        let to = self.search.get(&conf.package.name)?;
 
         for place in item.places.iter() {
             if let Place::Dependency(n, _) = place {
-                let from = self.search.get(n).unwrap();
+                let from = self.search.get(n)?;
                 self.graph.add_edge(*from, *to, -1);
             }
         }
@@ -108,6 +108,7 @@ mod tests {
     use super::*;
     use crate::version_iter::VersionIter;
     use crate::{update_configs, Increment};
+    use rstest::*;
     use spectral::prelude::*;
 
     #[test]
@@ -126,10 +127,9 @@ mod tests {
         assert_that!(result.is_err()).is_true();
     }
 
-    #[test]
-    fn read_workspace_test() {
+    #[rstest]
+    fn read_workspace_test(root: VfsPath) {
         // Arrange
-        let root = new_file_system();
         let conf = root.join(CARGO_CONFIG).unwrap();
         let it = VersionIter::open(&conf).unwrap();
 
@@ -140,34 +140,30 @@ mod tests {
         assert_that!(versions).is_equal_to(2);
     }
 
-    #[test]
-    fn update_workspace_version_change_tests() {
+    #[rstest]
+    #[case::patch(Increment::Patch, "0.1.14")]
+    #[case::minor(Increment::Minor, "0.2.0")]
+    #[case::major(Increment::Major, "1.0.0")]
+    #[trace]
+    fn update_workspace_version_change_tests(
+        root: VfsPath,
+        #[case] incr: Increment,
+        #[case] expected: String,
+    ) {
         // Arrange
-        let cases = vec![
-            (Increment::Patch, "0.1.14"),
-            (Increment::Minor, "0.2.0"),
-            (Increment::Major, "1.0.0"),
-        ];
+        let conf = root.join(CARGO_CONFIG).unwrap();
+        let mut it = VersionIter::open(&conf).unwrap();
 
         // Act
-        for (validator, input, expected) in table_test!(cases) {
-            let root = new_file_system();
-            let conf = root.join(CARGO_CONFIG).unwrap();
-            let mut it = VersionIter::open(&conf).unwrap();
-            let actual = update_configs(&conf, &mut it, input).unwrap().to_string();
+        let actual = update_configs(&conf, &mut it, incr).unwrap().to_string();
 
-            validator
-                .given(&format!("Increment: {:#?}", input))
-                .when("update_configs")
-                .then(&format!("it should be {}", expected))
-                .assert_eq(expected, &actual);
-        }
+        // Assert
+        assert_that!(actual).is_equal_to(expected);
     }
 
-    #[test]
-    fn version_iter_topo_sort_test() {
+    #[rstest]
+    fn version_iter_topo_sort_test(root: VfsPath) {
         // Arrange
-        let root: VfsPath = new_file_system();
         let conf = root.join(CARGO_CONFIG).unwrap();
         let mut it = VersionIter::open(&conf).unwrap();
         let actual = update_configs(&conf, &mut it, Increment::Minor);
@@ -282,7 +278,8 @@ a = { path = "../a/", version = "0.1.0" }
         assert_eq!(vec!["a", "d", "b", "c"], sorted);
     }
 
-    fn new_file_system() -> VfsPath {
+    #[fixture]
+    fn root() -> VfsPath {
         let root = VfsPath::new(MemoryFS::new());
 
         root.join("solv").unwrap().create_dir().unwrap();

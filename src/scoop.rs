@@ -33,18 +33,12 @@ pub fn new_scoop(
 ) -> Option<String> {
     let crate_conf = new_cargo_config_path(&crate_path).unwrap();
     let config = CrateConfig::open(&crate_conf);
-    let binary = pkg::new_binary_pkg(&binary_path, base_uri);
-    let x64pkg: Binary;
-    match binary {
-        None => return None,
-        Some(p) => {
-            x64pkg = Binary {
-                url: p.url,
-                hash: Some(p.hash),
-                bin: vec![executable_name.to_string()],
-            }
-        }
-    }
+    let binary = pkg::new_binary_pkg(&binary_path, base_uri)?;
+    let x64pkg = Binary {
+        url: binary.url,
+        hash: Some(binary.hash),
+        bin: vec![executable_name.to_string()],
+    };
 
     if let Ok(c) = config {
         let scoop = Scoop {
@@ -68,13 +62,13 @@ pub fn new_scoop(
 mod tests {
     use super::*;
     use crate::CARGO_CONFIG;
+    use rstest::*;
     use spectral::prelude::*;
     use vfs::MemoryFS;
 
-    #[test]
-    fn new_scoop_all_correct() {
+    #[rstest]
+    fn new_scoop_all_correct(root: VfsPath) {
         // Arrange
-        let root: VfsPath = new_file_system();
         let binary_path = root.join("x64").unwrap();
 
         // Act
@@ -101,10 +95,9 @@ mod tests {
         )
     }
 
-    #[test]
-    fn new_scoop_binary_path_not_exist() {
+    #[rstest]
+    fn new_scoop_binary_path_not_exist(root: VfsPath) {
         // Arrange
-        let root: VfsPath = new_file_system();
         let binary_path = root.join("x86").unwrap();
 
         // Act
@@ -114,7 +107,8 @@ mod tests {
         assert_that!(result).is_none();
     }
 
-    fn new_file_system() -> VfsPath {
+    #[fixture]
+    fn root() -> VfsPath {
         let root = VfsPath::new(MemoryFS::new());
 
         root.join("x64").unwrap().create_dir().unwrap();
