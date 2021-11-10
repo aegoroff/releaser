@@ -13,12 +13,15 @@ use crate::Increment;
 use crate::Publisher;
 use crate::Vcs;
 
-pub struct Releasable<'a> {
+/// Represents virtual path in a filesystem
+/// that keeps real fs path that is root of this
+/// virtual path
+pub struct VPath<'a> {
     real_path: &'a str,
     virtual_path: VfsPath,
 }
 
-impl<'a> Releasable<'a> {
+impl<'a> VPath<'a> {
     pub fn new(real_path: &'a str, virtual_path: VfsPath) -> Self {
         Self {
             virtual_path,
@@ -31,7 +34,7 @@ pub trait Release<'a> {
     /// Releases crate or workspace
     /// * `root` - path to folder where crate's or workspace's Cargo.toml located
     /// * `incr` - Version increment (major, minor or patch)
-    fn release(&self, root: Releasable<'a>, incr: Increment) -> crate::Result<()>;
+    fn release(&self, root: VPath<'a>, incr: Increment) -> crate::Result<()>;
 }
 
 pub struct Workspace<P: Publisher, V: Vcs> {
@@ -51,7 +54,7 @@ impl<P: Publisher, V: Vcs> Workspace<P, V> {
 }
 
 impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
-    fn release(&self, root: Releasable<'a>, incr: Increment) -> crate::Result<()> {
+    fn release(&self, root: VPath<'a>, incr: Increment) -> crate::Result<()> {
         let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
 
         let mut it = VersionIter::open(&crate_conf)?;
@@ -96,7 +99,7 @@ impl<P: Publisher, V: Vcs> Crate<P, V> {
 }
 
 impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
-    fn release(&self, root: Releasable<'a>, incr: Increment) -> crate::Result<()> {
+    fn release(&self, root: VPath<'a>, incr: Increment) -> crate::Result<()> {
         let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
 
         let conf = CrateConfig::open(&crate_conf)?;
@@ -168,10 +171,10 @@ mod tests {
             .returning(|_, _| Ok(()));
 
         let w = Workspace::new(0, mock_pub, mock_vcs);
-        let releasable = Releasable::new("/x", root);
+        let path = VPath::new("/x", root);
 
         // Act
-        let r = w.release(releasable, Increment::Minor);
+        let r = w.release(path, Increment::Minor);
 
         // Assert
         assert_that!(r).is_ok();
@@ -209,10 +212,10 @@ mod tests {
 
         let c = Crate::new(mock_pub, mock_vcs);
 
-        let releasable = Releasable::new("/x", root.join("solp").unwrap());
+        let path = VPath::new("/x", root.join("solp").unwrap());
 
         // Act
-        let r = c.release(releasable, Increment::Minor);
+        let r = c.release(path, Increment::Minor);
 
         // Assert
         assert_that!(r).is_ok();

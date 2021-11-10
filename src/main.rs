@@ -10,7 +10,7 @@ use releaser::brew;
 use releaser::cargo::Cargo;
 use releaser::git::Git;
 use releaser::scoop;
-use releaser::workflow::{Crate, Releasable, Release, Workspace};
+use releaser::workflow::{Crate, Release, VPath, Workspace};
 use releaser::Increment;
 
 const PATH: &str = "PATH";
@@ -120,7 +120,7 @@ where
     }
 
     let r: VfsPath = PhysicalFS::new(PathBuf::from(path)).into();
-    let root = Releasable::new(path, r);
+    let root = VPath::new(path, r);
     match release.release(root, inc.unwrap()) {
         Ok(()) => {}
         Err(e) => {
