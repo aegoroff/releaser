@@ -33,18 +33,12 @@ pub fn new_scoop(
 ) -> Option<String> {
     let crate_conf = new_cargo_config_path(&crate_path).unwrap();
     let config = CrateConfig::open(&crate_conf);
-    let binary = pkg::new_binary_pkg(&binary_path, base_uri);
-    let x64pkg: Binary;
-    match binary {
-        None => return None,
-        Some(p) => {
-            x64pkg = Binary {
-                url: p.url,
-                hash: Some(p.hash),
-                bin: vec![executable_name.to_string()],
-            }
-        }
-    }
+    let binary = pkg::new_binary_pkg(&binary_path, base_uri)?;
+    let x64pkg = Binary {
+        url: binary.url,
+        hash: Some(binary.hash),
+        bin: vec![executable_name.to_string()],
+    };
 
     if let Ok(c) = config {
         let scoop = Scoop {
