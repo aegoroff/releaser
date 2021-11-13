@@ -68,7 +68,7 @@ pub fn new_brew(
     macos_path: VfsPath,
     base_uri: &str,
 ) -> Option<String> {
-    let crate_conf = new_cargo_config_path(&crate_path).unwrap();
+    let crate_conf = new_cargo_config_path(&crate_path)?;
     let config = CrateConfig::open(&crate_conf);
 
     if let Ok(c) = config {

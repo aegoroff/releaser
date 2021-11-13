@@ -16,7 +16,7 @@ use std::io;
 use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
 use toml_edit::{value, Document};
-use vfs::{VfsPath, VfsResult};
+use vfs::VfsPath;
 
 pub mod brew;
 pub mod cargo;
@@ -128,8 +128,15 @@ fn increment(v: &str, i: Increment) -> Result<Version> {
     Ok(v)
 }
 
-pub fn new_cargo_config_path(root: &VfsPath) -> VfsResult<VfsPath> {
-    root.join(CARGO_CONFIG)
+fn new_cargo_config_path(root: &VfsPath) -> Option<VfsPath> {
+    join(root, CARGO_CONFIG)
+}
+
+fn join(p: &VfsPath, other: &str) -> Option<VfsPath> {
+    match p.join(other) {
+        Ok(r) => Some(r),
+        Err(_) => None,
+    }
 }
 
 fn increment_patch(v: &mut Version) {
