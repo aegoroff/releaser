@@ -36,8 +36,7 @@ jobs:
         run: cargo build
       - name: Run tests
         run: cargo test --verbose  -- --nocapture
+      - name: Setup linter
+        run: rustup component add clippy
       - name: Run linter
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features -- -Dwarnings
+        run: cargo clippy -- -Dwarnings
