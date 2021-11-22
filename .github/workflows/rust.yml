@@ -42,9 +42,7 @@ jobs:
           args: '-- --test-threads 1'
       - name: Upload to codecov.io
         if: matrix.build == 'linux' && matrix.rust != 'nightly'
-        uses: codecov/codecov-action@v1.0.2
-        with:
-          token: ${{env.CODECOV_TOKEN}}
+        uses: codecov/codecov-action@v2
       - name: Run tests
         if: matrix.build != 'linux'
         run: cargo test --verbose  -- --nocapture
