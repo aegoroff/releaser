@@ -47,19 +47,19 @@ jobs:
         if: matrix.build != 'linux'
         run: cargo test --verbose  -- --nocapture
       - name: Setup linter
-        if: matrix.rust == 'nightly'
+        if: matrix.rust == 'nightly' || matrix.build != 'linux'
         run: rustup component add clippy
       - name: Run linter
-        if: matrix.rust == 'nightly'
+        if: matrix.rust == 'nightly' || matrix.build != 'linux'
         run: cargo clippy -- -Dwarnings
       - name: Run clippy-check
-        if: matrix.rust != 'nightly'
+        if: matrix.rust != 'nightly' && matrix.build == 'linux'
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features --release -- -Dwarnings
       - name: Run audit
-        if: matrix.rust != 'nightly'
+        if: matrix.rust != 'nightly' && matrix.build == 'linux'
         uses: actions-rs/audit-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
