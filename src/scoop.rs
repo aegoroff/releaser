@@ -119,7 +119,16 @@ mod tests {
             .unwrap()
             .write_all("test".as_bytes())
             .unwrap();
-        let binary_path = root.join("x86").unwrap();
+
+        let binary_path = root.join("x64").unwrap();
+
+        binary_path
+            .join("solv.tar.gz")
+            .unwrap()
+            .create_file()
+            .unwrap()
+            .write_all("123".as_bytes())
+            .unwrap();
 
         // Act
         let result = new_scoop(root, binary_path, "solv.exe", "http://localhost");
