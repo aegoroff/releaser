@@ -40,10 +40,28 @@ jobs:
         with:
           version: '0.15.0'
           args: '-- --test-threads 1'
+      - name: Upload to codecov.io
+        if: matrix.build == 'linux' && matrix.rust != 'nightly'
+        uses: codecov/codecov-action@v1.0.2
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
       - name: Run tests
         if: matrix.build != 'linux'
         run: cargo test --verbose  -- --nocapture
       - name: Setup linter
+        if: matrix.rust == 'nightly'
         run: rustup component add clippy
       - name: Run linter
+        if: matrix.rust == 'nightly'
         run: cargo clippy -- -Dwarnings
+      - name: Run clippy-check
+        if: matrix.rust != 'nightly'
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features --release -- -Dwarnings
+      - name: Run audit
+        if: matrix.rust != 'nightly'
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
