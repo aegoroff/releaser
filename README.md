@@ -1,5 +1,6 @@
 [![crates.io](https://img.shields.io/crates/v/releaser.svg)](https://crates.io/crates/releaser)
 [![Rust](https://github.com/aegoroff/releaser/actions/workflows/rust.yml/badge.svg)](https://github.com/aegoroff/releaser/actions/workflows/rust.yml)
+[![codecov](https://codecov.io/gh/aegoroff/releaser/branch/master/graph/badge.svg?token=A2vtLxosWU)](https://codecov.io/gh/aegoroff/releaser)
 
 # Installation
 Install Rust and then run:
