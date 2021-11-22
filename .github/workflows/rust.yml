@@ -34,7 +34,14 @@ jobs:
         run: rustup -V
       - name: Build
         run: cargo build
+      - name: Run cargo-tarpaulin
+        if: matrix.build == 'linux'
+        uses: actions-rs/tarpaulin@v0.1
+        with:
+          version: '0.15.0'
+          args: '-- --test-threads 1'
       - name: Run tests
+        if: matrix.build != 'linux'
         run: cargo test --verbose  -- --nocapture
       - name: Setup linter
         run: rustup component add clippy
