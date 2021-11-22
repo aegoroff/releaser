@@ -44,7 +44,7 @@ jobs:
         if: matrix.build == 'linux' && matrix.rust != 'nightly'
         uses: codecov/codecov-action@v1.0.2
         with:
-          token: ${{secrets.CODECOV_TOKEN}}
+          token: ${{env.CODECOV_TOKEN}}
       - name: Run tests
         if: matrix.build != 'linux'
         run: cargo test --verbose  -- --nocapture
