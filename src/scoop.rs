@@ -107,6 +107,27 @@ mod tests {
         assert_that!(result).is_none();
     }
 
+    #[rstest]
+    fn new_scoop_invalid_cargo_toml() {
+        // Arrange
+        let root = VfsPath::new(MemoryFS::new());
+
+        root.join("x64").unwrap().create_dir().unwrap();
+        root.join(CARGO_CONFIG)
+            .unwrap()
+            .create_file()
+            .unwrap()
+            .write_all("test".as_bytes())
+            .unwrap();
+        let binary_path = root.join("x86").unwrap();
+
+        // Act
+        let result = new_scoop(root, binary_path, "solv.exe", "http://localhost");
+
+        // Assert
+        assert_that!(result).is_none();
+    }
+
     #[fixture]
     fn root() -> VfsPath {
         let root = VfsPath::new(MemoryFS::new());

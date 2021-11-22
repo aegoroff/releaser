@@ -181,7 +181,7 @@ impl CrateConfig {
         let mut file = path.open_file()?;
         let mut content = String::new();
         file.read_to_string(&mut content)?;
-        let conf: CrateConfig = toml::from_str(&content).unwrap();
+        let conf: CrateConfig = toml::from_str(&content)?;
         Ok(conf)
     }
 

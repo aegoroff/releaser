@@ -377,6 +377,29 @@ end
         assert_that!(result).is_none();
     }
 
+    #[rstest]
+    fn new_brew_invalid_cargo() {
+        // Arrange
+        let root = VfsPath::new(MemoryFS::new());
+        root.join("linux").unwrap().create_dir().unwrap();
+        root.join("macos").unwrap().create_dir().unwrap();
+        root.join(CARGO_CONFIG)
+            .unwrap()
+            .create_file()
+            .unwrap()
+            .write_all("test".as_bytes())
+            .unwrap();
+
+        let linux_path = root.join("linux").unwrap();
+        let macos_path = root.join("macos").unwrap();
+
+        // Act
+        let result = new_brew(root, linux_path, macos_path, "http://localhost");
+
+        // Assert
+        assert_that!(result).is_none();
+    }
+
     #[fixture]
     fn root() -> VfsPath {
         let root = VfsPath::new(MemoryFS::new());
