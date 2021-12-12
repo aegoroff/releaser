@@ -29,9 +29,9 @@ pub fn calculate_sha256(path: &VfsPath) -> Result<String, VfsError> {
 
 #[cfg(test)]
 mod tests {
-    use vfs::MemoryFS;
-
     use super::*;
+    use spectral::prelude::*;
+    use vfs::MemoryFS;
 
     #[test]
     fn calculate_sha256_test() {
@@ -49,9 +49,21 @@ mod tests {
         let hash = calculate_sha256(&file_path).unwrap();
 
         // Assert
-        assert_eq!(
-            "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
-            hash
-        );
+        assert_that!(hash.as_str())
+            .is_equal_to("a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3");
+    }
+
+    #[test]
+    fn calculate_sha256_file_not_exist_test() {
+        // Arrange
+        let root: VfsPath = MemoryFS::new().into();
+        let file_path = root.join("file.txt");
+        let file_path = file_path.unwrap();
+
+        // Act
+        let hash = calculate_sha256(&file_path);
+
+        // Assert
+        assert_that!(hash).is_err();
     }
 }

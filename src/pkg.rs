@@ -5,7 +5,7 @@ use vfs::VfsPath;
 
 const PKG_EXTENSION: &str = "gz";
 
-#[derive(Serialize, Default)]
+#[derive(Serialize, Default, Debug)]
 pub struct Package {
     pub url: String,
     pub hash: String,
@@ -31,8 +31,13 @@ fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
         Err(_) => None,
     }?;
 
-    let hash = hash::calculate_sha256(&file_name).unwrap_or_default();
-    Some((hash, file_name.filename()))
+    match hash::calculate_sha256(&file_name) {
+        Ok(hash) => Some((hash, file_name.filename())),
+        Err(e) => {
+            eprintln!("Hash calculation error: {:#?}", e);
+            None
+        }
+    }
 }
 
 #[cfg(test)]
@@ -59,5 +64,17 @@ mod tests {
         assert_that!(p.hash.as_str())
             .is_equal_to("a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3");
         assert_that!(p.url.as_str()).is_equal_to("http://x/f.tar.gz");
+    }
+
+    #[test]
+    fn new_binary_pkg_gz_file_not_exists_test() {
+        // Arrange
+        let root: VfsPath = MemoryFS::new().into();
+
+        // Act
+        let p = new_binary_pkg(&root, "http://x");
+
+        // Assert
+        assert_that!(p).is_none();
     }
 }
