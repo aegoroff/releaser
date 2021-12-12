@@ -31,13 +31,8 @@ fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
         Err(_) => None,
     }?;
 
-    match hash::calculate_sha256(&file_name) {
-        Ok(hash) => Some((hash, file_name.filename())),
-        Err(e) => {
-            eprintln!("Hash calculation error: {:#?}", e);
-            None
-        }
-    }
+    let hash = hash::calculate_sha256(&file_name).unwrap_or_default();
+    Some((hash, file_name.filename()))
 }
 
 #[cfg(test)]
@@ -70,9 +65,19 @@ mod tests {
     fn new_binary_pkg_gz_file_not_exists_test() {
         // Arrange
         let root: VfsPath = MemoryFS::new().into();
+        let dir_path = root.join("d").unwrap();
+        dir_path.create_dir().unwrap();
+        root.join("d")
+            .unwrap()
+            .join("f.txt")
+            .unwrap()
+            .create_file()
+            .unwrap()
+            .write_all("123".as_bytes())
+            .unwrap();
 
         // Act
-        let p = new_binary_pkg(&root, "http://x");
+        let p = new_binary_pkg(&dir_path, "http://x");
 
         // Assert
         assert_that!(p).is_none();
