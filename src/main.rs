@@ -15,6 +15,7 @@ use releaser::Increment;
 
 const PATH: &str = "PATH";
 const INCR: &str = "INCR";
+const ALL: &str = "all";
 
 fn main() {
     let app = build_cli();
@@ -107,6 +108,7 @@ where
 {
     let path = cmd.value_of(PATH).unwrap();
     let incr = cmd.value_of(INCR).unwrap();
+    let all_features = cmd.is_present(ALL);
 
     let inc = match incr {
         "major" => Some(Increment::Major),
@@ -121,7 +123,7 @@ where
 
     let r: VfsPath = PhysicalFS::new(PathBuf::from(path)).into();
     let root = VPath::new(path, r);
-    match release.release(root, inc.unwrap()) {
+    match release.release(root, inc.unwrap(), all_features) {
         Ok(()) => {}
         Err(e) => {
             eprintln!("Path:\t{}\nError:\t{}", path, e);
@@ -160,6 +162,14 @@ fn build_cli() -> App<'static, 'static> {
                         .default_value("20")
                         .help("Delay in seconds between publish next workflow's crate")
                         .required(false),
+                )
+                .arg(
+                    Arg::with_name(ALL)
+                        .long(ALL)
+                        .short("a")
+                        .takes_value(false)
+                        .help("Whether to add option --all-features to cargo publish command")
+                        .required(false),
                 ),
         )
         .subcommand(
@@ -177,6 +187,14 @@ fn build_cli() -> App<'static, 'static> {
                         .help("Sets crate's root path")
                         .required(true)
                         .index(2),
+                )
+                .arg(
+                    Arg::with_name(ALL)
+                        .long(ALL)
+                        .short("a")
+                        .takes_value(false)
+                        .help("Whether to add option --all-features to cargo publish command")
+                        .required(false),
                 ),
         )
         .subcommand(

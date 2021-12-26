@@ -49,10 +49,15 @@ const VERSION: &str = "version";
 const PACK: &str = "package";
 const DEPS: &str = "dependencies";
 
+#[derive(Default, Eq, PartialEq, Debug)]
+pub struct PublishOptions<'a> {
+    pub crate_to_publish: Option<&'a str>,
+    pub all_features: bool,
+}
+
 #[cfg_attr(test, automock)]
 pub trait Publisher {
-    fn publish(&self, path: &str, crt: &str) -> io::Result<()>;
-    fn publish_current(&self, path: &str) -> io::Result<()>;
+    fn publish<'a>(&'a self, path: &'a str, options: PublishOptions<'a>) -> io::Result<()>;
 }
 
 #[cfg_attr(test, automock)]

@@ -6,12 +6,12 @@ use ansi_term::Colour::Green;
 use semver::Version;
 use vfs::VfsPath;
 
-use crate::new_cargo_config_path;
 use crate::version_iter::VersionIter;
 use crate::CrateConfig;
 use crate::Increment;
 use crate::Publisher;
 use crate::Vcs;
+use crate::{new_cargo_config_path, PublishOptions};
 
 /// Represents virtual path in a filesystem
 /// that keeps real fs path that is root of this
@@ -34,7 +34,8 @@ pub trait Release<'a> {
     /// Releases crate or workspace
     /// * `root` - path to folder where crate's or workspace's Cargo.toml located
     /// * `incr` - Version increment (major, minor or patch)
-    fn release(&self, root: VPath<'a>, incr: Increment) -> crate::Result<()>;
+    /// * `all_features` - whether to publish all features i.e. pass --all-features flag to cargo publish
+    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool) -> crate::Result<()>;
 }
 
 pub struct Workspace<P: Publisher, V: Vcs> {
@@ -54,7 +55,7 @@ impl<P: Publisher, V: Vcs> Workspace<P, V> {
 }
 
 impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
-    fn release(&self, root: VPath<'a>, incr: Increment) -> crate::Result<()> {
+    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool) -> crate::Result<()> {
         let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
 
         let mut it = VersionIter::open(&crate_conf)?;
@@ -66,7 +67,11 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
         let delay = time::Duration::from_secs(self.delay_seconds);
         let crates_to_publish = it.topo_sort();
         for (i, publish) in crates_to_publish.iter().enumerate() {
-            self.publisher.publish(root.real_path, publish)?;
+            let options = PublishOptions {
+                crate_to_publish: Some(publish),
+                all_features,
+            };
+            self.publisher.publish(root.real_path, options)?;
             // delay needed between crates to avoid publish failure in case of dependencies
             // crates.io index dont updated instantly
             if i < crates_to_publish.len() - 1 {
@@ -99,7 +104,7 @@ impl<P: Publisher, V: Vcs> Crate<P, V> {
 }
 
 impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
-    fn release(&self, root: VPath<'a>, incr: Increment) -> crate::Result<()> {
+    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool) -> crate::Result<()> {
         let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
 
         let conf = CrateConfig::open(&crate_conf)?;
@@ -108,7 +113,11 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
 
         let ver = commit_version(&self.vcs, root.real_path, version)?;
 
-        self.publisher.publish_current(root.real_path)?;
+        let options = PublishOptions {
+            crate_to_publish: None,
+            all_features,
+        };
+        self.publisher.publish(root.real_path, options)?;
 
         self.vcs.create_tag(root.real_path, &ver)?;
         self.vcs.push_tag(root.real_path, &ver)?;
@@ -135,7 +144,10 @@ mod tests {
     use vfs::MemoryFS;
 
     #[rstest]
-    fn release_workspace(root: VfsPath) {
+    #[case(true)]
+    #[case(false)]
+    #[trace]
+    fn release_workspace(root: VfsPath, #[case] all_features: bool) {
         // Arrange
         let mut mock_pub = MockPublisher::new();
         let mut mock_vcs = MockVcs::new();
@@ -146,15 +158,23 @@ mod tests {
             .times(1)
             .returning(|_, _| Ok(()));
 
+        let solp_options: PublishOptions = PublishOptions {
+            crate_to_publish: Some("solp"),
+            all_features,
+        };
         mock_pub
             .expect_publish()
-            .with(eq("/x"), eq("solp"))
+            .withf(move |p, o| p == "/x" && *o == solp_options)
             .times(1)
             .returning(|_, _| Ok(()));
 
+        let solv_options: PublishOptions = PublishOptions {
+            crate_to_publish: Some("solv"),
+            all_features,
+        };
         mock_pub
             .expect_publish()
-            .with(eq("/x"), eq("solv"))
+            .withf(move |p, o| p == "/x" && *o == solv_options)
             .times(1)
             .returning(|_, _| Ok(()));
 
@@ -174,14 +194,17 @@ mod tests {
         let path = VPath::new("/x", root);
 
         // Act
-        let r = w.release(path, Increment::Minor);
+        let r = w.release(path, Increment::Minor, all_features);
 
         // Assert
         assert_that!(r).is_ok();
     }
 
     #[rstest]
-    fn release_crate(root: VfsPath) {
+    #[case(true)]
+    #[case(false)]
+    #[trace]
+    fn release_crate(root: VfsPath, #[case] all_features: bool) {
         // Arrange
         let mut mock_pub = MockPublisher::new();
         let mut mock_vcs = MockVcs::new();
@@ -192,11 +215,15 @@ mod tests {
             .times(1)
             .returning(|_, _| Ok(()));
 
+        let options: PublishOptions = PublishOptions {
+            crate_to_publish: None,
+            all_features,
+        };
         mock_pub
-            .expect_publish_current()
-            .with(eq("/x"))
+            .expect_publish()
+            .withf(move |p, o| p == "/x" && *o == options)
             .times(1)
-            .returning(|_| Ok(()));
+            .returning(|_, _| Ok(()));
 
         mock_vcs
             .expect_create_tag()
@@ -215,7 +242,7 @@ mod tests {
         let path = VPath::new("/x", root.join("solp").unwrap());
 
         // Act
-        let r = c.release(path, Increment::Minor);
+        let r = c.release(path, Increment::Minor, all_features);
 
         // Assert
         assert_that!(r).is_ok();
