@@ -210,6 +210,7 @@ struct Package {
 #[serde(untagged)]
 enum Dependency {
     Plain(String),
+    Optional(bool),
     Object(HashMap<String, Dependency>),
     List(Vec<Dependency>),
 }
@@ -286,6 +287,67 @@ mod tests {
             assert_eq!(2, o.len());
             assert!(o.contains_key(VERSION));
             assert!(o.contains_key("path"));
+        }
+    }
+
+    #[test]
+    fn toml_parse_crate_with_optional_deps() {
+        // Arrange
+        let conf = r#"[package]
+name = "editorconfiger"
+version = "0.1.9"
+description = "Plain tool to validate and compare .editorconfig files"
+authors = ["egoroff <egoroff@gmail.com>"]
+keywords = ["editorconfig"]
+homepage = "https://github.com/aegoroff/editorconfiger"
+edition = "2021"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies] # <-- We added this and everything after!
+lalrpop = "0.19"
+
+[dependencies]
+lalrpop-util  = { version = "0.19", features = ["lexer"] }
+regex = "1"
+jwalk = "0.6"
+aho-corasick = "0.7"
+nom = "7"
+num_cpus = "1.13.0"
+
+ansi_term = { version = "0.12", optional = true }
+prettytable-rs = { version = "^0.8", optional = true }
+clap = { version = "2", optional = true }
+
+[dev-dependencies]
+table-test = "0.2.1"
+spectral = "0.6.0"
+rstest = "0.12.0"
+
+[features]
+build-binary = ["clap", "ansi_term", "prettytable-rs"]
+
+[[bin]]
+name = "editorconfiger"
+required-features = ["build-binary"]
+
+[profile.release]
+lto = true"#;
+
+        // Act
+        let cfg: CrateConfig = toml::from_str(conf).unwrap();
+
+        // Assert
+        let deps = cfg.dependencies.unwrap();
+        assert_eq!("editorconfiger", cfg.package.name);
+        assert_eq!("0.1.9", cfg.package.version);
+        assert_eq!(9, deps.len());
+        let ansi_term = &deps["ansi_term"];
+        if let Dependency::Object(o) = ansi_term {
+            assert_eq!(2, o.len());
+            assert!(o.contains_key(VERSION));
+            assert!(o.contains_key("optional"));
         }
     }
 
