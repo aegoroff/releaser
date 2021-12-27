@@ -15,7 +15,9 @@ use releaser::Increment;
 
 const PATH: &str = "PATH";
 const INCR: &str = "INCR";
+const INCR_HELP: &str = "Version increment. One of the following: major, minor or patch";
 const ALL: &str = "all";
+const ALL_HELP: &str = "Whether to add option --all-features to cargo publish command";
 
 fn main() {
     let app = build_cli();
@@ -144,7 +146,7 @@ fn build_cli() -> App<'static, 'static> {
                 .about("Release workspace specified by path")
                 .arg(
                     Arg::with_name(INCR)
-                        .help("Version increment. One of the following: major, minor or patch")
+                        .help(INCR_HELP)
                         .required(true)
                         .index(1),
                 )
@@ -168,7 +170,7 @@ fn build_cli() -> App<'static, 'static> {
                         .long(ALL)
                         .short("a")
                         .takes_value(false)
-                        .help("Whether to add option --all-features to cargo publish command")
+                        .help(ALL_HELP)
                         .required(false),
                 ),
         )
@@ -178,7 +180,7 @@ fn build_cli() -> App<'static, 'static> {
                 .about("Release single crate specified by path")
                 .arg(
                     Arg::with_name(INCR)
-                        .help("Version increment. One of the following: major, minor or patch")
+                        .help(INCR_HELP)
                         .required(true)
                         .index(1),
                 )
@@ -193,7 +195,7 @@ fn build_cli() -> App<'static, 'static> {
                         .long(ALL)
                         .short("a")
                         .takes_value(false)
-                        .help("Whether to add option --all-features to cargo publish command")
+                        .help(ALL_HELP)
                         .required(false),
                 ),
         )
