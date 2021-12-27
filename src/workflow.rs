@@ -144,8 +144,8 @@ mod tests {
     use vfs::MemoryFS;
 
     #[rstest]
-    #[case(true)]
-    #[case(false)]
+    #[case::all_features(true)]
+    #[case::default_features(false)]
     #[trace]
     fn release_workspace(root: VfsPath, #[case] all_features: bool) {
         // Arrange
@@ -201,8 +201,8 @@ mod tests {
     }
 
     #[rstest]
-    #[case(true)]
-    #[case(false)]
+    #[case::all_features(true)]
+    #[case::default_features(false)]
     #[trace]
     fn release_crate(root: VfsPath, #[case] all_features: bool) {
         // Arrange
