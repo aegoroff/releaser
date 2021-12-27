@@ -51,6 +51,7 @@ USAGE:
     releaser w [OPTIONS] <INCR> <PATH>
 
 FLAGS:
+    -a, --all        Whether to add option --all-features to cargo publish command
     -h, --help       Prints help information
     -V, --version    Prints version information
 
@@ -69,6 +70,7 @@ USAGE:
     releaser c <INCR> <PATH>
 
 FLAGS:
+    -a, --all        Whether to add option --all-features to cargo publish command
     -h, --help       Prints help information
     -V, --version    Prints version information
 
