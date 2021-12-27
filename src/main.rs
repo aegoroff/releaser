@@ -18,6 +18,10 @@ const INCR: &str = "INCR";
 const INCR_HELP: &str = "Version increment. One of the following: major, minor or patch";
 const ALL: &str = "all";
 const ALL_HELP: &str = "Whether to add option --all-features to cargo publish command";
+const OUTPUT: &str = "output";
+const OUTPUT_HELP: &str = "File path to save result to. If not set result will be written into stdout";
+const BASE: &str = "base";
+const BASE_HELP: &str = "Base URI of downloaded artifacts";
 
 fn main() {
     let app = build_cli();
@@ -53,7 +57,7 @@ fn brew(cmd: &ArgMatches) {
     }
 
     let crate_path = cmd.value_of("crate").unwrap_or("");
-    let base_uri = cmd.value_of("base").unwrap_or("");
+    let base_uri = cmd.value_of(BASE).unwrap_or("");
 
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
     let linux_path: VfsPath = PhysicalFS::new(PathBuf::from(linux_path)).into();
@@ -67,7 +71,7 @@ fn scoop(cmd: &ArgMatches) {
     let exe_name = cmd.value_of("exe").unwrap_or("");
     let binary_path = cmd.value_of("binary").unwrap_or("");
     let crate_path = cmd.value_of("crate").unwrap_or("");
-    let base_uri = cmd.value_of("base").unwrap_or("");
+    let base_uri = cmd.value_of(BASE).unwrap_or("");
 
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
     let binary_path: VfsPath = PhysicalFS::new(PathBuf::from(binary_path)).into();
@@ -86,7 +90,7 @@ fn output_string(cmd: &ArgMatches, s: Option<String>) {
     match s {
         None => std::process::exit(ErrorCode::NoOutputProduced as i32),
         Some(b) => {
-            let output_path = cmd.value_of("output");
+            let output_path = cmd.value_of(OUTPUT);
             match output_path {
                 None => println!("{}", b),
                 Some(path) => {
@@ -228,19 +232,19 @@ fn build_cli() -> App<'static, 'static> {
                         .required(false),
                 )
                 .arg(
-                    Arg::with_name("base")
-                        .long("base")
+                    Arg::with_name(BASE)
+                        .long(BASE)
                         .short("b")
                         .takes_value(true)
-                        .help("Base URI of downloaded artifacts")
+                        .help(BASE_HELP)
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name("output")
-                        .long("output")
+                    Arg::with_name(OUTPUT)
+                        .long(OUTPUT)
                         .short("u")
                         .takes_value(true)
-                        .help("File path to save result to. If not set result will be written into stdout")
+                        .help(OUTPUT_HELP)
                         .required(false),
                 ),
         )
@@ -273,19 +277,19 @@ fn build_cli() -> App<'static, 'static> {
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name("base")
-                        .long("base")
+                    Arg::with_name(BASE)
+                        .long(BASE)
                         .short("b")
                         .takes_value(true)
-                        .help("Base URI of downloaded artifacts")
+                        .help(BASE_HELP)
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name("output")
-                        .long("output")
+                    Arg::with_name(OUTPUT)
+                        .long(OUTPUT)
                         .short("u")
                         .takes_value(true)
-                        .help("File path to save result to. If not set result will be written into stdout")
+                        .help(OUTPUT_HELP)
                         .required(false),
                 ),
         );
