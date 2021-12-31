@@ -19,7 +19,8 @@ const INCR_HELP: &str = "Version increment. One of the following: major, minor o
 const ALL: &str = "all";
 const ALL_HELP: &str = "Whether to add option --all-features to cargo publish command";
 const OUTPUT: &str = "output";
-const OUTPUT_HELP: &str = "File path to save result to. If not set result will be written into stdout";
+const OUTPUT_HELP: &str =
+    "File path to save result to. If not set result will be written into stdout";
 const BASE: &str = "base";
 const BASE_HELP: &str = "Base URI of downloaded artifacts";
 
