@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate clap;
 
-use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
+use clap::{App, AppSettings, Arg, ArgMatches};
 use std::option::Option::Some;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};
@@ -28,10 +28,10 @@ fn main() {
     let matches = app.get_matches();
 
     match matches.subcommand() {
-        ("w", Some(cmd)) => workspace(cmd),
-        ("c", Some(cmd)) => single_crate(cmd),
-        ("b", Some(cmd)) => brew(cmd),
-        ("s", Some(cmd)) => scoop(cmd),
+        Some(("w", cmd)) => workspace(cmd),
+        Some(("c", cmd)) => single_crate(cmd),
+        Some(("b", cmd)) => brew(cmd),
+        Some(("s", cmd)) => scoop(cmd),
         _ => {}
     }
 }
@@ -138,156 +138,156 @@ where
     }
 }
 
-fn build_cli() -> App<'static, 'static> {
+fn build_cli() -> App<'static> {
     return App::new(crate_name!())
         .setting(AppSettings::ArgRequiredElseHelp)
         .version(crate_version!())
         .author("egoroff <egoroff@gmail.com>")
         .about("Rust releasing workspace tool")
         .subcommand(
-            SubCommand::with_name("w")
+            App::new("w")
                 .aliases(&["workspace"])
                 .about("Release workspace specified by path")
                 .arg(
-                    Arg::with_name(INCR)
+                    Arg::new(INCR)
                         .help(INCR_HELP)
                         .required(true)
                         .index(1),
                 )
                 .arg(
-                    Arg::with_name(PATH)
+                    Arg::new(PATH)
                         .help("Sets workspace root path")
                         .required(true)
                         .index(2),
                 )
                 .arg(
-                    Arg::with_name("delay")
+                    Arg::new("delay")
                         .long("delay")
-                        .short("d")
+                        .short('d')
                         .takes_value(true)
                         .default_value("20")
                         .help("Delay in seconds between publish next workflow's crate")
                         .required(false),
                 )
                 .arg(
-                    Arg::with_name(ALL)
+                    Arg::new(ALL)
                         .long(ALL)
-                        .short("a")
+                        .short('a')
                         .takes_value(false)
                         .help(ALL_HELP)
                         .required(false),
                 ),
         )
         .subcommand(
-            SubCommand::with_name("c")
+            App::new("c")
                 .aliases(&["crate"])
                 .about("Release single crate specified by path")
                 .arg(
-                    Arg::with_name(INCR)
+                    Arg::new(INCR)
                         .help(INCR_HELP)
                         .required(true)
                         .index(1),
                 )
                 .arg(
-                    Arg::with_name(PATH)
+                    Arg::new(PATH)
                         .help("Sets crate's root path")
                         .required(true)
                         .index(2),
                 )
                 .arg(
-                    Arg::with_name(ALL)
+                    Arg::new(ALL)
                         .long(ALL)
-                        .short("a")
+                        .short('a')
                         .takes_value(false)
                         .help(ALL_HELP)
                         .required(false),
                 ),
         )
         .subcommand(
-            SubCommand::with_name("b")
+            App::new("b")
                 .aliases(&["brew"])
                 .about("Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)")
                 .arg(
-                    Arg::with_name("crate")
+                    Arg::new("crate")
                         .long("crate")
-                        .short("c")
+                        .short('c')
                         .takes_value(true)
                         .help("Sets crate's path where Cargo.toml located")
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name("linux")
+                    Arg::new("linux")
                         .long("linux")
-                        .short("l")
+                        .short('l')
                         .takes_value(true)
                         .help("Sets Linux package directory path")
                         .required(false),
                 )
                 .arg(
-                    Arg::with_name("macos")
+                    Arg::new("macos")
                         .long("macos")
-                        .short("m")
+                        .short('m')
                         .takes_value(true)
                         .help("Sets Mac OS package directory path")
                         .required(false),
                 )
                 .arg(
-                    Arg::with_name(BASE)
+                    Arg::new(BASE)
                         .long(BASE)
-                        .short("b")
+                        .short('b')
                         .takes_value(true)
                         .help(BASE_HELP)
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name(OUTPUT)
+                    Arg::new(OUTPUT)
                         .long(OUTPUT)
-                        .short("u")
+                        .short('u')
                         .takes_value(true)
                         .help(OUTPUT_HELP)
                         .required(false),
                 ),
         )
         .subcommand(
-            SubCommand::with_name("s")
+            App::new("s")
                 .aliases(&["scoop"])
                 .about("Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)")
                 .arg(
-                    Arg::with_name("crate")
+                    Arg::new("crate")
                         .long("crate")
-                        .short("c")
+                        .short('c')
                         .takes_value(true)
                         .help("Sets crate's path where Cargo.toml located")
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name("binary")
+                    Arg::new("binary")
                         .long("binary")
-                        .short("i")
+                        .short('i')
                         .takes_value(true)
                         .help("Sets 64-bit binary package directory path")
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name("exe")
+                    Arg::new("exe")
                         .long("exe")
-                        .short("e")
+                        .short('e')
                         .takes_value(true)
                         .help("Sets Windows executable name")
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name(BASE)
+                    Arg::new(BASE)
                         .long(BASE)
-                        .short("b")
+                        .short('b')
                         .takes_value(true)
                         .help(BASE_HELP)
                         .required(true),
                 )
                 .arg(
-                    Arg::with_name(OUTPUT)
+                    Arg::new(OUTPUT)
                         .long(OUTPUT)
-                        .short("u")
+                        .short('u')
                         .takes_value(true)
                         .help(OUTPUT_HELP)
                         .required(false),
