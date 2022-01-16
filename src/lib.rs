@@ -13,6 +13,8 @@ extern crate vfs;
 use std::collections::HashMap;
 use std::io;
 
+#[cfg(test)]
+use mockall::{automock, predicate::*};
 use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
 use toml_edit::{value, Document};
@@ -37,9 +39,6 @@ extern crate mockall;
 
 #[cfg(test)] // <-- not needed in integration tests
 extern crate rstest;
-
-#[cfg(test)]
-use mockall::{automock, predicate::*};
 
 pub type AnyError = Box<dyn std::error::Error>;
 pub type Result<T> = core::result::Result<T, AnyError>;
