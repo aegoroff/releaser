@@ -93,13 +93,13 @@ fn output_string(cmd: &ArgMatches, s: Option<String>) {
         Some(b) => {
             let output_path = cmd.value_of(OUTPUT);
             match output_path {
-                None => println!("{}", b),
+                None => println!("{b}"),
                 Some(path) => {
                     let result = std::fs::write(path, b);
                     match result {
                         Ok(_) => {}
                         Err(e) => {
-                            eprintln!("{}", e);
+                            eprintln!("{e}");
                             std::process::exit(ErrorCode::FileWriteError as i32);
                         }
                     }

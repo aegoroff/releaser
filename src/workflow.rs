@@ -127,8 +127,8 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
 }
 
 fn commit_version(vcs: &impl Vcs, path: &str, version: Version) -> crate::Result<String> {
-    let ver = format!("v{}", version);
-    let commit_msg = format!("changelog: {}", &ver);
+    let ver = format!("v{version}");
+    let commit_msg = format!("changelog: {ver}");
     vcs.commit(path, &commit_msg)?;
     Ok(ver)
 }
