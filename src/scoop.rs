@@ -75,7 +75,8 @@ mod tests {
 
         // Assert
         assert!(result.is_some());
-        assert_eq!(result.unwrap().as_str(),
+        assert_eq!(
+            result.unwrap().as_str(),
             r###"{
   "description": "Microsoft Visual Studio solution parsing library",
   "64bit": "https://github.com/aegoroff/solv",
