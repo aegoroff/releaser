@@ -140,7 +140,6 @@ mod tests {
     use crate::{MockPublisher, CARGO_CONFIG};
     use mockall::predicate::*;
     use rstest::*;
-    use spectral::prelude::*;
     use vfs::MemoryFS;
 
     #[rstest]
@@ -197,7 +196,7 @@ mod tests {
         let r = w.release(path, Increment::Minor, all_features);
 
         // Assert
-        assert_that!(r).is_ok();
+        assert!(r.is_ok());
     }
 
     #[rstest]
@@ -245,7 +244,7 @@ mod tests {
         let r = c.release(path, Increment::Minor, all_features);
 
         // Assert
-        assert_that!(r).is_ok();
+        assert!(r.is_ok());
     }
 
     #[fixture]

@@ -121,7 +121,6 @@ mod tests {
     use super::*;
     use crate::CARGO_CONFIG;
     use rstest::*;
-    use spectral::prelude::*;
     use vfs::MemoryFS;
 
     #[test]
@@ -358,10 +357,10 @@ end
         let result = new_brew(root, linux_path, macos_path, "http://localhost");
 
         // Assert
-        assert_that!(result).is_some();
+        assert!(result.is_some());
         let r = result.unwrap();
-        assert_that!(r.as_str()).contains("http://localhost/linux-solv.tar.gz");
-        assert_that!(r.as_str()).contains("http://localhost/macos-solv.tar.gz");
+        assert!(r.contains("http://localhost/linux-solv.tar.gz"));
+        assert!(r.contains("http://localhost/macos-solv.tar.gz"));
     }
 
     #[rstest]
@@ -374,7 +373,7 @@ end
         let result = new_brew(root, linux_path, macos_path, "http://localhost");
 
         // Assert
-        assert_that!(result).is_none();
+        assert!(result.is_none());
     }
 
     #[rstest]
@@ -397,7 +396,7 @@ end
         let result = new_brew(root, linux_path, macos_path, "http://localhost");
 
         // Assert
-        assert_that!(result).is_none();
+        assert!(result.is_none());
     }
 
     #[fixture]

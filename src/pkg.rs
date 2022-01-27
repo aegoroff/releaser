@@ -38,7 +38,6 @@ fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use spectral::prelude::*;
     use vfs::MemoryFS;
 
     #[test]
@@ -56,9 +55,8 @@ mod tests {
         let p = new_binary_pkg(&root, "http://x").unwrap();
 
         // Assert
-        assert_that!(p.hash.as_str())
-            .is_equal_to("a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3");
-        assert_that!(p.url.as_str()).is_equal_to("http://x/f.tar.gz");
+        assert_eq!(p.hash.as_str(), "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3");
+        assert_eq!(p.url.as_str(), "http://x/f.tar.gz");
     }
 
     #[test]
@@ -80,6 +78,6 @@ mod tests {
         let p = new_binary_pkg(&dir_path, "http://x");
 
         // Assert
-        assert_that!(p).is_none();
+        assert!(p.is_none());
     }
 }

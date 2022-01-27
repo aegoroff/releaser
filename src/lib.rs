@@ -31,9 +31,6 @@ mod version_iter;
 pub mod workflow;
 
 #[cfg(test)] // <-- not needed in integration tests
-extern crate spectral;
-
-#[cfg(test)] // <-- not needed in integration tests
 #[macro_use]
 extern crate mockall;
 
@@ -240,7 +237,6 @@ pub enum Increment {
 mod tests {
     use super::*;
     use rstest::*;
-    use spectral::prelude::*;
 
     #[rstest]
     #[case::patch(Increment::Patch, "0.1.2")]
@@ -255,7 +251,7 @@ mod tests {
         let actual = increment(v, incr).unwrap();
 
         // Assert
-        assert_that!(actual).is_equal_to(Version::parse(expected).unwrap());
+        assert_eq!(actual, Version::parse(expected).unwrap());
     }
 
     #[test]

@@ -52,7 +52,6 @@ impl std::fmt::Display for Resource {
 mod tests {
     use super::*;
     use rstest::*;
-    use spectral::prelude::*;
 
     #[test]
     fn new_correct_some() {
@@ -62,7 +61,7 @@ mod tests {
         let r = Resource::new("http://localhost");
 
         // Assert
-        assert_that!(r.is_some()).is_true();
+        assert!(r.is_some());
     }
 
     #[test]
@@ -73,7 +72,7 @@ mod tests {
         let r = Resource::new("http/localhost");
 
         // Assert
-        assert_that!(r.is_none()).is_true();
+        assert!(r.is_none());
     }
 
     #[rstest]
@@ -96,6 +95,6 @@ mod tests {
         r.append_path(path);
 
         // Assert
-        assert_that!(r.to_string().as_str()).is_equal_to(expected);
+        assert_eq!(r.to_string().as_str(), expected);
     }
 }

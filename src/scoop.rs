@@ -63,7 +63,6 @@ mod tests {
     use super::*;
     use crate::CARGO_CONFIG;
     use rstest::*;
-    use spectral::prelude::*;
     use vfs::MemoryFS;
 
     #[rstest]
@@ -75,8 +74,8 @@ mod tests {
         let result = new_scoop(root, binary_path, "solv.exe", "http://localhost");
 
         // Assert
-        assert_that!(result).is_some();
-        assert_that!(result.unwrap().as_str()).is_equal_to(
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().as_str(),
             r###"{
   "description": "Microsoft Visual Studio solution parsing library",
   "64bit": "https://github.com/aegoroff/solv",
@@ -104,7 +103,7 @@ mod tests {
         let result = new_scoop(root, binary_path, "solv.exe", "http://localhost");
 
         // Assert
-        assert_that!(result).is_none();
+        assert!(result.is_none());
     }
 
     #[rstest]
@@ -134,7 +133,7 @@ mod tests {
         let result = new_scoop(root, binary_path, "solv.exe", "http://localhost");
 
         // Assert
-        assert_that!(result).is_none();
+        assert!(result.is_none());
     }
 
     #[fixture]

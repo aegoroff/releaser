@@ -109,7 +109,6 @@ mod tests {
     use crate::version_iter::VersionIter;
     use crate::{update_configs, Increment};
     use rstest::*;
-    use spectral::prelude::*;
 
     #[test]
     fn read_empty_workspace_test() {
@@ -124,7 +123,7 @@ mod tests {
         let result = VersionIter::open(&conf);
 
         // Assert
-        assert_that!(result.is_err()).is_true();
+        assert!(result.is_err());
     }
 
     #[rstest]
@@ -137,7 +136,7 @@ mod tests {
         let versions = it.count();
 
         // Assert
-        assert_that!(versions).is_equal_to(2);
+        assert_eq!(versions, 2);
     }
 
     #[rstest]
@@ -158,7 +157,7 @@ mod tests {
         let actual = update_configs(&conf, &mut it, incr).unwrap().to_string();
 
         // Assert
-        assert_that!(actual).is_equal_to(expected);
+        assert_eq!(actual, expected);
     }
 
     #[rstest]
@@ -172,8 +171,8 @@ mod tests {
         let sorted = it.topo_sort();
 
         // Assert
-        assert_that!(actual).is_ok();
-        assert_that!(actual.unwrap().minor).is_equal_to(2);
+        assert!(actual.is_ok());
+        assert_eq!(actual.unwrap().minor, 2);
         assert_eq!(vec!["solp", "solv"], sorted);
 
         let it = VersionIter::open(&conf).unwrap();
