@@ -144,7 +144,7 @@ fn build_cli() -> App<'static> {
         .setting(AppSettings::ArgRequiredElseHelp)
         .version(crate_version!())
         .author("egoroff <egoroff@gmail.com>")
-        .about("Rust releasing workspace tool")
+        .about("Rust crate or workspace releasing tool")
         .subcommand(
             App::new("w")
                 .aliases(&["workspace"])
