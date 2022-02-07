@@ -6,7 +6,7 @@ use std::process::Command;
 const TOOL: &str = "cargo";
 
 #[derive(Default)]
-pub struct Cargo {}
+pub struct Cargo;
 
 impl Publisher for Cargo {
     fn publish<'a>(&self, path: &str, options: PublishOptions) -> io::Result<()> {

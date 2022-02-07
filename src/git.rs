@@ -6,7 +6,7 @@ use crate::Vcs;
 const TOOL: &str = "git";
 
 #[derive(Default)]
-pub struct Git {}
+pub struct Git;
 
 impl Vcs for Git {
     fn commit(&self, path: &str, message: &str) -> io::Result<()> {
