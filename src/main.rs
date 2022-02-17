@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate clap;
 
-use clap::{App, AppSettings, Arg, ArgMatches};
+use clap::{command, ArgMatches, Command};
 use std::option::Option::Some;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};
@@ -139,159 +139,133 @@ where
     }
 }
 
-fn build_cli() -> App<'static> {
-    return App::new(crate_name!())
-        .setting(AppSettings::ArgRequiredElseHelp)
+fn build_cli() -> Command<'static> {
+    return command!(crate_name!())
+        .arg_required_else_help(true)
         .version(crate_version!())
-        .author("egoroff <egoroff@gmail.com>")
-        .about("Rust crate or workspace releasing tool")
+        .author(crate_authors!("\n"))
+        .about(crate_description!())
         .subcommand(
-            App::new("w")
+            Command::new("w")
                 .aliases(&["workspace"])
                 .about("Release workspace specified by path")
                 .arg(
-                    Arg::new(INCR)
+                    arg!([INCR])
                         .help(INCR_HELP)
                         .required(true)
                         .index(1),
                 )
                 .arg(
-                    Arg::new(PATH)
+                    arg!([PATH])
                         .help("Sets workspace root path")
                         .required(true)
                         .index(2),
                 )
                 .arg(
-                    Arg::new("delay")
-                        .long("delay")
-                        .short('d')
+                    arg!(-d --delay <URI>)
+                        .required(false)
                         .takes_value(true)
                         .default_value("20")
-                        .help("Delay in seconds between publish next workflow's crate")
-                        .required(false),
+                        .help("Delay in seconds between publish next workflow's crate"),
                 )
                 .arg(
-                    Arg::new(ALL)
-                        .long(ALL)
-                        .short('a')
+                    arg!(-a --all)
+                        .required(false)
                         .takes_value(false)
-                        .help(ALL_HELP)
-                        .required(false),
+                        .help(ALL_HELP),
                 ),
         )
         .subcommand(
-            App::new("c")
+            Command::new("c")
                 .aliases(&["crate"])
                 .about("Release single crate specified by path")
                 .arg(
-                    Arg::new(INCR)
+                    arg!([INCR])
                         .help(INCR_HELP)
                         .required(true)
                         .index(1),
                 )
                 .arg(
-                    Arg::new(PATH)
+                    arg!([PATH])
                         .help("Sets crate's root path")
                         .required(true)
                         .index(2),
                 )
                 .arg(
-                    Arg::new(ALL)
-                        .long(ALL)
-                        .short('a')
+                    arg!(-a --all)
+                        .required(false)
                         .takes_value(false)
-                        .help(ALL_HELP)
-                        .required(false),
+                        .help(ALL_HELP),
                 ),
         )
         .subcommand(
-            App::new("b")
+            Command::new("b")
                 .aliases(&["brew"])
                 .about("Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)")
                 .arg(
-                    Arg::new("crate")
-                        .long("crate")
-                        .short('c')
+                    arg!(-c --crate <PATH>)
+                        .required(true)
                         .takes_value(true)
-                        .help("Sets crate's path where Cargo.toml located")
-                        .required(true),
+                        .help("Sets crate's path where Cargo.toml located"),
                 )
                 .arg(
-                    Arg::new("linux")
-                        .long("linux")
-                        .short('l')
+                    arg!(-l --linux <PATH>)
+                        .required(false)
                         .takes_value(true)
-                        .help("Sets Linux package directory path")
-                        .required(false),
+                        .help("Sets Linux package directory path"),
                 )
                 .arg(
-                    Arg::new("macos")
-                        .long("macos")
-                        .short('m')
+                    arg!(-m --macos <PATH>)
+                        .required(false)
                         .takes_value(true)
-                        .help("Sets Mac OS package directory path")
-                        .required(false),
+                        .help("Sets Mac OS package directory path"),
                 )
                 .arg(
-                    Arg::new(BASE)
-                        .long(BASE)
-                        .short('b')
+                    arg!(-b --base <URI>)
+                        .required(true)
                         .takes_value(true)
-                        .help(BASE_HELP)
-                        .required(true),
+                        .help(BASE_HELP),
                 )
                 .arg(
-                    Arg::new(OUTPUT)
-                        .long(OUTPUT)
-                        .short('u')
+                    arg!(-u --output)
+                        .required(false)
                         .takes_value(true)
-                        .help(OUTPUT_HELP)
-                        .required(false),
+                        .help(OUTPUT_HELP),
                 ),
         )
         .subcommand(
-            App::new("s")
+            Command::new("s")
                 .aliases(&["scoop"])
                 .about("Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)")
                 .arg(
-                    Arg::new("crate")
-                        .long("crate")
-                        .short('c')
+                    arg!(-c --crate <PATH>)
+                        .required(true)
                         .takes_value(true)
-                        .help("Sets crate's path where Cargo.toml located")
-                        .required(true),
+                        .help("Sets crate's path where Cargo.toml located"),
                 )
                 .arg(
-                    Arg::new("binary")
-                        .long("binary")
-                        .short('i')
+                    arg!(-i --binary <PATH>)
+                        .required(true)
                         .takes_value(true)
-                        .help("Sets 64-bit binary package directory path")
-                        .required(true),
+                        .help("Sets 64-bit binary package directory path"),
                 )
                 .arg(
-                    Arg::new("exe")
-                        .long("exe")
-                        .short('e')
+                    arg!(-e --exe <FILE>)
+                        .required(true)
                         .takes_value(true)
-                        .help("Sets Windows executable name")
-                        .required(true),
+                        .help("Sets Windows executable name"),
                 )
                 .arg(
-                    Arg::new(BASE)
-                        .long(BASE)
-                        .short('b')
+                    arg!(-b --base)
+                        .required(true)
                         .takes_value(true)
-                        .help(BASE_HELP)
-                        .required(true),
+                        .help(BASE_HELP),
                 )
                 .arg(
-                    Arg::new(OUTPUT)
-                        .long(OUTPUT)
-                        .short('u')
+                    arg!(-u --output)
+                        .required(false)
                         .takes_value(true)
-                        .help(OUTPUT_HELP)
-                        .required(false),
+                        .help(OUTPUT_HELP),
                 ),
         );
 }
