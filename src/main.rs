@@ -162,7 +162,7 @@ fn build_cli() -> Command<'static> {
                         .index(2),
                 )
                 .arg(
-                    arg!(-d --delay <URI>)
+                    arg!(-d --delay <NUMBER>)
                         .required(false)
                         .takes_value(true)
                         .default_value("20")
@@ -227,7 +227,7 @@ fn build_cli() -> Command<'static> {
                         .help(BASE_HELP),
                 )
                 .arg(
-                    arg!(-u --output)
+                    arg!(-u --output [PATH])
                         .required(false)
                         .takes_value(true)
                         .help(OUTPUT_HELP),
@@ -256,13 +256,13 @@ fn build_cli() -> Command<'static> {
                         .help("Sets Windows executable name"),
                 )
                 .arg(
-                    arg!(-b --base)
+                    arg!(-b --base <URI>)
                         .required(true)
                         .takes_value(true)
                         .help(BASE_HELP),
                 )
                 .arg(
-                    arg!(-u --output)
+                    arg!(-u --output [PATH])
                         .required(false)
                         .takes_value(true)
                         .help(OUTPUT_HELP),
