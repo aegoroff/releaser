@@ -13,15 +13,18 @@ extern crate vfs;
 use std::collections::HashMap;
 use std::io;
 
+use error::FileError;
 #[cfg(test)]
 use mockall::{automock, predicate::*};
 use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
+
 use toml_edit::{value, Document};
 use vfs::VfsPath;
 
 pub mod brew;
 pub mod cargo;
+pub mod error;
 pub mod git;
 pub mod hash;
 mod pkg;
@@ -86,11 +89,22 @@ pub fn update_config(path: &VfsPath, version: &CrateVersion, incr: Increment) ->
         working_config_path = path;
     } else {
         let parent = path.parent().unwrap();
-        member_config_path = parent.join(&version.path)?.join(CARGO_CONFIG)?;
+        member_config_path = match match parent.join(&version.path) {
+            Ok(it) => it,
+            Err(err) => return Err(Box::new(FileError::from(err))),
+        }
+        .join(CARGO_CONFIG)
+        {
+            Ok(it) => it,
+            Err(err) => return Err(Box::new(FileError::from(err))),
+        };
         working_config_path = &member_config_path;
     }
 
-    let mut file = working_config_path.open_file()?;
+    let mut file = match working_config_path.open_file() {
+        Ok(it) => it,
+        Err(err) => return Err(Box::new(FileError::from(err))),
+    };
     let mut content = String::new();
     file.read_to_string(&mut content)?;
 
@@ -113,7 +127,10 @@ pub fn update_config(path: &VfsPath, version: &CrateVersion, incr: Increment) ->
         }
     }
 
-    let mut f = working_config_path.create_file()?;
+    let mut f = match working_config_path.create_file() {
+        Ok(it) => it,
+        Err(err) => return Err(Box::new(FileError::from(err))),
+    };
     let changed = doc.to_string();
     f.write_all(changed.as_bytes())?;
     Ok(result)
@@ -179,7 +196,10 @@ struct CrateConfig {
 
 impl CrateConfig {
     pub fn open(path: &VfsPath) -> Result<Self> {
-        let mut file = path.open_file()?;
+        let mut file = match path.open_file() {
+            Ok(it) => it,
+            Err(err) => return Err(Box::new(FileError::from(err))),
+        };
         let mut content = String::new();
         file.read_to_string(&mut content)?;
         let conf: CrateConfig = toml::from_str(&content)?;

@@ -1,4 +1,5 @@
 use crate::{CrateConfig, CrateVersion, Dependency, Place, WorkspaceConfig, CARGO_CONFIG, VERSION};
+use crate::error::FileError;
 use petgraph::algo::DfsSpace;
 use petgraph::graphmap::DiGraphMap;
 use std::collections::HashMap;
@@ -14,7 +15,10 @@ pub struct VersionIter<'a> {
 
 impl<'a> VersionIter<'a> {
     pub fn open(path: &'a VfsPath) -> crate::Result<Self> {
-        let mut wks_file = path.open_file()?;
+        let mut wks_file = match path.open_file() {
+            Ok(it) => it,
+            Err(err) => return Err(Box::new(FileError::from(err))),
+        };
         let mut wc = String::new();
         wks_file.read_to_string(&mut wc)?;
         let wks: WorkspaceConfig = toml::from_str(&wc)?;
