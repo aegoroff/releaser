@@ -88,24 +88,19 @@ enum ErrorCode {
 }
 
 fn output_string(cmd: &ArgMatches, s: Option<String>) {
-    match s {
-        None => std::process::exit(ErrorCode::NoOutputProduced as i32),
-        Some(b) => {
-            let output_path = cmd.value_of(OUTPUT);
-            match output_path {
-                None => println!("{b}"),
-                Some(path) => {
-                    let result = std::fs::write(path, b);
-                    match result {
-                        Ok(_) => {}
-                        Err(e) => {
-                            eprintln!("{e}");
-                            std::process::exit(ErrorCode::FileWriteError as i32);
-                        }
-                    }
-                }
+    if let Some(b) = s {
+        let output_path = cmd.value_of(OUTPUT);
+        if let Some(path) = output_path {
+            let result = std::fs::write(path, b);
+            if let Err(e) = result {
+                eprintln!("{e}");
+                std::process::exit(ErrorCode::FileWriteError as i32);
             }
+        } else {
+            println!("{b}")
         }
+    } else {
+        std::process::exit(ErrorCode::NoOutputProduced as i32)
     }
 }
 
