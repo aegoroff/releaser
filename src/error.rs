@@ -6,7 +6,7 @@ use vfs::VfsError;
 #[derive(Error, Debug)]
 pub enum FileError {
     /// Generic error variant
-    Other {
+    Generic {
         /// The generic error message
         message: String,
     },
@@ -15,8 +15,8 @@ pub enum FileError {
 impl std::fmt::Display for FileError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            FileError::Other { message } => {
-                write!(f, "FileSystem error: {}", message)
+            FileError::Generic { message } => {
+                write!(f, "{}", message)
             }
         }
     }
@@ -24,7 +24,7 @@ impl std::fmt::Display for FileError {
 
 impl From<VfsError> for FileError {
     fn from(err: VfsError) -> Self {
-        FileError::Other {
+        FileError::Generic {
             message: err.to_string(),
         }
     }
