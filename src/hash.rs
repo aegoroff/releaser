@@ -12,14 +12,13 @@ pub fn calculate_sha256(path: &VfsPath) -> Result<String, VfsError> {
 
     loop {
         let r = reader.read(&mut buf);
-        match r {
-            Ok(n) => {
-                if n == 0 {
-                    break;
-                }
-                hasher.update(&buf[..n])
+        if let Ok(n) = r {
+            if n == 0 {
+                break;
             }
-            Err(_) => break,
+            hasher.update(&buf[..n])
+        } else {
+            break
         }
     }
     let result = &hasher.finalize()[..];
