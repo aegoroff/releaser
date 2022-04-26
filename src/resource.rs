@@ -19,25 +19,22 @@ impl Resource {
     }
 
     pub fn append_path(&mut self, path: &str) {
-        match self.url.path_segments() {
-            None => {
-                let r = self.url.join(path);
-                if r.is_ok() {}
-            }
-            Some(segments) => {
-                let p = segments
-                    .chain(std::iter::once(path))
-                    .filter(|x| !x.is_empty())
-                    .map(|x| x.trim_matches('/'))
-                    .join("/");
+        if let Some(segments) = self.url.path_segments() {
+            let p = segments
+                .chain(std::iter::once(path))
+                .filter(|x| !x.is_empty())
+                .map(|x| x.trim_matches('/'))
+                .join("/");
 
-                if path.len() > 1 && path.chars().last().unwrap_or_default() == '/' {
-                    let p = p + "/";
-                    self.url.set_path(&p);
-                } else {
-                    self.url.set_path(&p);
-                }
+            if path.len() > 1 && path.chars().last().unwrap_or_default() == '/' {
+                let p = p + "/";
+                self.url.set_path(&p);
+            } else {
+                self.url.set_path(&p);
             }
+        } else {
+            let r = self.url.join(path);
+            if r.is_ok() {}
         }
     }
 }
