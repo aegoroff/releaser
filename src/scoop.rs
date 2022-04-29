@@ -49,9 +49,10 @@ pub fn new_scoop(
             architecture: Architecture { x64: x64pkg },
         };
         let result = serde_json::to_string_pretty(&scoop);
-        match result {
-            Ok(r) => Some(r),
-            Err(_) => None,
+        if let Ok(r) = result {
+            Some(r)
+        } else {
+            None
         }
     } else {
         None

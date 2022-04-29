@@ -125,12 +125,9 @@ where
 
     let r: VfsPath = PhysicalFS::new(PathBuf::from(path)).into();
     let root = VPath::new(path, r);
-    match release.release(root, inc.unwrap(), all_features) {
-        Ok(()) => {}
-        Err(e) => {
-            eprintln!("Path:\t{}\nError:\t{}", path, e);
-            std::process::exit(ErrorCode::ReleaseError as i32);
-        }
+    if let Err(e) = release.release(root, inc.unwrap(), all_features) {
+        eprintln!("Path:\t{}\nError:\t{}", path, e);
+        std::process::exit(ErrorCode::ReleaseError as i32);
     }
 }
 

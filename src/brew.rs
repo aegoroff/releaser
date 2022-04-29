@@ -97,9 +97,10 @@ pub fn new_brew(
 
 fn uppercase_first_letter(s: &str) -> String {
     let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().chain(c).collect(),
+    if let Some(f) = c.next() {
+        f.to_uppercase().chain(c).collect()
+    } else {
+        String::new()
     }
 }
 
