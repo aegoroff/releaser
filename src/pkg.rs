@@ -24,11 +24,11 @@ pub fn new_binary_pkg(path: &VfsPath, base_uri: &str) -> Option<Package> {
 }
 
 fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
-    let file_name = match path.read_dir() {
-        Ok(it) => it
-            .filter(|x| x.extension().is_some())
-            .find(|x| x.extension().unwrap().eq(PKG_EXTENSION)),
-        Err(_) => None,
+    let file_name = if let Ok(it) = path.read_dir() {
+        it.filter(|x| x.extension().is_some())
+            .find(|x| x.extension().unwrap().eq(PKG_EXTENSION))
+    } else {
+        None
     }?;
 
     let hash = hash::calculate_sha256(&file_name).unwrap_or_default();
