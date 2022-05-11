@@ -94,4 +94,17 @@ mod tests {
         // Assert
         assert_eq!(r.to_string().as_str(), expected);
     }
+
+    #[test]
+    fn append_path_twice() {
+        // Arrange
+        let mut r = Resource::new("http://localhost").unwrap();
+
+        // Act
+        r.append_path("x");
+        r.append_path("y");
+
+        // Assert
+        assert_eq!(r.to_string().as_str(), "http://localhost/x/y");
+    }
 }
