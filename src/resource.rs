@@ -34,7 +34,7 @@ impl Resource {
             }
         } else {
             let r = self.url.join(path);
-            if !r.is_ok() {
+            if r.is_err() {
                 // Think over error handling
             }
         }
