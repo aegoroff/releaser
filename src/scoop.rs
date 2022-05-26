@@ -5,7 +5,7 @@ use vfs::VfsPath;
 #[derive(Serialize, Default)]
 pub struct Scoop {
     pub description: String,
-    #[serde(rename(serialize = "64bit"), skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub homepage: Option<String>,
     pub version: String,
     pub license: String,
@@ -80,7 +80,7 @@ mod tests {
             result.unwrap().as_str(),
             r###"{
   "description": "Microsoft Visual Studio solution parsing library",
-  "64bit": "https://github.com/aegoroff/solv",
+  "homepage": "https://github.com/aegoroff/solv",
   "version": "0.1.13",
   "license": "MIT",
   "architecture": {
