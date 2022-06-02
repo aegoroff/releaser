@@ -72,8 +72,8 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
                 all_features,
             };
             self.publisher.publish(root.real_path, options)?;
-            // delay needed between crates to avoid publish failure in case of dependencies
-            // crates.io index aren't updated instantly
+            // delay needed between crates to avoid publish failure
+            // if crates.io index aren't updated instantly
             if i < crates_to_publish.len() - 1 {
                 println!(
                     " Waiting {} seconds after publish {} ...",
