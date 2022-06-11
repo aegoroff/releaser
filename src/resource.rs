@@ -18,7 +18,7 @@ impl Resource {
         }
     }
 
-    pub fn append_path(&mut self, path: &str) {
+    pub fn append_path(&mut self, path: &str) -> &mut Self {
         if let Some(segments) = self.url.path_segments() {
             let p = segments
                 .chain(std::iter::once(path))
@@ -38,6 +38,7 @@ impl Resource {
                 // Think over error handling
             }
         }
+        self
     }
 }
 
@@ -104,8 +105,7 @@ mod tests {
         let mut r = Resource::new("http://localhost").unwrap();
 
         // Act
-        r.append_path("x");
-        r.append_path("y");
+        r.append_path("x").append_path("y");
 
         // Assert
         assert_eq!(r.to_string().as_str(), "http://localhost/x/y");
