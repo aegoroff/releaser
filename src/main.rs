@@ -38,9 +38,8 @@ fn main() {
 }
 
 fn workspace(cmd: &ArgMatches) {
-    let delay_seconds = cmd.value_of("delay").unwrap_or("");
-    let delay_seconds: u64 = delay_seconds.parse().unwrap_or(20);
-    let r = Workspace::new(delay_seconds, Cargo::default(), Git::default());
+    let delay_seconds = cmd.get_one::<u64>("delay").unwrap_or(&20);
+    let r = Workspace::new(*delay_seconds, Cargo::default(), Git::default());
     release(cmd, r);
 }
 
@@ -50,15 +49,16 @@ fn single_crate(cmd: &ArgMatches) {
 }
 
 fn brew(cmd: &ArgMatches) {
-    let linux_path = cmd.value_of("linux").unwrap_or("");
-    let macos_path = cmd.value_of("macos").unwrap_or("");
+    let empty = String::default();
+    let linux_path = cmd.get_one::<String>("linux").unwrap_or(&empty);
+    let macos_path = cmd.get_one::<String>("macos").unwrap_or(&empty);
 
     if linux_path.is_empty() && macos_path.is_empty() {
         return;
     }
 
-    let crate_path = cmd.value_of("crate").unwrap_or("");
-    let base_uri = cmd.value_of(BASE).unwrap_or("");
+    let crate_path = cmd.get_one::<String>("crate").unwrap_or(&empty);
+    let base_uri = cmd.get_one::<String>(BASE).unwrap_or(&empty);
 
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
     let linux_path: VfsPath = PhysicalFS::new(PathBuf::from(linux_path)).into();
@@ -69,10 +69,11 @@ fn brew(cmd: &ArgMatches) {
 }
 
 fn scoop(cmd: &ArgMatches) {
-    let exe_name = cmd.value_of("exe").unwrap_or("");
-    let binary_path = cmd.value_of("binary").unwrap_or("");
-    let crate_path = cmd.value_of("crate").unwrap_or("");
-    let base_uri = cmd.value_of(BASE).unwrap_or("");
+    let empty = String::default();
+    let exe_name = cmd.get_one::<String>("exe").unwrap_or(&empty);
+    let binary_path = cmd.get_one::<String>("binary").unwrap_or(&empty);
+    let crate_path = cmd.get_one::<String>("crate").unwrap_or(&empty);
+    let base_uri = cmd.get_one::<String>(BASE).unwrap_or(&empty);
 
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
     let binary_path: VfsPath = PhysicalFS::new(PathBuf::from(binary_path)).into();
@@ -89,7 +90,7 @@ enum ErrorCode {
 
 fn output_string(cmd: &ArgMatches, s: Option<String>) {
     if let Some(b) = s {
-        let output_path = cmd.value_of(OUTPUT);
+        let output_path = cmd.get_one::<String>(OUTPUT);
         if let Some(path) = output_path {
             let result = std::fs::write(path, b);
             if let Err(e) = result {
@@ -108,24 +109,17 @@ fn release<'a, R>(cmd: &'a ArgMatches, release: R)
 where
     R: Release<'a>,
 {
-    let path = cmd.value_of(PATH).unwrap();
-    let incr = cmd.value_of(INCR).unwrap();
-    let all_features = cmd.is_present(ALL);
+    let path = cmd.get_one::<String>(PATH).unwrap();
+    let incr = cmd.get_one::<Increment>(INCR);
+    let all_features = cmd.contains_id(ALL);
 
-    let inc = match incr {
-        "major" => Some(Increment::Major),
-        "minor" => Some(Increment::Minor),
-        "patch" => Some(Increment::Patch),
-        _ => None,
-    };
-
-    if inc.is_none() {
+    if incr.is_none() {
         return;
     }
 
     let r: VfsPath = PhysicalFS::new(PathBuf::from(path)).into();
     let root = VPath::new(path, r);
-    if let Err(e) = release.release(root, inc.unwrap(), all_features) {
+    if let Err(e) = release.release(root, *incr.unwrap(), all_features) {
         eprintln!("Path:\t{}\nError:\t{}", path, e);
         std::process::exit(ErrorCode::ReleaseError as i32);
     }

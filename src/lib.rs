@@ -13,6 +13,7 @@ extern crate vfs;
 use std::collections::HashMap;
 use std::io;
 
+use clap::ValueEnum;
 use error::FileError;
 #[cfg(test)]
 use mockall::{automock, predicate::*};
@@ -246,7 +247,7 @@ pub enum Place {
     Dependency(String, String),
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum Increment {
     Major,
     Minor,
