@@ -137,6 +137,7 @@ fn build_cli() -> Command<'static> {
                 .about("Release workspace specified by path")
                 .arg(
                     arg!([INCR])
+                        .value_parser(value_parser!(Increment))
                         .help(INCR_HELP)
                         .required(true)
                         .index(1),
@@ -151,6 +152,7 @@ fn build_cli() -> Command<'static> {
                     arg!(-d --delay <NUMBER>)
                         .required(false)
                         .takes_value(true)
+                        .value_parser(value_parser!(u64))
                         .default_value("20")
                         .help("Delay in seconds between publish next workflow's crate"),
                 )
@@ -167,6 +169,7 @@ fn build_cli() -> Command<'static> {
                 .about("Release single crate specified by path")
                 .arg(
                     arg!([INCR])
+                        .value_parser(value_parser!(Increment))
                         .help(INCR_HELP)
                         .required(true)
                         .index(1),
