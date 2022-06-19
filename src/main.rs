@@ -22,6 +22,7 @@ const OUTPUT: &str = "output";
 const OUTPUT_HELP: &str =
     "File path to save result to. If not set result will be written into stdout";
 const BASE: &str = "base";
+const CRATE: &str = "crate";
 const BASE_HELP: &str = "Base URI of downloaded artifacts";
 
 fn main() {
@@ -57,7 +58,7 @@ fn brew(cmd: &ArgMatches) {
         return;
     }
 
-    let crate_path = cmd.get_one::<String>("crate").unwrap_or(&empty);
+    let crate_path = cmd.get_one::<String>(CRATE).unwrap_or(&empty);
     let base_uri = cmd.get_one::<String>(BASE).unwrap_or(&empty);
 
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
@@ -72,7 +73,7 @@ fn scoop(cmd: &ArgMatches) {
     let empty = String::default();
     let exe_name = cmd.get_one::<String>("exe").unwrap_or(&empty);
     let binary_path = cmd.get_one::<String>("binary").unwrap_or(&empty);
-    let crate_path = cmd.get_one::<String>("crate").unwrap_or(&empty);
+    let crate_path = cmd.get_one::<String>(CRATE).unwrap_or(&empty);
     let base_uri = cmd.get_one::<String>(BASE).unwrap_or(&empty);
 
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
