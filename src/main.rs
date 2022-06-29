@@ -89,6 +89,8 @@ enum ErrorCode {
     ReleaseError = 3,
 }
 
+/// Helper function that outputs string specified into
+/// console or file that set by command line option
 fn output_string(cmd: &ArgMatches, s: Option<String>) {
     if let Some(b) = s {
         let output_path = cmd.get_one::<String>(OUTPUT);
@@ -106,6 +108,7 @@ fn output_string(cmd: &ArgMatches, s: Option<String>) {
     }
 }
 
+/// Helper function that releases crate or workspace
 fn release<'a, R>(cmd: &'a ArgMatches, release: R)
 where
     R: Release<'a>,
