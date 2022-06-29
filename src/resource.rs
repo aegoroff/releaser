@@ -26,7 +26,7 @@ impl Resource {
                 .map(|x| x.trim_matches('/'))
                 .join("/");
 
-            if path.len() > 1 && path.chars().last().unwrap_or_default() == '/' {
+            if path.len() > 1 && path.chars().rev().next().unwrap_or_default() == '/' {
                 let p = p + "/";
                 self.url.set_path(&p);
             } else {
