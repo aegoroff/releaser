@@ -21,12 +21,11 @@ impl Resource {
     pub fn append_path(&mut self, path: &str) -> &mut Self {
         if let Some(segments) = self.url.path_segments() {
             let p = segments
-                .chain(std::iter::once(path))
+                .chain(path.split('/'))
                 .filter(|x| !x.is_empty())
-                .map(|x| x.trim_matches('/'))
                 .join("/");
 
-            if path.len() > 1 && path.chars().rev().next().unwrap_or_default() == '/' {
+            if path.chars().rev().next().unwrap_or_default() == '/' {
                 let p = p + "/";
                 self.url.set_path(&p);
             } else {
@@ -76,17 +75,29 @@ mod tests {
     }
 
     #[rstest]
+    #[case("http://localhost", "x", "http://localhost/x")]
     #[case("http://localhost", "/x", "http://localhost/x")]
     #[case("http://localhost", "/x/", "http://localhost/x/")]
+    #[case("http://localhost", "x/", "http://localhost/x/")]
+    #[case("http://localhost", "/x/y/", "http://localhost/x/y/")]
+    #[case("http://localhost/", "x", "http://localhost/x")]
+    #[case("http://localhost/", "/x", "http://localhost/x")]
     #[case("http://localhost/", "/x/", "http://localhost/x/")]
+    #[case("http://localhost/", "x/", "http://localhost/x/")]
     #[case("http://localhost/", "x/y", "http://localhost/x/y")]
     #[case("http://localhost/", "/x/y", "http://localhost/x/y")]
+    #[case("http://localhost/", "/x/y/", "http://localhost/x/y/")]
     #[case("http://localhost/x", "/y", "http://localhost/x/y")]
-    #[case("http://localhost/x/", "/y", "http://localhost/x/y")]
+    #[case("http://localhost/x", "y", "http://localhost/x/y")]
+    #[case("http://localhost/x", "y/", "http://localhost/x/y/")]
+    #[case("http://localhost/x", "/y/", "http://localhost/x/y/")]
     #[case("http://localhost/x/", "y", "http://localhost/x/y")]
+    #[case("http://localhost/x/", "/y", "http://localhost/x/y")]
+    #[case("http://localhost/x/", "y/", "http://localhost/x/y/")]
+    #[case("http://localhost/x/", "/y/", "http://localhost/x/y/")]
     #[case::real_slashed_base("https://github.com/aegoroff/dirstat/releases/download/v1.0.7/", "dirstat_1.0.7_darwin_amd64.tar.gz", "https://github.com/aegoroff/dirstat/releases/download/v1.0.7/dirstat_1.0.7_darwin_amd64.tar.gz")]
     #[case::real_slashless_base("https://github.com/aegoroff/dirstat/releases/download/v1.0.7", "dirstat_1.0.7_darwin_amd64.tar.gz", "https://github.com/aegoroff/dirstat/releases/download/v1.0.7/dirstat_1.0.7_darwin_amd64.tar.gz")]
-    #[case("http://localhost", "http://:/", "http://localhost/http://:/")]
+    #[case("http://localhost", "http://:/", "http://localhost/http:/:/")]
     #[trace]
     fn append_path_tests(#[case] base: &str, #[case] path: &str, #[case] expected: &str) {
         // Arrange
