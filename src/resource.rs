@@ -33,8 +33,8 @@ impl Resource {
             }
         } else {
             let r = self.url.join(path);
-            if r.is_err() {
-                // Think over error handling
+            if let Ok(u) = r {
+                self.url = u
             }
         }
         self
