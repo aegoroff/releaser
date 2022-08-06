@@ -76,8 +76,7 @@ where
     let result = iter
         .by_ref()
         .map(|config| update_config(path, &config, incr))
-        .filter(|v| v.is_ok())
-        .map(|r| r.unwrap())
+        .filter_map(|v| v.ok())
         .fold(result, |r, v| r.max(v));
 
     Ok(result)
