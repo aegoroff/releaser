@@ -17,7 +17,9 @@ const PATH: &str = "PATH";
 const INCR: &str = "INCR";
 const INCR_HELP: &str = "Version increment. One of the following: major, minor or patch";
 const ALL: &str = "all";
+const NO_VERIFY: &str = "no-verify";
 const ALL_HELP: &str = "Whether to add option --all-features to cargo publish command";
+const NO_VERIFY_HELP: &str = "Whether to add option --no-verify to cargo publish command";
 const OUTPUT: &str = "output";
 const OUTPUT_HELP: &str =
     "File path to save result to. If not set result will be written into stdout";
@@ -116,6 +118,7 @@ where
     let path = cmd.get_one::<String>(PATH).unwrap();
     let incr = cmd.get_one::<Increment>(INCR);
     let all_features = cmd.contains_id(ALL);
+    let no_verify = cmd.contains_id(NO_VERIFY);
 
     if incr.is_none() {
         return;
@@ -123,7 +126,7 @@ where
 
     let r: VfsPath = PhysicalFS::new(PathBuf::from(path)).into();
     let root = VPath::new(path, r);
-    if let Err(e) = release.release(root, *incr.unwrap(), all_features) {
+    if let Err(e) = release.release(root, *incr.unwrap(), all_features, no_verify) {
         eprintln!("Path:\t{}\nError:\t{}", path, e);
         std::process::exit(ErrorCode::ReleaseError as i32);
     }
@@ -165,6 +168,12 @@ fn build_cli() -> Command<'static> {
                         .required(false)
                         .takes_value(false)
                         .help(ALL_HELP),
+                )
+                .arg(
+                    arg!(-n --noverify)
+                        .required(false)
+                        .takes_value(false)
+                        .help(NO_VERIFY_HELP),
                 ),
         )
         .subcommand(
@@ -189,6 +198,12 @@ fn build_cli() -> Command<'static> {
                         .required(false)
                         .takes_value(false)
                         .help(ALL_HELP),
+                )
+                .arg(
+                    arg!(-n --noverify)
+                        .required(false)
+                        .takes_value(false)
+                        .help(NO_VERIFY_HELP),
                 ),
         )
         .subcommand(

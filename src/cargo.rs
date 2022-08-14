@@ -23,6 +23,10 @@ impl Publisher for Cargo {
             child.arg("--all-features");
         }
 
+        if options.no_verify {
+            child.arg("--no-verify");
+        }
+
         child.spawn()?.wait()?;
         Ok(())
     }

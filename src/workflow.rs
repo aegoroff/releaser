@@ -35,7 +35,8 @@ pub trait Release<'a> {
     /// * `root` - path to folder where crate's or workspace's Cargo.toml located
     /// * `incr` - Version increment (major, minor or patch)
     /// * `all_features` - whether to publish all features i.e. pass --all-features flag to cargo publish
-    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool) -> crate::Result<()>;
+    /// * `no_verify` - whether to verify package tarball before publish i.e. pass --no-verify flag to cargo publish
+    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool, no_verify: bool) -> crate::Result<()>;
 }
 
 pub struct Workspace<P: Publisher, V: Vcs> {
@@ -55,7 +56,7 @@ impl<P: Publisher, V: Vcs> Workspace<P, V> {
 }
 
 impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
-    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool) -> crate::Result<()> {
+    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool, no_verify: bool) -> crate::Result<()> {
         let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
 
         let mut it = VersionIter::open(&crate_conf)?;
@@ -70,6 +71,7 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
             let options = PublishOptions {
                 crate_to_publish: Some(publish),
                 all_features,
+                no_verify,
             };
             self.publisher.publish(root.real_path, options)?;
             // delay between crates needed to avoid publish failure
@@ -104,7 +106,7 @@ impl<P: Publisher, V: Vcs> Crate<P, V> {
 }
 
 impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
-    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool) -> crate::Result<()> {
+    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool, no_verify: bool) -> crate::Result<()> {
         let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
 
         let conf = CrateConfig::open(&crate_conf)?;
@@ -116,6 +118,7 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
         let options = PublishOptions {
             crate_to_publish: None,
             all_features,
+            no_verify,
         };
         self.publisher.publish(root.real_path, options)?;
 
@@ -160,6 +163,7 @@ mod tests {
         let solp_options: PublishOptions = PublishOptions {
             crate_to_publish: Some("solp"),
             all_features,
+            no_verify: false
         };
         mock_pub
             .expect_publish()
@@ -170,6 +174,7 @@ mod tests {
         let solv_options: PublishOptions = PublishOptions {
             crate_to_publish: Some("solv"),
             all_features,
+            no_verify: false
         };
         mock_pub
             .expect_publish()
@@ -193,7 +198,7 @@ mod tests {
         let path = VPath::new("/x", root);
 
         // Act
-        let r = w.release(path, Increment::Minor, all_features);
+        let r = w.release(path, Increment::Minor, all_features, false);
 
         // Assert
         assert!(r.is_ok());
@@ -217,6 +222,7 @@ mod tests {
         let options: PublishOptions = PublishOptions {
             crate_to_publish: None,
             all_features,
+            no_verify: false,
         };
         mock_pub
             .expect_publish()
@@ -241,7 +247,7 @@ mod tests {
         let path = VPath::new("/x", root.join("solp").unwrap());
 
         // Act
-        let r = c.release(path, Increment::Minor, all_features);
+        let r = c.release(path, Increment::Minor, all_features, false);
 
         // Assert
         assert!(r.is_ok());

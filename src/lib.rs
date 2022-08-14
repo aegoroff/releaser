@@ -53,6 +53,7 @@ const DEPS: &str = "dependencies";
 pub struct PublishOptions<'a> {
     pub crate_to_publish: Option<&'a str>,
     pub all_features: bool,
+    pub no_verify: bool,
 }
 
 #[cfg_attr(test, automock)]
