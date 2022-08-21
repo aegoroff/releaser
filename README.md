@@ -50,33 +50,33 @@ Release workspace specified by path
 USAGE:
     releaser w [OPTIONS] <INCR> <PATH>
 
-FLAGS:
-    -a, --all        Whether to add option --all-features to cargo publish command
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+ARGS:
+    <INCR>    Version increment. One of the following: major, minor or patch [possible values:
+              major, minor, patch]
+    <PATH>    Sets workspace root path
 
 OPTIONS:
-    -d, --delay <delay>    Delay in seconds between publish next workflow's crate [default: 20]
-
-ARGS:
-    <INCR>    Version increment. One of the following: major, minor or patch
-    <PATH>    Sets workspace root path
+    -a, --all               Whether to add option --all-features to cargo publish command
+    -d, --delay <NUMBER>    Delay in seconds between publish next workflow's crate [default: 20]
+    -h, --help              Print help information
+    -n, --noverify          Whether to add option --no-verify to cargo publish command
 ```
 Releasing simple crate
 ```
 Release single crate specified by path
 
 USAGE:
-    releaser c <INCR> <PATH>
-
-FLAGS:
-    -a, --all        Whether to add option --all-features to cargo publish command
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+    releaser c [OPTIONS] <INCR> <PATH>
 
 ARGS:
-    <INCR>    Version increment. One of the following: major, minor or patch
+    <INCR>    Version increment. One of the following: major, minor or patch [possible values:
+              major, minor, patch]
     <PATH>    Sets crate's root path
+
+OPTIONS:
+    -a, --all         Whether to add option --all-features to cargo publish command
+    -h, --help        Print help information
+    -n, --noverify    Whether to add option --no-verify to cargo publish command
 ```
 Creating brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux
 only)
