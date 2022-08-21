@@ -27,20 +27,22 @@ cargo install releaser
 
 # Command line syntax:
 ```
-Rust releasing workspace tool
+Crate or workspace releasing tool. All crates from workspace will be released on crates.io
 
 USAGE:
-    releaser.exe [SUBCOMMAND]
+    releaser [SUBCOMMAND]
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+OPTIONS:
+    -h, --help       Print help information
+    -V, --version    Print version information
 
 SUBCOMMANDS:
-    b       Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux
-            only)
+    b       Create brew package manager Formula (package definition file) to publish it into a
+                tap (MacOS and Linux only)
     c       Release single crate specified by path
-    help    Prints this message or the help of the given subcommand(s)
+    help    Print this message or the help of the given subcommand(s)
+    s       Create scoop package manager JSON (package definition file) to publish it into
+                bucket (Windows only)
     w       Release workspace specified by path
 ```
 Releasing workspace
