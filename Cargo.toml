@@ -12,7 +12,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-semver = "1.0.13"
+semver = "1.0.14"
 toml = "0.5.9"
 toml_edit = "0.14.4"
 serde = { version = "1.0.144", features = ["derive"] }
@@ -21,12 +21,12 @@ vfs = "0.7.1"
 clap = { version = "3.2.22", features = ["std", "color", "suggestions", "cargo", "derive"] }
 petgraph = "0.6.2"
 ansi_term = "0.12.1"
-handlebars = "4.3.3"
-sha2 = "0.10.5"
+handlebars = "4.3.4"
+sha2 = "0.10.6"
 hex = "0.4.3"
-url = "2.2.2"
-itertools = "0.10.3"
-thiserror = "1.0.34"
+url = "2.3.1"
+itertools = "0.10.4"
+thiserror = "1.0.35"
 
 [dev-dependencies]
 mockall = "0.11.2"
