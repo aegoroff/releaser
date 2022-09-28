@@ -108,7 +108,7 @@ fn serialize_brew<T: Serialize>(data: &T) -> String {
     handlebars_helper!(lines: |count: i32| {
         let mut i = 0;
         while i < count {
-            println!("");
+            println!();
             i += 1;
         }
     });
