@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate clap;
 
-use clap::{command, ArgMatches, Command};
+use clap::{command, ArgMatches, Command, ArgAction};
 use std::option::Option::Some;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};
@@ -117,8 +117,8 @@ where
 {
     let path = cmd.get_one::<String>(PATH).unwrap();
     let incr = cmd.get_one::<Increment>(INCR);
-    let all_features = cmd.contains_id(ALL);
-    let no_verify = cmd.contains_id(NO_VERIFY);
+    let all_features = cmd.get_flag(ALL);
+    let no_verify = cmd.get_flag(NO_VERIFY);
 
     if incr.is_none() {
         return;
@@ -132,8 +132,8 @@ where
     }
 }
 
-fn build_cli() -> Command<'static> {
-    return command!(crate_name!())
+fn build_cli() -> Command {
+    command!(crate_name!())
         .arg_required_else_help(true)
         .version(crate_version!())
         .author(crate_authors!("\n"))
@@ -158,7 +158,6 @@ fn build_cli() -> Command<'static> {
                 .arg(
                     arg!(-d --delay <NUMBER>)
                         .required(false)
-                        .takes_value(true)
                         .value_parser(value_parser!(u64))
                         .default_value("20")
                         .help("Delay in seconds between publish next workflow's crate"),
@@ -166,13 +165,13 @@ fn build_cli() -> Command<'static> {
                 .arg(
                     arg!(-a --all)
                         .required(false)
-                        .takes_value(false)
+                        .action(ArgAction::SetTrue)
                         .help(ALL_HELP),
                 )
                 .arg(
                     arg!(-n --noverify)
                         .required(false)
-                        .takes_value(false)
+                        .action(ArgAction::SetTrue)
                         .help(NO_VERIFY_HELP),
                 ),
         )
@@ -196,13 +195,13 @@ fn build_cli() -> Command<'static> {
                 .arg(
                     arg!(-a --all)
                         .required(false)
-                        .takes_value(false)
+                        .action(ArgAction::SetTrue)
                         .help(ALL_HELP),
                 )
                 .arg(
                     arg!(-n --noverify)
                         .required(false)
-                        .takes_value(false)
+                        .action(ArgAction::SetTrue)
                         .help(NO_VERIFY_HELP),
                 ),
         )
@@ -213,31 +212,26 @@ fn build_cli() -> Command<'static> {
                 .arg(
                     arg!(-c --crate <PATH>)
                         .required(true)
-                        .takes_value(true)
                         .help("Sets crate's path where Cargo.toml located"),
                 )
                 .arg(
                     arg!(-l --linux <PATH>)
                         .required(false)
-                        .takes_value(true)
                         .help("Sets Linux package directory path"),
                 )
                 .arg(
                     arg!(-m --macos <PATH>)
                         .required(false)
-                        .takes_value(true)
                         .help("Sets Mac OS package directory path"),
                 )
                 .arg(
                     arg!(-b --base <URI>)
                         .required(true)
-                        .takes_value(true)
                         .help(BASE_HELP),
                 )
                 .arg(
                     arg!(-u --output [PATH])
                         .required(false)
-                        .takes_value(true)
                         .help(OUTPUT_HELP),
                 ),
         )
@@ -248,32 +242,27 @@ fn build_cli() -> Command<'static> {
                 .arg(
                     arg!(-c --crate <PATH>)
                         .required(true)
-                        .takes_value(true)
                         .help("Sets crate's path where Cargo.toml located"),
                 )
                 .arg(
                     arg!(-i --binary <PATH>)
                         .required(true)
-                        .takes_value(true)
                         .help("Sets 64-bit binary package directory path"),
                 )
                 .arg(
                     arg!(-e --exe <FILE>)
                         .required(true)
-                        .takes_value(true)
                         .help("Sets Windows executable name"),
                 )
                 .arg(
                     arg!(-b --base <URI>)
                         .required(true)
-                        .takes_value(true)
                         .help(BASE_HELP),
                 )
                 .arg(
                     arg!(-u --output [PATH])
                         .required(false)
-                        .takes_value(true)
                         .help(OUTPUT_HELP),
                 ),
-        );
+        )
 }
