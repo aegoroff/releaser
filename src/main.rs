@@ -140,7 +140,7 @@ fn build_cli() -> Command {
         .about(crate_description!())
         .subcommand(
             Command::new("w")
-                .aliases(&["workspace"])
+                .aliases(["workspace"])
                 .about("Release workspace specified by path")
                 .arg(
                     arg!([INCR])
@@ -177,7 +177,7 @@ fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("c")
-                .aliases(&["crate"])
+                .aliases(["crate"])
                 .about("Release single crate specified by path")
                 .arg(
                     arg!([INCR])
@@ -207,7 +207,7 @@ fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("b")
-                .aliases(&["brew"])
+                .aliases(["brew"])
                 .about("Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)")
                 .arg(
                     arg!(-c --crate <PATH>)
@@ -237,7 +237,7 @@ fn build_cli() -> Command {
         )
         .subcommand(
             Command::new("s")
-                .aliases(&["scoop"])
+                .aliases(["scoop"])
                 .about("Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)")
                 .arg(
                     arg!(-c --crate <PATH>)
