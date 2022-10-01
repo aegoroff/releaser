@@ -12,14 +12,12 @@ pub struct Package {
 }
 
 pub fn new_binary_pkg(path: &VfsPath, base_uri: &str) -> Option<Package> {
-    let sha256 = calculate_sha256(path);
+    let (hash, file) = calculate_sha256(path)?;
     let mut resource = Resource::new(base_uri)?;
-    sha256.map(|(h, f)| {
-        resource.append_path(&f);
-        Package {
-            url: resource.to_string(),
-            hash: h,
-        }
+    resource.append_path(&file);
+    Some(Package {
+        url: resource.to_string(),
+        hash,
     })
 }
 
@@ -31,7 +29,7 @@ fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
         None
     }?;
 
-    let hash = hash::calculate_sha256(&file_name).unwrap_or_default();
+    let hash = hash::calculate_sha256(&file_name).ok()?;
     Some((hash, file_name.filename()))
 }
 
