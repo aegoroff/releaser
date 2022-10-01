@@ -22,12 +22,10 @@ pub fn new_binary_pkg(path: &VfsPath, base_uri: &str) -> Option<Package> {
 }
 
 fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
-    let file_name = if let Ok(it) = path.read_dir() {
-        it.filter(|x| x.extension().is_some())
-            .find(|x| x.extension().unwrap().eq(PKG_EXTENSION))
-    } else {
-        None
-    }?;
+    let it = path.read_dir().ok()?;
+    let file_name = it
+        .filter(|x| x.extension().is_some())
+        .find(|x| x.extension().unwrap().eq(PKG_EXTENSION))?;
 
     let hash = hash::calculate_sha256(&file_name).ok()?;
     Some((hash, file_name.filename()))

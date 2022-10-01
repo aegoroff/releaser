@@ -11,11 +11,8 @@ pub struct Resource {
 
 impl Resource {
     pub fn new(uri: &str) -> Option<Resource> {
-        if let Ok(url) = Url::parse(uri) {
-            Some(Resource { url })
-        } else {
-            None
-        }
+        let url = Url::parse(uri).ok()?;
+        Some(Resource { url })
     }
 
     pub fn append_path(&mut self, path: &str) -> &mut Self {

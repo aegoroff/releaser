@@ -69,29 +69,25 @@ pub fn new_brew(
     base_uri: &str,
 ) -> Option<String> {
     let crate_conf = new_cargo_config_path(&crate_path)?;
-    let config = CrateConfig::open(&crate_conf);
+    let config = CrateConfig::open(&crate_conf).ok()?;
 
-    if let Ok(c) = config {
-        let name = c.package.name;
+    let name = config.package.name;
 
-        let brew = Brew {
-            formula: uppercase_first_letter(&name),
-            name,
-            description: c.package.description.unwrap_or_default(),
-            homepage: c.package.homepage,
-            version: c.package.version,
-            license: c.package.license.unwrap_or_default(),
-            linux: pkg::new_binary_pkg(&linux_path, base_uri),
-            macos: pkg::new_binary_pkg(&macos_path, base_uri),
-        };
+    let brew = Brew {
+        formula: uppercase_first_letter(&name),
+        name,
+        description: config.package.description.unwrap_or_default(),
+        homepage: config.package.homepage,
+        version: config.package.version,
+        license: config.package.license.unwrap_or_default(),
+        linux: pkg::new_binary_pkg(&linux_path, base_uri),
+        macos: pkg::new_binary_pkg(&macos_path, base_uri),
+    };
 
-        if brew.linux.is_none() && brew.macos.is_none() {
-            None
-        } else {
-            Some(serialize_brew(&brew))
-        }
-    } else {
+    if brew.linux.is_none() && brew.macos.is_none() {
         None
+    } else {
+        Some(serialize_brew(&brew))
     }
 }
 

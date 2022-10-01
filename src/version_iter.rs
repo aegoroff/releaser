@@ -68,10 +68,7 @@ impl<'a> Iterator for VersionIter<'a> {
         let config_path = crate::join(&root, &member)?;
         let config_path = crate::join(&config_path, CARGO_CONFIG)?;
 
-        let conf = CrateConfig::open(&config_path).unwrap_or_default();
-        if conf.package.version.is_empty() {
-            return None;
-        }
+        let conf = CrateConfig::open(&config_path).ok()?;
 
         let mut item = conf.new_version(member);
 

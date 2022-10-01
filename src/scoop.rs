@@ -32,7 +32,7 @@ pub fn new_scoop(
     base_uri: &str,
 ) -> Option<String> {
     let crate_conf = new_cargo_config_path(&crate_path)?;
-    let config = CrateConfig::open(&crate_conf);
+    let config = CrateConfig::open(&crate_conf).ok()?;
     let binary = pkg::new_binary_pkg(&binary_path, base_uri)?;
     let x64pkg = Binary {
         url: binary.url,
@@ -40,23 +40,15 @@ pub fn new_scoop(
         bin: vec![executable_name.to_string()],
     };
 
-    if let Ok(c) = config {
-        let scoop = Scoop {
-            description: c.package.description.unwrap_or_default(),
-            homepage: c.package.homepage,
-            version: c.package.version,
-            license: c.package.license.unwrap_or_default(),
-            architecture: Architecture { x64: x64pkg },
-        };
-        let result = serde_json::to_string_pretty(&scoop);
-        if let Ok(r) = result {
-            Some(r)
-        } else {
-            None
-        }
-    } else {
-        None
-    }
+    let scoop = Scoop {
+        description: config.package.description.unwrap_or_default(),
+        homepage: config.package.homepage,
+        version: config.package.version,
+        license: config.package.license.unwrap_or_default(),
+        architecture: Architecture { x64: x64pkg },
+    };
+    let result = serde_json::to_string_pretty(&scoop).ok()?;
+    Some(result)
 }
 
 #[cfg(test)]
