@@ -87,7 +87,7 @@ pub fn new_brew(
     if brew.linux.is_none() && brew.macos.is_none() {
         None
     } else {
-        Some(serialize_brew(&brew))
+        serialize_brew(&brew)
     }
 }
 
@@ -100,7 +100,7 @@ fn uppercase_first_letter(s: &str) -> String {
     }
 }
 
-fn serialize_brew<T: Serialize>(data: &T) -> String {
+fn serialize_brew<T: Serialize>(data: &T) -> Option<String> {
     handlebars_helper!(lines: |count: i32| {
         let mut i = 0;
         while i < count {
@@ -110,7 +110,7 @@ fn serialize_brew<T: Serialize>(data: &T) -> String {
     });
     let mut reg = Handlebars::new();
     reg.register_helper("lines", Box::new(lines));
-    reg.render_template(TEMPLATE, data).unwrap()
+    reg.render_template(TEMPLATE, data).ok()
 }
 
 #[cfg(test)]
@@ -168,7 +168,7 @@ mod tests {
         };
 
         // Act
-        let result = serialize_brew(&brew);
+        let result = serialize_brew(&brew).unwrap_or_default();
 
         // Assert
         assert_eq!(
@@ -205,7 +205,7 @@ end
         };
 
         // Act
-        let result = serialize_brew(&brew);
+        let result = serialize_brew(&brew).unwrap_or_default();
 
         // Assert
         assert_eq!(
@@ -254,7 +254,7 @@ end
         };
 
         // Act
-        let result = serialize_brew(&brew);
+        let result = serialize_brew(&brew).unwrap_or_default();
 
         // Assert
         assert_eq!(
@@ -307,7 +307,7 @@ end
         };
 
         // Act
-        let result = serialize_brew(&brew);
+        let result = serialize_brew(&brew).unwrap_or_default();
 
         // Assert
         assert_eq!(
