@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate handlebars;
 extern crate hex;
-extern crate itertools;
 extern crate petgraph;
 extern crate semver;
 extern crate serde;

@@ -2,7 +2,9 @@ extern crate url;
 
 use self::url::Url;
 use core::fmt;
-use itertools::Itertools;
+use std::ops::Add;
+
+const SEP: char = '/';
 
 #[derive(Clone)]
 pub struct Resource {
@@ -18,15 +20,18 @@ impl Resource {
     pub fn append_path(&mut self, path: &str) -> &mut Self {
         if let Some(segments) = self.url.path_segments() {
             let p = segments
-                .chain(path.split('/'))
+                .chain(path.split(SEP))
                 .filter(|x| !x.is_empty())
-                .join("/");
+                .fold(String::new(), |s, x| {
+                    let mut y = s.add(x);
+                    y.push(SEP);
+                    y
+                });
 
-            if path.chars().rev().next().unwrap_or_default() == '/' {
-                let p = p + "/";
+            if path.chars().rev().next().unwrap_or_default() == SEP {
                 self.url.set_path(&p);
             } else {
-                self.url.set_path(&p);
+                self.url.set_path(&p[..p.len()-1]);
             }
         } else {
             let r = self.url.join(path);
