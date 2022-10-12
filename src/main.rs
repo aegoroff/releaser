@@ -2,9 +2,11 @@
 extern crate clap;
 
 use clap::{command, ArgMatches, Command, ArgAction};
+use clap_complete::{generate, Shell};
 use std::option::Option::Some;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};
+use std::io;
 
 use releaser::brew;
 use releaser::cargo::Cargo;
@@ -36,7 +38,16 @@ fn main() {
         Some(("c", cmd)) => single_crate(cmd),
         Some(("b", cmd)) => brew(cmd),
         Some(("s", cmd)) => scoop(cmd),
+        Some(("completion", cmd)) => print_completions(cmd),
         _ => {}
+    }
+}
+
+fn print_completions(matches: &ArgMatches) {
+    let mut cmd = build_cli();
+    let bin_name = cmd.get_name().to_string();
+    if let Some(generator) = matches.get_one::<Shell>("generator") {
+        generate(*generator, &mut cmd, bin_name, &mut io::stdout());
     }
 }
 
@@ -264,5 +275,12 @@ fn build_cli() -> Command {
                         .required(false)
                         .help(OUTPUT_HELP),
                 ),
+        ).subcommand(
+            Command::new("completion").arg(
+                arg!([generator])
+                    .value_parser(value_parser!(Shell))
+                    .required(true)
+                    .index(1),
+            )
         )
 }
