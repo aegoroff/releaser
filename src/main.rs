@@ -276,7 +276,9 @@ fn build_cli() -> Command {
                         .help(OUTPUT_HELP),
                 ),
         ).subcommand(
-            Command::new("completion").arg(
+            Command::new("completion")
+            .about("Generate the autocompletion script for the specified shell")
+            .arg(
                 arg!([generator])
                     .value_parser(value_parser!(Shell))
                     .required(true)
