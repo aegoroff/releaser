@@ -16,7 +16,7 @@ impl std::fmt::Display for FileError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             FileError::Generic { message } => {
-                write!(f, "{}", message)
+                write!(f, "{message}")
             }
         }
     }
