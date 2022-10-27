@@ -43,7 +43,7 @@ impl Resource {
     }
 }
 
-impl std::fmt::Display for Resource {
+impl fmt::Display for Resource {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.url)
     }
