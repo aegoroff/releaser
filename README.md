@@ -29,89 +29,77 @@ cargo install releaser
 ```
 Crate or workspace releasing tool. All crates from workspace will be released on crates.io
 
-USAGE:
-    releaser [SUBCOMMAND]
+Usage: releaser [COMMAND]
 
-OPTIONS:
-    -h, --help       Print help information
-    -V, --version    Print version information
+Commands:
+  w           Release workspace specified by path
+  c           Release single crate specified by path
+  b           Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)
+  s           Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)
+  completion  Generate the autocompletion script for the specified shell
+  help        Print this message or the help of the given subcommand(s)
 
-SUBCOMMANDS:
-    b       Create brew package manager Formula (package definition file) to publish it into a
-                tap (MacOS and Linux only)
-    c       Release single crate specified by path
-    help    Print this message or the help of the given subcommand(s)
-    s       Create scoop package manager JSON (package definition file) to publish it into
-                bucket (Windows only)
-    w       Release workspace specified by path
+Options:
+  -h, --help     Print help information
+  -V, --version  Print version information
 ```
 Releasing workspace
 ```
 Release workspace specified by path
 
-USAGE:
-    releaser w [OPTIONS] <INCR> <PATH>
+Usage: releaser w [OPTIONS] <INCR> <PATH>
 
-ARGS:
-    <INCR>    Version increment. One of the following: major, minor or patch [possible values:
-              major, minor, patch]
-    <PATH>    Sets workspace root path
+Arguments:
+  <INCR>  Version increment. One of the following: major, minor or patch [possible values: major, minor, patch]
+  <PATH>  Sets workspace root path
 
-OPTIONS:
-    -a, --all               Whether to add option --all-features to cargo publish command
-    -d, --delay <NUMBER>    Delay in seconds between publish next workflow's crate [default: 20]
-    -h, --help              Print help information
-    -n, --noverify          Whether to add option --no-verify to cargo publish command
+Options:
+  -d, --delay <NUMBER>  Delay in seconds between publish next workflow's crate [default: 20]
+  -a, --all             Whether to add option --all-features to cargo publish command
+  -n, --noverify        Whether to add option --no-verify to cargo publish command
+  -h, --help            Print help information
 ```
 Releasing simple crate
 ```
 Release single crate specified by path
 
-USAGE:
-    releaser c [OPTIONS] <INCR> <PATH>
+Usage: releaser c [OPTIONS] <INCR> <PATH>
 
-ARGS:
-    <INCR>    Version increment. One of the following: major, minor or patch [possible values:
-              major, minor, patch]
-    <PATH>    Sets crate's root path
+Arguments:
+  <INCR>  Version increment. One of the following: major, minor or patch [possible values: major, minor, patch]
+  <PATH>  Sets crate's root path
 
-OPTIONS:
-    -a, --all         Whether to add option --all-features to cargo publish command
-    -h, --help        Print help information
-    -n, --noverify    Whether to add option --no-verify to cargo publish command
+Options:
+  -a, --all       Whether to add option --all-features to cargo publish command
+  -n, --noverify  Whether to add option --no-verify to cargo publish command
+  -h, --help      Print help information
 ```
 Creating brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux
 only)
 ```
 Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)
 
-USAGE:
-    releaser b [OPTIONS] --base <base> --crate <crate>
+Usage: releaser b [OPTIONS] --crate <PATH> --base <URI>
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-OPTIONS:
-    -b, --base <base>        Base URI of downloaded artifacts
-    -c, --crate <crate>      Sets crate's path where Cargo.toml located
-    -l, --linux <linux>      Sets Linux package directory path
-    -m, --macos <macos>      Sets Mac OS package directory path
-    -u, --output <output>    File path to save result to. If not set result will be written into stdout
+Options:
+  -c, --crate <PATH>     Sets crate's path where Cargo.toml located
+  -l, --linux <PATH>     Sets Linux package directory path
+  -m, --macos <PATH>     Sets Mac OS package directory path
+  -b, --base <URI>       Base URI of downloaded artifacts
+  -u, --output [<PATH>]  File path to save result to. If not set result will be written into stdout
+  -h, --help             Print help information
 ```
 Creating scoop package manager JSON definition file to publish it into a bucket (Windows only)
 ```
-USAGE:
-    releaser s [OPTIONS] --base <base> --binary <binary> --crate <crate> --exe <exe>
+Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+Usage: releaser s [OPTIONS] --crate <PATH> --binary <PATH> --exe <FILE> --base <URI>
 
-OPTIONS:
-    -b, --base <base>        Base URI of downloaded artifacts
-    -i, --binary <binary>    Sets 64-bit binary package directory path
-    -c, --crate <crate>      Sets crate's path where Cargo.toml located
-    -e, --exe <exe>          Sets Windows executable name
-    -u, --output <output>    File path to save result to. If not set result will be written into stdout
+Options:
+  -c, --crate <PATH>     Sets crate's path where Cargo.toml located
+  -i, --binary <PATH>    Sets 64-bit binary package directory path
+  -e, --exe <FILE>       Sets Windows executable name
+  -b, --base <URI>       Base URI of downloaded artifacts
+  -u, --output [<PATH>]  File path to save result to. If not set result will be written into stdout
+  -h, --help             Print help information
 ```
