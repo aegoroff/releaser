@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         build: [ linux, macos, windows ]
-        rust: [ stable, nightly ]
+        rust: [ stable ]
         include:
           - build: linux
             os: ubuntu-latest
