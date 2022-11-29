@@ -30,4 +30,4 @@ thiserror = "1.0.37"
 
 [dev-dependencies]
 mockall = "0.11.3"
-rstest = "0.15.0"
+rstest = "0.16.0"
