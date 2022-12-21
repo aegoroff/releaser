@@ -88,7 +88,7 @@ pub fn update_config(path: &VfsPath, version: &CrateVersion, incr: Increment) ->
     if version.path.is_empty() {
         working_config_path = path;
     } else {
-        let parent = path.parent().unwrap();
+        let parent = path.parent();
         member_config_path = match match parent.join(&version.path) {
             Ok(it) => it,
             Err(err) => return Err(Box::new(FileError::from(err))),

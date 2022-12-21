@@ -64,7 +64,7 @@ impl<'a> Iterator for VersionIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let member = self.members.pop()?;
-        let root = self.workspace_config_path.parent()?;
+        let root = self.workspace_config_path.parent();
         let config_path = crate::join(&root, &member)?;
         let config_path = crate::join(&config_path, CARGO_CONFIG)?;
 
