@@ -147,14 +147,7 @@ fn increment(v: &str, i: Increment) -> Result<Version> {
 }
 
 fn new_cargo_config_path(root: &VfsPath) -> Option<VfsPath> {
-    join(root, CARGO_CONFIG)
-}
-
-fn join(p: &VfsPath, other: &str) -> Option<VfsPath> {
-    match p.join(other) {
-        Ok(r) => Some(r),
-        Err(_) => None,
-    }
+    root.join(CARGO_CONFIG).ok()
 }
 
 fn increment_patch(v: &mut Version) {
