@@ -29,7 +29,7 @@ jobs:
       - uses: hecrj/setup-rust-action@v1
         with:
           rust-version: ${{ matrix.rust }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Rust version
         run: rustup -V
       - name: Build
@@ -42,7 +42,7 @@ jobs:
           args: '-- --test-threads 1'
       - name: Upload to codecov.io
         if: matrix.build == 'linux' && matrix.rust != 'nightly'
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
       - name: Run tests
         if: matrix.build != 'linux'
         run: cargo test --verbose  -- --nocapture
