@@ -16,7 +16,7 @@ pub fn calculate_sha256(path: &VfsPath) -> Result<String, VfsError> {
             if n == 0 {
                 break;
             }
-            hasher.update(&buf[..n])
+            hasher.update(&buf[..n]);
         } else {
             break
         }

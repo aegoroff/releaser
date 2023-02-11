@@ -79,7 +79,7 @@ fn brew(cmd: &ArgMatches) {
     let macos_path: VfsPath = PhysicalFS::new(PathBuf::from(macos_path)).into();
 
     let b = brew::new_brew(crate_path, linux_path, macos_path, base_uri);
-    output_string(cmd, b)
+    output_string(cmd, b);
 }
 
 fn scoop(cmd: &ArgMatches) {
@@ -93,7 +93,7 @@ fn scoop(cmd: &ArgMatches) {
     let binary_path: VfsPath = PhysicalFS::new(PathBuf::from(binary_path)).into();
 
     let scoop = scoop::new_scoop(crate_path, binary_path, exe_name, base_uri);
-    output_string(cmd, scoop)
+    output_string(cmd, scoop);
 }
 
 enum ErrorCode {
@@ -114,7 +114,7 @@ fn output_string(cmd: &ArgMatches, s: Option<String>) {
                 std::process::exit(ErrorCode::FileWriteError as i32);
             }
         } else {
-            println!("{b}")
+            println!("{b}");
         }
     } else {
         std::process::exit(ErrorCode::NoOutputProduced as i32)
