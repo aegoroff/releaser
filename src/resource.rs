@@ -52,7 +52,7 @@ impl fmt::Display for Resource {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rstest::*;
+    use rstest::rstest;
 
     #[test]
     fn new_correct_some() {

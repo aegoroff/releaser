@@ -62,7 +62,7 @@ class {{ formula }} < Formula
 end
 "###;
 
-pub fn new_brew(
+#[must_use] pub fn new_brew(
     crate_path: VfsPath,
     linux_path: VfsPath,
     macos_path: VfsPath,
@@ -117,7 +117,7 @@ fn serialize_brew<T: Serialize>(data: &T) -> Option<String> {
 mod tests {
     use super::*;
     use crate::CARGO_CONFIG;
-    use rstest::*;
+    use rstest::{fixture, rstest};
     use vfs::MemoryFS;
 
     #[test]

@@ -15,7 +15,7 @@ use std::io;
 use clap::ValueEnum;
 use error::FileError;
 #[cfg(test)]
-use mockall::{automock, predicate::*};
+use mockall::{automock, predicate::str};
 use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
 
@@ -76,8 +76,8 @@ where
     let result = iter
         .by_ref()
         .map(|config| update_config(path, &config, incr))
-        .filter_map(|v| v.ok())
-        .fold(result, |r, v| r.max(v));
+        .filter_map(std::result::Result::ok)
+        .fold(result, std::cmp::Ord::max);
 
     Ok(result)
 }
@@ -202,7 +202,7 @@ impl CrateConfig {
     pub fn new_version(&self, path: String) -> CrateVersion {
         let places = vec![Place::Package(self.package.version.clone())];
 
-        CrateVersion { places, path }
+        CrateVersion { path, places }
     }
 }
 
@@ -249,7 +249,7 @@ pub enum Increment {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rstest::*;
+    use rstest::rstest;
 
     #[rstest]
     #[case::patch(Increment::Patch, "0.1.2")]

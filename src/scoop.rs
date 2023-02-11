@@ -25,7 +25,7 @@ pub struct Binary {
     pub bin: Vec<String>,
 }
 
-pub fn new_scoop(
+#[must_use] pub fn new_scoop(
     crate_path: VfsPath,
     binary_path: VfsPath,
     executable_name: &str,
@@ -55,7 +55,7 @@ pub fn new_scoop(
 mod tests {
     use super::*;
     use crate::CARGO_CONFIG;
-    use rstest::*;
+    use rstest::{fixture, rstest};
     use vfs::MemoryFS;
 
     #[rstest]

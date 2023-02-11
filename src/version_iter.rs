@@ -90,7 +90,7 @@ impl<'a> Iterator for VersionIter<'a> {
 
         let to = self.search.get(&conf.package.name)?;
 
-        for place in item.places.iter() {
+        for place in &item.places {
             if let Place::Dependency(n, _) = place {
                 let from = self.search.get(n)?;
                 self.graph.add_edge(*from, *to, -1);
@@ -109,7 +109,7 @@ mod tests {
     use super::*;
     use crate::version_iter::VersionIter;
     use crate::{update_configs, Increment};
-    use rstest::*;
+    use rstest::{fixture, rstest};
 
     #[test]
     fn read_empty_workspace_test() {
@@ -178,13 +178,12 @@ mod tests {
 
         let it = VersionIter::open(&conf).unwrap();
         let versions: Vec<String> = it
-            .map(|v| v.places)
-            .flatten()
+            .flat_map(|v| v.places)
             .map(|p| {
-                return match p {
+                match p {
                     Place::Package(s) => s,
                     Place::Dependency(_, s) => s,
-                };
+                }
             })
             .collect();
         assert_eq!(vec!["0.2.0", "0.2.0", "0.2.0"], versions)

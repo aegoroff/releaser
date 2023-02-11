@@ -22,11 +22,8 @@ pub struct VPath<'a> {
 }
 
 impl<'a> VPath<'a> {
-    pub fn new(real_path: &'a str, virtual_path: VfsPath) -> Self {
-        Self {
-            virtual_path,
-            real_path,
-        }
+    #[must_use] pub fn new(real_path: &'a str, virtual_path: VfsPath) -> Self {
+        Self { real_path, virtual_path }
     }
 }
 
@@ -141,8 +138,8 @@ mod tests {
     use super::*;
     use crate::MockVcs;
     use crate::{MockPublisher, CARGO_CONFIG};
-    use mockall::predicate::*;
-    use rstest::*;
+    use mockall::predicate::{eq, str};
+    use rstest::{fixture, rstest};
     use vfs::MemoryFS;
 
     #[rstest]
