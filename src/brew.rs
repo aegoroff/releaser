@@ -62,13 +62,14 @@ class {{ formula }} < Formula
 end
 "###;
 
-#[must_use] pub fn new_brew(
-    crate_path: VfsPath,
-    linux_path: VfsPath,
-    macos_path: VfsPath,
+#[must_use]
+pub fn new_brew(
+    crate_path: &VfsPath,
+    linux_path: &VfsPath,
+    macos_path: &VfsPath,
     base_uri: &str,
 ) -> Option<String> {
-    let crate_conf = new_cargo_config_path(&crate_path)?;
+    let crate_conf = new_cargo_config_path(crate_path)?;
     let config = CrateConfig::open(&crate_conf).ok()?;
 
     let name = config.package.name;
@@ -80,8 +81,8 @@ end
         homepage: config.package.homepage,
         version: config.package.version,
         license: config.package.license.unwrap_or_default(),
-        linux: pkg::new_binary_pkg(&linux_path, base_uri),
-        macos: pkg::new_binary_pkg(&macos_path, base_uri),
+        linux: pkg::new_binary_pkg(linux_path, base_uri),
+        macos: pkg::new_binary_pkg(macos_path, base_uri),
     };
 
     if brew.linux.is_none() && brew.macos.is_none() {
@@ -351,7 +352,7 @@ end
         let macos_path = root.join("macos").unwrap();
 
         // Act
-        let result = new_brew(root, linux_path, macos_path, "http://localhost");
+        let result = new_brew(&root, &linux_path, &macos_path, "http://localhost");
 
         // Assert
         assert!(result.is_some());
@@ -367,7 +368,7 @@ end
         let macos_path = root.join("macos1").unwrap();
 
         // Act
-        let result = new_brew(root, linux_path, macos_path, "http://localhost");
+        let result = new_brew(&root, &linux_path, &macos_path, "http://localhost");
 
         // Assert
         assert!(result.is_none());
@@ -390,7 +391,7 @@ end
         let macos_path = root.join("macos").unwrap();
 
         // Act
-        let result = new_brew(root, linux_path, macos_path, "http://localhost");
+        let result = new_brew(&root, &linux_path, &macos_path, "http://localhost");
 
         // Assert
         assert!(result.is_none());

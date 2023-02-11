@@ -54,12 +54,12 @@ fn print_completions(matches: &ArgMatches) {
 fn workspace(cmd: &ArgMatches) {
     let delay_seconds = cmd.get_one::<u64>("delay").unwrap_or(&20);
     let r = Workspace::new(*delay_seconds, Cargo::default(), Git::default());
-    release(cmd, r);
+    release(cmd, &r);
 }
 
 fn single_crate(cmd: &ArgMatches) {
     let r = Crate::new(Cargo::default(), Git::default());
-    release(cmd, r);
+    release(cmd, &r);
 }
 
 fn brew(cmd: &ArgMatches) {
@@ -78,7 +78,7 @@ fn brew(cmd: &ArgMatches) {
     let linux_path: VfsPath = PhysicalFS::new(PathBuf::from(linux_path)).into();
     let macos_path: VfsPath = PhysicalFS::new(PathBuf::from(macos_path)).into();
 
-    let b = brew::new_brew(crate_path, linux_path, macos_path, base_uri);
+    let b = brew::new_brew(&crate_path, &linux_path, &macos_path, base_uri);
     output_string(cmd, b);
 }
 
@@ -92,7 +92,7 @@ fn scoop(cmd: &ArgMatches) {
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
     let binary_path: VfsPath = PhysicalFS::new(PathBuf::from(binary_path)).into();
 
-    let scoop = scoop::new_scoop(crate_path, binary_path, exe_name, base_uri);
+    let scoop = scoop::new_scoop(&crate_path, &binary_path, &exe_name, base_uri);
     output_string(cmd, scoop);
 }
 
@@ -122,7 +122,7 @@ fn output_string(cmd: &ArgMatches, s: Option<String>) {
 }
 
 /// Helper function that releases crate or workspace
-fn release<'a, R>(cmd: &'a ArgMatches, release: R)
+fn release<'a, R>(cmd: &'a ArgMatches, release: &R)
 where
     R: Release<'a>,
 {

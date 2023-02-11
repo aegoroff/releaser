@@ -25,15 +25,16 @@ pub struct Binary {
     pub bin: Vec<String>,
 }
 
-#[must_use] pub fn new_scoop(
-    crate_path: VfsPath,
-    binary_path: VfsPath,
+#[must_use]
+pub fn new_scoop(
+    crate_path: &VfsPath,
+    binary_path: &VfsPath,
     executable_name: &str,
     base_uri: &str,
 ) -> Option<String> {
-    let crate_conf = new_cargo_config_path(&crate_path)?;
+    let crate_conf = new_cargo_config_path(crate_path)?;
     let config = CrateConfig::open(&crate_conf).ok()?;
-    let binary = pkg::new_binary_pkg(&binary_path, base_uri)?;
+    let binary = pkg::new_binary_pkg(binary_path, base_uri)?;
     let x64pkg = Binary {
         url: binary.url,
         hash: Some(binary.hash),
@@ -64,7 +65,7 @@ mod tests {
         let binary_path = root.join("x64").unwrap();
 
         // Act
-        let result = new_scoop(root, binary_path, "solv.exe", "http://localhost");
+        let result = new_scoop(&root, &binary_path, "solv.exe", "http://localhost");
 
         // Assert
         assert!(result.is_some());
@@ -94,7 +95,7 @@ mod tests {
         let binary_path = root.join("x86").unwrap();
 
         // Act
-        let result = new_scoop(root, binary_path, "solv.exe", "http://localhost");
+        let result = new_scoop(&root, &binary_path, "solv.exe", "http://localhost");
 
         // Assert
         assert!(result.is_none());
@@ -124,7 +125,7 @@ mod tests {
             .unwrap();
 
         // Act
-        let result = new_scoop(root, binary_path, "solv.exe", "http://localhost");
+        let result = new_scoop(&root, &binary_path, "solv.exe", "http://localhost");
 
         // Assert
         assert!(result.is_none());
