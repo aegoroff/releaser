@@ -59,7 +59,7 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
         let mut it = VersionIter::open(&crate_conf)?;
         let version = crate::update_configs(&crate_conf, &mut it, incr)?;
 
-        let ver = commit_version(&self.vcs, root.real_path, version)?;
+        let ver = commit_version(&self.vcs, root.real_path, &version)?;
 
         let delay_str = format!("{}", self.delay_seconds);
         let delay = time::Duration::from_secs(self.delay_seconds);
@@ -110,7 +110,7 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
         let ver = conf.new_version(String::new());
         let version = crate::update_config(&crate_conf, &ver, incr)?;
 
-        let ver = commit_version(&self.vcs, root.real_path, version)?;
+        let ver = commit_version(&self.vcs, root.real_path, &version)?;
 
         let options = PublishOptions {
             crate_to_publish: None,
@@ -126,7 +126,7 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
     }
 }
 
-fn commit_version(vcs: &impl Vcs, path: &str, version: Version) -> crate::Result<String> {
+fn commit_version(vcs: &impl Vcs, path: &str, version: &Version) -> crate::Result<String> {
     let ver = format!("v{version}");
     let commit_msg = format!("changelog: {ver}");
     vcs.commit(path, &commit_msg)?;
