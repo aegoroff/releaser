@@ -28,6 +28,7 @@ impl Resource {
                     y
                 });
 
+            // If original ends with spearator char use as is or trim last (separator) char otherwise
             if path.chars().rev().next().unwrap_or_default() == SEP {
                 self.url.set_path(&p);
             } else {
