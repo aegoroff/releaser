@@ -2,7 +2,6 @@ extern crate url;
 
 use self::url::Url;
 use core::fmt;
-use std::ops::Add;
 
 const SEP: char = '/';
 
@@ -22,10 +21,10 @@ impl Resource {
             let p = segments
                 .chain(path.split(SEP))
                 .filter(|x| !x.is_empty())
-                .fold(String::new(), |s, x| {
-                    let mut y = s.add(x);
-                    y.push(SEP);
-                    y
+                .fold(String::new(), |mut s, x| {
+                    s.push_str(x);
+                    s.push(SEP);
+                    s
                 });
 
             // If original ends with spearator char use as is or trim last (separator) char otherwise
