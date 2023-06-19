@@ -1,9 +1,10 @@
-use crate::{CrateConfig, CrateVersion, Dependency, Place, WorkspaceConfig, CARGO_CONFIG, VERSION};
 use crate::error::FileError;
+use crate::{CrateConfig, CrateVersion, Dependency, Place, WorkspaceConfig, CARGO_CONFIG, VERSION};
 use petgraph::algo::DfsSpace;
 use petgraph::graphmap::DiGraphMap;
 use std::collections::HashMap;
 use std::io::Read;
+use std::ops::Deref;
 use vfs::VfsPath;
 
 pub struct VersionIter<'a> {
@@ -49,13 +50,16 @@ impl<'a> VersionIter<'a> {
             .collect::<HashMap<usize, &String>>();
 
         let mut space = DfsSpace::new(&self.graph);
-        let sorted = petgraph::algo::toposort(&self.graph, Some(&mut space)).unwrap_or_default();
-
-        sorted
-            .into_iter()
-            .map(|g| *reverted.get(&g).unwrap())
-            .cloned()
-            .collect()
+        if let Ok(sorted) = petgraph::algo::toposort(&self.graph, Some(&mut space)) {
+            sorted
+                .into_iter()
+                .filter_map(|g| reverted.get(&g))
+                .map(|s| s.deref())
+                .cloned()
+                .collect()
+        } else {
+            vec![]
+        }
     }
 }
 
@@ -179,11 +183,9 @@ mod tests {
         let it = VersionIter::open(&conf).unwrap();
         let versions: Vec<String> = it
             .flat_map(|v| v.places)
-            .map(|p| {
-                match p {
-                    Place::Package(s) => s,
-                    Place::Dependency(_, s) => s,
-                }
+            .map(|p| match p {
+                Place::Package(s) => s,
+                Place::Dependency(_, s) => s,
             })
             .collect();
         assert_eq!(vec!["0.2.0", "0.2.0", "0.2.0"], versions)
