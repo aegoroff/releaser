@@ -1,5 +1,3 @@
-extern crate ansi_term;
-
 use std::{thread, time};
 
 use ansi_term::Colour::Green;
