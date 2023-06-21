@@ -116,6 +116,8 @@ fn serialize_brew<T: Serialize>(data: &T) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::unwrap_used)]
     use super::*;
     use crate::CARGO_CONFIG;
     use rstest::{fixture, rstest};

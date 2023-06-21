@@ -1,5 +1,5 @@
 #![warn(unused_extern_crates)]
-#![forbid(clippy::unwrap_in_result)]
+#![warn(clippy::unwrap_in_result)]
 #![warn(clippy::unwrap_used)]
 #[macro_use]
 extern crate handlebars;
@@ -243,6 +243,7 @@ pub enum Increment {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used)]
     use super::*;
     use rstest::rstest;
 

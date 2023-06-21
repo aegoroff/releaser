@@ -54,6 +54,8 @@ pub fn new_scoop(
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::unwrap_used)]
     use super::*;
     use crate::CARGO_CONFIG;
     use rstest::{fixture, rstest};
