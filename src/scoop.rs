@@ -32,7 +32,7 @@ pub fn new_scoop(
     executable_name: &str,
     base_uri: &str,
 ) -> Option<String> {
-    let crate_conf = new_cargo_config_path(crate_path)?;
+    let crate_conf = new_cargo_config_path(crate_path).ok()?;
     let config = CrateConfig::open(&crate_conf).ok()?;
     let binary = pkg::new_binary_pkg(binary_path, base_uri)?;
     let x64pkg = Binary {

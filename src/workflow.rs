@@ -52,7 +52,7 @@ impl<P: Publisher, V: Vcs> Workspace<P, V> {
 
 impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
     fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool, no_verify: bool) -> crate::Result<()> {
-        let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
+        let crate_conf = new_cargo_config_path(&root.virtual_path)?;
 
         let mut it = VersionIter::open(&crate_conf)?;
         let version = crate::update_configs(&crate_conf, &mut it, incr)?;
@@ -102,7 +102,7 @@ impl<P: Publisher, V: Vcs> Crate<P, V> {
 
 impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
     fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool, no_verify: bool) -> crate::Result<()> {
-        let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
+        let crate_conf = new_cargo_config_path(&root.virtual_path)?;
 
         let conf = CrateConfig::open(&crate_conf)?;
         let ver = conf.new_version(String::new());

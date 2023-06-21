@@ -1,4 +1,6 @@
 #![warn(unused_extern_crates)]
+#![forbid(clippy::unwrap_in_result)]
+#![warn(clippy::unwrap_used)]
 #[macro_use]
 extern crate handlebars;
 
@@ -139,8 +141,8 @@ fn increment(v: &str, i: Increment) -> Result<Version> {
     Ok(v)
 }
 
-fn new_cargo_config_path(root: &VfsPath) -> Option<VfsPath> {
-    root.join(CARGO_CONFIG).ok()
+fn new_cargo_config_path(root: &VfsPath) -> Result<VfsPath> {
+    Ok(root.join(CARGO_CONFIG)?)
 }
 
 fn increment_patch(v: &mut Version) {
