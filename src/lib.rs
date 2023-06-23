@@ -22,7 +22,7 @@ pub mod cargo;
 pub mod error;
 pub mod git;
 pub mod hash;
-mod pkg;
+mod packaging;
 mod resource;
 pub mod scoop;
 mod version_iter;

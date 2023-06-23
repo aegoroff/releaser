@@ -1,4 +1,4 @@
-use crate::{new_cargo_config_path, pkg, CrateConfig};
+use crate::{new_cargo_config_path, packaging, CrateConfig};
 use serde::Serialize;
 use vfs::VfsPath;
 
@@ -34,7 +34,7 @@ pub fn new_scoop(
 ) -> Option<String> {
     let crate_conf = new_cargo_config_path(crate_path).ok()?;
     let config = CrateConfig::open(&crate_conf).ok()?;
-    let binary = pkg::new_binary_pkg(binary_path, base_uri)?;
+    let binary = packaging::new_binary_pkg(binary_path, base_uri)?;
     let x64pkg = Binary {
         url: binary.url,
         hash: Some(binary.hash),

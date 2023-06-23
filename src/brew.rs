@@ -4,9 +4,9 @@ use handlebars::Handlebars;
 use serde::Serialize;
 use vfs::VfsPath;
 
-use crate::pkg::Package;
+use crate::packaging::Package;
 use crate::CrateConfig;
-use crate::{new_cargo_config_path, pkg};
+use crate::{new_cargo_config_path, packaging};
 
 #[derive(Serialize, Default)]
 pub struct Brew {
@@ -81,8 +81,8 @@ pub fn new_brew(
         homepage: config.package.homepage,
         version: config.package.version,
         license: config.package.license.unwrap_or_default(),
-        linux: pkg::new_binary_pkg(linux_path, base_uri),
-        macos: pkg::new_binary_pkg(macos_path, base_uri),
+        linux: packaging::new_binary_pkg(linux_path, base_uri),
+        macos: packaging::new_binary_pkg(macos_path, base_uri),
     };
 
     if brew.linux.is_none() && brew.macos.is_none() {
