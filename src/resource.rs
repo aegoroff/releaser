@@ -1,5 +1,5 @@
-use url::Url;
 use core::fmt;
+use url::Url;
 
 const SEP: char = '/';
 
@@ -9,8 +9,8 @@ pub struct Resource {
 }
 
 impl Resource {
-    pub fn new(uri: &str) -> Option<Resource> {
-        let url = Url::parse(uri).ok()?;
+    pub fn new(input: &str) -> Option<Resource> {
+        let url = Url::parse(input).ok()?;
         Some(Resource { url })
     }
 
@@ -29,7 +29,7 @@ impl Resource {
             if path.chars().rev().next().unwrap_or_default() == SEP {
                 self.url.set_path(&p);
             } else {
-                self.url.set_path(&p[..p.len()-1]);
+                self.url.set_path(&p[..p.len() - 1]);
             }
         } else {
             let r = self.url.join(path);

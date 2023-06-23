@@ -54,7 +54,7 @@ impl<'a> VersionIter<'a> {
             sorted
                 .into_iter()
                 .filter_map(|g| reverted.get(&g))
-                .map(|s| s.deref())
+                .map(Deref::deref)
                 .cloned()
                 .collect()
         } else {
