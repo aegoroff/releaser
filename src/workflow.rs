@@ -20,8 +20,12 @@ pub struct VPath<'a> {
 }
 
 impl<'a> VPath<'a> {
-    #[must_use] pub fn new(real_path: &'a str, virtual_path: VfsPath) -> Self {
-        Self { real_path, virtual_path }
+    #[must_use]
+    pub fn new(real_path: &'a str, virtual_path: VfsPath) -> Self {
+        Self {
+            real_path,
+            virtual_path,
+        }
     }
 }
 
@@ -31,7 +35,13 @@ pub trait Release<'a> {
     /// * `incr` - Version increment (major, minor or patch)
     /// * `all_features` - whether to publish all features i.e. pass --all-features flag to cargo publish
     /// * `no_verify` - whether to verify package tarball before publish i.e. pass --no-verify flag to cargo publish
-    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool, no_verify: bool) -> crate::Result<()>;
+    fn release(
+        &self,
+        root: VPath<'a>,
+        incr: Increment,
+        all_features: bool,
+        no_verify: bool,
+    ) -> crate::Result<()>;
 }
 
 pub struct Workspace<P: Publisher, V: Vcs> {
@@ -51,8 +61,14 @@ impl<P: Publisher, V: Vcs> Workspace<P, V> {
 }
 
 impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
-    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool, no_verify: bool) -> crate::Result<()> {
-        let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
+    fn release(
+        &self,
+        root: VPath<'a>,
+        incr: Increment,
+        all_features: bool,
+        no_verify: bool,
+    ) -> crate::Result<()> {
+        let crate_conf = new_cargo_config_path(&root.virtual_path)?;
 
         let mut it = VersionIter::open(&crate_conf)?;
         let version = crate::update_configs(&crate_conf, &mut it, incr)?;
@@ -101,8 +117,14 @@ impl<P: Publisher, V: Vcs> Crate<P, V> {
 }
 
 impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
-    fn release(&self, root: VPath<'a>, incr: Increment, all_features: bool, no_verify: bool) -> crate::Result<()> {
-        let crate_conf = new_cargo_config_path(&root.virtual_path).unwrap();
+    fn release(
+        &self,
+        root: VPath<'a>,
+        incr: Increment,
+        all_features: bool,
+        no_verify: bool,
+    ) -> crate::Result<()> {
+        let crate_conf = new_cargo_config_path(&root.virtual_path)?;
 
         let conf = CrateConfig::open(&crate_conf)?;
         let ver = conf.new_version(String::new());
@@ -133,6 +155,8 @@ fn commit_version(vcs: &impl Vcs, path: &str, version: &Version) -> crate::Resul
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::unwrap_used)]
     use super::*;
     use crate::MockVcs;
     use crate::{MockPublisher, CARGO_CONFIG};
@@ -158,7 +182,7 @@ mod tests {
         let solp_options: PublishOptions = PublishOptions {
             crate_to_publish: Some("solp"),
             all_features,
-            no_verify: false
+            no_verify: false,
         };
         mock_pub
             .expect_publish()
@@ -169,7 +193,7 @@ mod tests {
         let solv_options: PublishOptions = PublishOptions {
             crate_to_publish: Some("solv"),
             all_features,
-            no_verify: false
+            no_verify: false,
         };
         mock_pub
             .expect_publish()

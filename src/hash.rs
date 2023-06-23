@@ -18,7 +18,7 @@ pub fn calculate_sha256(path: &VfsPath) -> Result<String, VfsError> {
             }
             hasher.update(&buf[..n]);
         } else {
-            break
+            break;
         }
     }
     let result = &hasher.finalize()[..];
@@ -28,6 +28,8 @@ pub fn calculate_sha256(path: &VfsPath) -> Result<String, VfsError> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::unwrap_used)]
     use super::*;
     use vfs::MemoryFS;
 

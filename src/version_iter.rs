@@ -107,6 +107,8 @@ impl<'a> Iterator for VersionIter<'a> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::unwrap_used)]
     use std::path::PathBuf;
     use vfs::{FileSystem, MemoryFS};
 

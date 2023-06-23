@@ -22,10 +22,14 @@ pub fn new_binary_pkg(path: &VfsPath, base_uri: &str) -> Option<Package> {
 }
 
 fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
-    let it = path.read_dir().ok()?;
-    let file_name = it
-        .filter(|x| x.extension().is_some())
-        .find(|x| x.extension().unwrap().eq(PKG_EXTENSION))?;
+    let mut it = path.read_dir().ok()?;
+    let file_name = it.find(|x| {
+        if let Some(ext) = x.extension() {
+            ext.eq(PKG_EXTENSION)
+        } else {
+            false
+        }
+    })?;
 
     let hash = hash::calculate_sha256(&file_name).ok()?;
     Some((hash, file_name.filename()))
@@ -33,6 +37,8 @@ fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::unwrap_used)]
     use super::*;
     use vfs::MemoryFS;
 

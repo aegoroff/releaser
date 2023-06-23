@@ -69,7 +69,7 @@ pub fn new_brew(
     macos_path: &VfsPath,
     base_uri: &str,
 ) -> Option<String> {
-    let crate_conf = new_cargo_config_path(crate_path)?;
+    let crate_conf = new_cargo_config_path(crate_path).ok()?;
     let config = CrateConfig::open(&crate_conf).ok()?;
 
     let name = config.package.name;
@@ -116,6 +116,8 @@ fn serialize_brew<T: Serialize>(data: &T) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_in_result)]
+    #![allow(clippy::unwrap_used)]
     use super::*;
     use crate::CARGO_CONFIG;
     use rstest::{fixture, rstest};
