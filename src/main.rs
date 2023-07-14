@@ -53,12 +53,12 @@ fn print_completions(matches: &ArgMatches) {
 
 fn workspace(cmd: &ArgMatches) {
     let delay_seconds = cmd.get_one::<u64>("delay").unwrap_or(&20);
-    let r = Workspace::new(*delay_seconds, Cargo::default(), Git::default());
+    let r = Workspace::new(*delay_seconds, Cargo, Git);
     release(cmd, &r);
 }
 
 fn single_crate(cmd: &ArgMatches) {
-    let r = Crate::new(Cargo::default(), Git::default());
+    let r = Crate::new(Cargo, Git);
     release(cmd, &r);
 }
 
