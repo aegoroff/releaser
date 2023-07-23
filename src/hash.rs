@@ -1,9 +1,9 @@
-use std::io::{BufReader, Read};
-
+use color_eyre::eyre::Result;
 use sha2::{Digest, Sha256};
-use vfs::{VfsError, VfsPath};
+use std::io::{BufReader, Read};
+use vfs::VfsPath;
 
-pub fn calculate_sha256(path: &VfsPath) -> Result<String, VfsError> {
+pub fn calculate_sha256(path: &VfsPath) -> Result<String> {
     let file = path.open_file()?;
     let mut reader = BufReader::new(file);
     let mut hasher = Sha256::new();

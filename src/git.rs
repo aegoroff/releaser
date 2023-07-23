@@ -1,4 +1,4 @@
-use std::io;
+use color_eyre::eyre::Result;
 use std::process::Command;
 
 use crate::Vcs;
@@ -9,7 +9,7 @@ const TOOL: &str = "git";
 pub struct Git;
 
 impl Vcs for Git {
-    fn commit(&self, path: &str, message: &str) -> io::Result<()> {
+    fn commit(&self, path: &str, message: &str) -> Result<()> {
         let mut child = Command::new(TOOL)
             .current_dir(path)
             .arg("commit")
@@ -21,7 +21,7 @@ impl Vcs for Git {
         Ok(())
     }
 
-    fn create_tag(&self, path: &str, tag: &str) -> io::Result<()> {
+    fn create_tag(&self, path: &str, tag: &str) -> Result<()> {
         let mut child = Command::new(TOOL)
             .current_dir(path)
             .arg("tag")
@@ -31,7 +31,7 @@ impl Vcs for Git {
         Ok(())
     }
 
-    fn push_tag(&self, path: &str, tag: &str) -> io::Result<()> {
+    fn push_tag(&self, path: &str, tag: &str) -> Result<()> {
         let mut child = Command::new(TOOL)
             .current_dir(path)
             .arg("push")

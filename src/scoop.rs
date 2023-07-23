@@ -1,4 +1,5 @@
 use crate::{new_cargo_config_path, packaging, CrateConfig};
+use color_eyre::eyre::Result;
 use serde::Serialize;
 use vfs::VfsPath;
 
@@ -25,15 +26,14 @@ pub struct Binary {
     pub bin: Vec<String>,
 }
 
-#[must_use]
 pub fn new_scoop(
     crate_path: &VfsPath,
     binary_path: &VfsPath,
     executable_name: &str,
     base_uri: &str,
-) -> Option<String> {
-    let crate_conf = new_cargo_config_path(crate_path).ok()?;
-    let config = CrateConfig::open(&crate_conf).ok()?;
+) -> Result<String> {
+    let crate_conf = new_cargo_config_path(crate_path)?;
+    let config = CrateConfig::open(&crate_conf)?;
     let binary = packaging::new_binary_pkg(binary_path, base_uri)?;
     let x64pkg = Binary {
         url: binary.url,
@@ -48,8 +48,7 @@ pub fn new_scoop(
         license: config.package.license.unwrap_or_default(),
         architecture: Architecture { x64: x64pkg },
     };
-    let result = serde_json::to_string_pretty(&scoop).ok()?;
-    Some(result)
+    Ok(serde_json::to_string_pretty(&scoop)?)
 }
 
 #[cfg(test)]
@@ -70,7 +69,7 @@ mod tests {
         let result = new_scoop(&root, &binary_path, "solv.exe", "http://localhost");
 
         // Assert
-        assert!(result.is_some());
+        assert!(result.is_ok());
         assert_eq!(
             result.unwrap().as_str(),
             r###"{
@@ -100,7 +99,7 @@ mod tests {
         let result = new_scoop(&root, &binary_path, "solv.exe", "http://localhost");
 
         // Assert
-        assert!(result.is_none());
+        assert!(result.is_err());
     }
 
     #[rstest]
@@ -130,7 +129,7 @@ mod tests {
         let result = new_scoop(&root, &binary_path, "solv.exe", "http://localhost");
 
         // Assert
-        assert!(result.is_none());
+        assert!(result.is_err());
     }
 
     #[fixture]

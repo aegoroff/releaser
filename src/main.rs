@@ -1,12 +1,13 @@
 #[macro_use]
 extern crate clap;
 
-use clap::{command, ArgMatches, Command, ArgAction};
+use clap::{command, ArgAction, ArgMatches, Command};
 use clap_complete::{generate, Shell};
+use color_eyre::eyre::{eyre, Result};
+use std::io;
 use std::option::Option::Some;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};
-use std::io;
 
 use releaser::brew;
 use releaser::cargo::Cargo;
@@ -29,7 +30,8 @@ const BASE: &str = "base";
 const CRATE: &str = "crate";
 const BASE_HELP: &str = "Base URI of downloaded artifacts";
 
-fn main() {
+fn main() -> Result<()> {
+    color_eyre::install()?;
     let app = build_cli();
     let matches = app.get_matches();
 
@@ -38,8 +40,11 @@ fn main() {
         Some(("c", cmd)) => single_crate(cmd),
         Some(("b", cmd)) => brew(cmd),
         Some(("s", cmd)) => scoop(cmd),
-        Some(("completion", cmd)) => print_completions(cmd),
-        _ => {}
+        Some(("completion", cmd)) => {
+            print_completions(cmd);
+            Ok(())
+        }
+        _ => Ok(()),
     }
 }
 
@@ -51,24 +56,24 @@ fn print_completions(matches: &ArgMatches) {
     }
 }
 
-fn workspace(cmd: &ArgMatches) {
+fn workspace(cmd: &ArgMatches) -> Result<()> {
     let delay_seconds = cmd.get_one::<u64>("delay").unwrap_or(&20);
     let r = Workspace::new(*delay_seconds, Cargo, Git);
-    release(cmd, &r);
+    release(cmd, &r)
 }
 
-fn single_crate(cmd: &ArgMatches) {
+fn single_crate(cmd: &ArgMatches) -> Result<()> {
     let r = Crate::new(Cargo, Git);
-    release(cmd, &r);
+    release(cmd, &r)
 }
 
-fn brew(cmd: &ArgMatches) {
+fn brew(cmd: &ArgMatches) -> Result<()> {
     let empty = String::default();
     let linux_path = cmd.get_one::<String>("linux").unwrap_or(&empty);
     let macos_path = cmd.get_one::<String>("macos").unwrap_or(&empty);
 
     if linux_path.is_empty() && macos_path.is_empty() {
-        return;
+        return Ok(());
     }
 
     let crate_path = cmd.get_one::<String>(CRATE).unwrap_or(&empty);
@@ -77,12 +82,11 @@ fn brew(cmd: &ArgMatches) {
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
     let linux_path: VfsPath = PhysicalFS::new(PathBuf::from(linux_path)).into();
     let macos_path: VfsPath = PhysicalFS::new(PathBuf::from(macos_path)).into();
-
-    let b = brew::new_brew(&crate_path, &linux_path, &macos_path, base_uri);
-    output_string(cmd, b);
+    let b = brew::new_brew(&crate_path, &linux_path, &macos_path, base_uri)?;
+    output_string(cmd, b)
 }
 
-fn scoop(cmd: &ArgMatches) {
+fn scoop(cmd: &ArgMatches) -> Result<()> {
     let empty = String::default();
     let exe_name = cmd.get_one::<String>("exe").unwrap_or(&empty);
     let binary_path = cmd.get_one::<String>("binary").unwrap_or(&empty);
@@ -92,37 +96,28 @@ fn scoop(cmd: &ArgMatches) {
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
     let binary_path: VfsPath = PhysicalFS::new(PathBuf::from(binary_path)).into();
 
-    let scoop = scoop::new_scoop(&crate_path, &binary_path, exe_name, base_uri);
-    output_string(cmd, scoop);
-}
-
-enum ErrorCode {
-    NoOutputProduced = 1,
-    FileWriteError = 2,
-    ReleaseError = 3,
+    let scoop = scoop::new_scoop(&crate_path, &binary_path, exe_name, base_uri)?;
+    output_string(cmd, scoop)
 }
 
 /// Helper function that outputs string specified into
 /// console or file that set by command line option
-fn output_string(cmd: &ArgMatches, s: Option<String>) {
-    if let Some(b) = s {
+fn output_string(cmd: &ArgMatches, s: String) -> Result<()> {
+    if s.is_empty() {
+        Err(eyre!("No output produced but it should"))
+    } else {
         let output_path = cmd.get_one::<String>(OUTPUT);
         if let Some(path) = output_path {
-            let result = std::fs::write(path, b);
-            if let Err(e) = result {
-                eprintln!("{e}");
-                std::process::exit(ErrorCode::FileWriteError as i32);
-            }
+            std::fs::write(path, s)?;
         } else {
-            println!("{b}");
+            println!("{s}");
         }
-    } else {
-        std::process::exit(ErrorCode::NoOutputProduced as i32)
+        Ok(())
     }
 }
 
 /// Helper function that releases crate or workspace
-fn release<'a, R>(cmd: &'a ArgMatches, release: &R)
+fn release<'a, R>(cmd: &'a ArgMatches, release: &R) -> Result<()>
 where
     R: Release<'a>,
 {
@@ -132,15 +127,12 @@ where
     let no_verify = cmd.get_flag(NO_VERIFY);
 
     if incr.is_none() {
-        return;
+        return Ok(());
     }
 
     let r: VfsPath = PhysicalFS::new(PathBuf::from(path)).into();
     let root = VPath::new(path, r);
-    if let Err(e) = release.release(root, *incr.unwrap(), all_features, no_verify) {
-        eprintln!("Path:\t{path}\nError:\t{e}");
-        std::process::exit(ErrorCode::ReleaseError as i32);
-    }
+    release.release(root, *incr.unwrap(), all_features, no_verify)
 }
 
 fn build_cli() -> Command {

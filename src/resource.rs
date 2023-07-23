@@ -1,3 +1,4 @@
+use color_eyre::eyre::Result;
 use core::fmt;
 use url::Url;
 
@@ -9,9 +10,9 @@ pub struct Resource {
 }
 
 impl Resource {
-    pub fn new(input: &str) -> Option<Resource> {
-        let url = Url::parse(input).ok()?;
-        Some(Resource { url })
+    pub fn new(input: &str) -> Result<Resource> {
+        let url = Url::parse(input)?;
+        Ok(Resource { url })
     }
 
     pub fn append_path(&mut self, path: &str) -> &mut Self {
@@ -62,7 +63,7 @@ mod tests {
         let r = Resource::new("http://localhost");
 
         // Assert
-        assert!(r.is_some());
+        assert!(r.is_ok());
     }
 
     #[test]
@@ -73,7 +74,7 @@ mod tests {
         let r = Resource::new("http/localhost");
 
         // Assert
-        assert!(r.is_none());
+        assert!(r.is_err());
     }
 
     #[rstest]

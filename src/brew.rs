@@ -7,6 +7,7 @@ use vfs::VfsPath;
 use crate::packaging::Package;
 use crate::CrateConfig;
 use crate::{new_cargo_config_path, packaging};
+use color_eyre::eyre::Result;
 
 #[derive(Serialize, Default)]
 pub struct Brew {
@@ -62,15 +63,14 @@ class {{ formula }} < Formula
 end
 "###;
 
-#[must_use]
 pub fn new_brew(
     crate_path: &VfsPath,
     linux_path: &VfsPath,
     macos_path: &VfsPath,
     base_uri: &str,
-) -> Option<String> {
-    let crate_conf = new_cargo_config_path(crate_path).ok()?;
-    let config = CrateConfig::open(&crate_conf).ok()?;
+) -> Result<String> {
+    let crate_conf = new_cargo_config_path(crate_path)?;
+    let config = CrateConfig::open(&crate_conf)?;
 
     let name = config.package.name;
 
@@ -81,12 +81,12 @@ pub fn new_brew(
         homepage: config.package.homepage,
         version: config.package.version,
         license: config.package.license.unwrap_or_default(),
-        linux: packaging::new_binary_pkg(linux_path, base_uri),
-        macos: packaging::new_binary_pkg(macos_path, base_uri),
+        linux: packaging::new_binary_pkg(linux_path, base_uri).ok(),
+        macos: packaging::new_binary_pkg(macos_path, base_uri).ok(),
     };
 
     if brew.linux.is_none() && brew.macos.is_none() {
-        None
+        Ok(String::new())
     } else {
         serialize_brew(&brew)
     }
@@ -101,7 +101,7 @@ fn uppercase_first_letter(s: &str) -> String {
     }
 }
 
-fn serialize_brew<T: Serialize>(data: &T) -> Option<String> {
+fn serialize_brew<T: Serialize>(data: &T) -> Result<String> {
     handlebars_helper!(lines: |count: i32| {
         let mut i = 0;
         while i < count {
@@ -111,7 +111,7 @@ fn serialize_brew<T: Serialize>(data: &T) -> Option<String> {
     });
     let mut reg = Handlebars::new();
     reg.register_helper("lines", Box::new(lines));
-    reg.render_template(TEMPLATE, data).ok()
+    Ok(reg.render_template(TEMPLATE, data)?)
 }
 
 #[cfg(test)]
@@ -357,7 +357,7 @@ end
         let result = new_brew(&root, &linux_path, &macos_path, "http://localhost");
 
         // Assert
-        assert!(result.is_some());
+        assert!(result.is_ok());
         let r = result.unwrap();
         assert!(r.contains("http://localhost/linux-solv.tar.gz"));
         assert!(r.contains("http://localhost/macos-solv.tar.gz"));
@@ -373,7 +373,8 @@ end
         let result = new_brew(&root, &linux_path, &macos_path, "http://localhost");
 
         // Assert
-        assert!(result.is_none());
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
     }
 
     #[rstest]
@@ -396,7 +397,7 @@ end
         let result = new_brew(&root, &linux_path, &macos_path, "http://localhost");
 
         // Assert
-        assert!(result.is_none());
+        assert!(result.is_err());
     }
 
     #[fixture]

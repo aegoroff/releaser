@@ -1,5 +1,5 @@
 use crate::{PublishOptions, Publisher};
-use std::io;
+use color_eyre::eyre::Result;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -9,7 +9,7 @@ const TOOL: &str = "cargo";
 pub struct Cargo;
 
 impl Publisher for Cargo {
-    fn publish<'a>(&self, path: &str, options: PublishOptions) -> io::Result<()> {
+    fn publish<'a>(&self, path: &str, options: PublishOptions) -> Result<()> {
         let mut process = Command::new(TOOL);
         let child = process.current_dir(path).arg("publish");
 

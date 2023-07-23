@@ -1,5 +1,6 @@
 use crate::hash;
 use crate::resource::Resource;
+use color_eyre::eyre::{eyre, Result};
 use serde::Serialize;
 use vfs::VfsPath;
 
@@ -11,28 +12,32 @@ pub struct Package {
     pub hash: String,
 }
 
-pub fn new_binary_pkg(path: &VfsPath, base_uri: &str) -> Option<Package> {
+pub fn new_binary_pkg(path: &VfsPath, base_uri: &str) -> Result<Package> {
     let (hash, file) = calculate_sha256(path)?;
     let mut resource = Resource::new(base_uri)?;
     resource.append_path(&file);
-    Some(Package {
+    Ok(Package {
         url: resource.to_string(),
         hash,
     })
 }
 
-fn calculate_sha256(path: &VfsPath) -> Option<(String, String)> {
-    let mut it = path.read_dir().ok()?;
+fn calculate_sha256(path: &VfsPath) -> Result<(String, String)> {
+    let mut it = path.read_dir()?;
     let file_name = it.find(|x| {
         if let Some(ext) = x.extension() {
             ext.eq(PKG_EXTENSION)
         } else {
             false
         }
-    })?;
+    });
 
-    let hash = hash::calculate_sha256(&file_name).ok()?;
-    Some((hash, file_name.filename()))
+    if let Some(file_name) = file_name {
+        let hash = hash::calculate_sha256(&file_name)?;
+        Ok((hash, file_name.filename()))
+    } else {
+        Err(eyre!("No file with extension {PKG_EXTENSION} found"))
+    }
 }
 
 #[cfg(test)]
@@ -83,6 +88,6 @@ mod tests {
         let p = new_binary_pkg(&dir_path, "http://x");
 
         // Assert
-        assert!(p.is_none());
+        assert!(p.is_err());
     }
 }

@@ -1,25 +1,24 @@
 #![warn(unused_extern_crates)]
 #![warn(clippy::unwrap_in_result)]
 #![warn(clippy::unwrap_used)]
+#![allow(clippy::missing_errors_doc)]
 #[macro_use]
 extern crate handlebars;
 
 use std::collections::HashMap;
-use std::io;
 
 use clap::ValueEnum;
-use error::FileError;
 #[cfg(test)]
 use mockall::{automock, predicate::str};
 use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
 
+use color_eyre::eyre::Result;
 use toml_edit::{value, Document};
 use vfs::VfsPath;
 
 pub mod brew;
 pub mod cargo;
-pub mod error;
 pub mod git;
 pub mod hash;
 mod packaging;
@@ -35,9 +34,6 @@ extern crate mockall;
 #[cfg(test)] // <-- not needed in integration tests
 extern crate rstest;
 
-pub type AnyError = Box<dyn std::error::Error>;
-pub type Result<T> = core::result::Result<T, AnyError>;
-
 const CARGO_CONFIG: &str = "Cargo.toml";
 const VERSION: &str = "version";
 const PACK: &str = "package";
@@ -52,14 +48,14 @@ pub struct PublishOptions<'a> {
 
 #[cfg_attr(test, automock)]
 pub trait Publisher {
-    fn publish<'a>(&'a self, path: &'a str, options: PublishOptions<'a>) -> io::Result<()>;
+    fn publish<'a>(&'a self, path: &'a str, options: PublishOptions<'a>) -> Result<()>;
 }
 
 #[cfg_attr(test, automock)]
 pub trait Vcs {
-    fn commit(&self, path: &str, message: &str) -> io::Result<()>;
-    fn create_tag(&self, path: &str, tag: &str) -> io::Result<()>;
-    fn push_tag(&self, path: &str, tag: &str) -> io::Result<()>;
+    fn commit(&self, path: &str, message: &str) -> Result<()>;
+    fn create_tag(&self, path: &str, tag: &str) -> Result<()>;
+    fn push_tag(&self, path: &str, tag: &str) -> Result<()>;
 }
 
 pub fn update_configs<I>(path: &VfsPath, iter: &mut I, incr: Increment) -> Result<Version>
@@ -84,22 +80,11 @@ pub fn update_config(path: &VfsPath, version: &CrateVersion, incr: Increment) ->
         working_config_path = path;
     } else {
         let parent = path.parent();
-        member_config_path = match match parent.join(&version.path) {
-            Ok(it) => it,
-            Err(err) => return Err(Box::new(FileError::from(err))),
-        }
-        .join(CARGO_CONFIG)
-        {
-            Ok(it) => it,
-            Err(err) => return Err(Box::new(FileError::from(err))),
-        };
+        member_config_path = parent.join(&version.path)?.join(CARGO_CONFIG)?;
         working_config_path = &member_config_path;
     }
 
-    let mut file = match working_config_path.open_file() {
-        Ok(it) => it,
-        Err(err) => return Err(Box::new(FileError::from(err))),
-    };
+    let mut file = working_config_path.open_file()?;
     let mut content = String::new();
     file.read_to_string(&mut content)?;
 
@@ -122,10 +107,7 @@ pub fn update_config(path: &VfsPath, version: &CrateVersion, incr: Increment) ->
         }
     }
 
-    let mut f = match working_config_path.create_file() {
-        Ok(it) => it,
-        Err(err) => return Err(Box::new(FileError::from(err))),
-    };
+    let mut f = working_config_path.create_file()?;
     let changed = doc.to_string();
     f.write_all(changed.as_bytes())?;
     Ok(result)
@@ -184,10 +166,7 @@ struct CrateConfig {
 
 impl CrateConfig {
     pub fn open(path: &VfsPath) -> Result<Self> {
-        let mut file = match path.open_file() {
-            Ok(it) => it,
-            Err(err) => return Err(Box::new(FileError::from(err))),
-        };
+        let mut file = path.open_file()?;
         let mut content = String::new();
         file.read_to_string(&mut content)?;
         let conf: CrateConfig = toml::from_str(&content)?;

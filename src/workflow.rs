@@ -10,6 +10,7 @@ use crate::Increment;
 use crate::Publisher;
 use crate::Vcs;
 use crate::{new_cargo_config_path, PublishOptions};
+use color_eyre::eyre::Result;
 
 /// Represents virtual path in a filesystem
 /// that keeps real fs path that is root of this
@@ -41,7 +42,7 @@ pub trait Release<'a> {
         incr: Increment,
         all_features: bool,
         no_verify: bool,
-    ) -> crate::Result<()>;
+    ) -> Result<()>;
 }
 
 pub struct Workspace<P: Publisher, V: Vcs> {
@@ -67,7 +68,7 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
         incr: Increment,
         all_features: bool,
         no_verify: bool,
-    ) -> crate::Result<()> {
+    ) -> Result<()> {
         let crate_conf = new_cargo_config_path(&root.virtual_path)?;
 
         let mut it = VersionIter::open(&crate_conf)?;
@@ -123,7 +124,7 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
         incr: Increment,
         all_features: bool,
         no_verify: bool,
-    ) -> crate::Result<()> {
+    ) -> Result<()> {
         let crate_conf = new_cargo_config_path(&root.virtual_path)?;
 
         let conf = CrateConfig::open(&crate_conf)?;
@@ -146,7 +147,7 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
     }
 }
 
-fn commit_version(vcs: &impl Vcs, path: &str, version: &Version) -> crate::Result<String> {
+fn commit_version(vcs: &impl Vcs, path: &str, version: &Version) -> Result<String> {
     let ver = format!("v{version}");
     let commit_msg = format!("changelog: {ver}");
     vcs.commit(path, &commit_msg)?;
