@@ -136,6 +136,7 @@ where
 }
 
 fn build_cli() -> Command {
+    #![allow(non_upper_case_globals)]
     command!(crate_name!())
         .arg_required_else_help(true)
         .version(crate_version!())
