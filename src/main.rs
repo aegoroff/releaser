@@ -142,140 +142,151 @@ fn build_cli() -> Command {
         .version(crate_version!())
         .author(crate_authors!("\n"))
         .about(crate_description!())
-        .subcommand(
-            Command::new("w")
-                .aliases(["workspace"])
-                .about("Release workspace specified by path")
-                .arg(
-                    arg!([INCR])
-                        .value_parser(value_parser!(Increment))
-                        .help(INCR_HELP)
-                        .required(true)
-                        .index(1),
-                )
-                .arg(
-                    arg!([PATH])
-                        .help("Sets workspace root path")
-                        .required(true)
-                        .index(2),
-                )
-                .arg(
-                    arg!(-d --delay <NUMBER>)
-                        .required(false)
-                        .value_parser(value_parser!(u64))
-                        .default_value("20")
-                        .help("Delay in seconds between publish next workflow's crate"),
-                )
-                .arg(
-                    arg!(-a --all)
-                        .required(false)
-                        .action(ArgAction::SetTrue)
-                        .help(ALL_HELP),
-                )
-                .arg(
-                    arg!(-n --noverify)
-                        .required(false)
-                        .action(ArgAction::SetTrue)
-                        .help(NO_VERIFY_HELP),
-                ),
+        .subcommand(workspace_cmd())
+        .subcommand(crate_cmd())
+        .subcommand(brew_cmd())
+        .subcommand(scoop_cmd())
+        .subcommand(completion_cmd())
+}
+
+fn workspace_cmd() -> Command {
+    Command::new("w")
+        .aliases(["workspace"])
+        .about("Release workspace specified by path")
+        .arg(
+            arg!([INCR])
+                .value_parser(value_parser!(Increment))
+                .help(INCR_HELP)
+                .required(true)
+                .index(1),
         )
-        .subcommand(
-            Command::new("c")
-                .aliases(["crate"])
-                .about("Release single crate specified by path")
-                .arg(
-                    arg!([INCR])
-                        .value_parser(value_parser!(Increment))
-                        .help(INCR_HELP)
-                        .required(true)
-                        .index(1),
-                )
-                .arg(
-                    arg!([PATH])
-                        .help("Sets crate's root path")
-                        .required(true)
-                        .index(2),
-                )
-                .arg(
-                    arg!(-a --all)
-                        .required(false)
-                        .action(ArgAction::SetTrue)
-                        .help(ALL_HELP),
-                )
-                .arg(
-                    arg!(-n --noverify)
-                        .required(false)
-                        .action(ArgAction::SetTrue)
-                        .help(NO_VERIFY_HELP),
-                ),
+        .arg(
+            arg!([PATH])
+                .help("Sets workspace root path")
+                .required(true)
+                .index(2),
         )
-        .subcommand(
-            Command::new("b")
-                .aliases(["brew"])
-                .about("Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)")
-                .arg(
-                    arg!(-c --crate <PATH>)
-                        .required(true)
-                        .help("Sets crate's path where Cargo.toml located"),
-                )
-                .arg(
-                    arg!(-l --linux <PATH>)
-                        .required(false)
-                        .help("Sets Linux package directory path"),
-                )
-                .arg(
-                    arg!(-m --macos <PATH>)
-                        .required(false)
-                        .help("Sets Mac OS package directory path"),
-                )
-                .arg(
-                    arg!(-b --base <URI>)
-                        .required(true)
-                        .help(BASE_HELP),
-                )
-                .arg(
-                    arg!(-u --output [PATH])
-                        .required(false)
-                        .help(OUTPUT_HELP),
-                ),
+        .arg(
+            arg!(-d --delay <NUMBER>)
+                .required(false)
+                .value_parser(value_parser!(u64))
+                .default_value("20")
+                .help("Delay in seconds between publish next workflow's crate"),
         )
-        .subcommand(
-            Command::new("s")
-                .aliases(["scoop"])
-                .about("Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)")
-                .arg(
-                    arg!(-c --crate <PATH>)
-                        .required(true)
-                        .help("Sets crate's path where Cargo.toml located"),
-                )
-                .arg(
-                    arg!(-i --binary <PATH>)
-                        .required(true)
-                        .help("Sets 64-bit binary package directory path"),
-                )
-                .arg(
-                    arg!(-e --exe <FILE>)
-                        .required(true)
-                        .help("Sets Windows executable name"),
-                )
-                .arg(
-                    arg!(-b --base <URI>)
-                        .required(true)
-                        .help(BASE_HELP),
-                )
-                .arg(
-                    arg!(-u --output [PATH])
-                        .required(false)
-                        .help(OUTPUT_HELP),
-                ),
-        ).subcommand(
-            Command::new("completion")
-            .about("Generate the autocompletion script for the specified shell")
-            .arg(
-                arg!([generator])
-                    .value_parser(value_parser!(Shell))
-                    .required(true)
-                    .index(1),
-            )
+        .arg(
+            arg!(-a - -all)
+                .required(false)
+                .action(ArgAction::SetTrue)
+                .help(ALL_HELP),
+        )
+        .arg(
+            arg!(-n - -noverify)
+                .required(false)
+                .action(ArgAction::SetTrue)
+                .help(NO_VERIFY_HELP),
+        )
+}
+
+fn crate_cmd() -> Command {
+    Command::new("c")
+        .aliases(["crate"])
+        .about("Release single crate specified by path")
+        .arg(
+            arg!([INCR])
+                .value_parser(value_parser!(Increment))
+                .help(INCR_HELP)
+                .required(true)
+                .index(1),
+        )
+        .arg(
+            arg!([PATH])
+                .help("Sets crate's root path")
+                .required(true)
+                .index(2),
+        )
+        .arg(
+            arg!(-a - -all)
+                .required(false)
+                .action(ArgAction::SetTrue)
+                .help(ALL_HELP),
+        )
+        .arg(
+            arg!(-n - -noverify)
+                .required(false)
+                .action(ArgAction::SetTrue)
+                .help(NO_VERIFY_HELP),
+        )
+}
+
+fn brew_cmd() -> Command {
+    Command::new("b")
+        .aliases(["brew"])
+        .about("Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)")
+        .arg(
+            arg!(-c --crate <PATH>)
+                .required(true)
+                .help("Sets crate's path where Cargo.toml located"),
+        )
+        .arg(
+            arg!(-l --linux <PATH>)
+                .required(false)
+                .help("Sets Linux package directory path"),
+        )
+        .arg(
+            arg!(-m --macos <PATH>)
+                .required(false)
+                .help("Sets Mac OS package directory path"),
+        )
+        .arg(
+            arg!(-b --base <URI>)
+                .required(true)
+                .help(BASE_HELP),
+        )
+        .arg(
+            arg!(-u --output [PATH])
+                .required(false)
+                .help(OUTPUT_HELP),
+        )
+}
+
+fn scoop_cmd() -> Command {
+    Command::new("s")
+        .aliases(["scoop"])
+        .about("Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)")
+        .arg(
+            arg!(-c --crate <PATH>)
+                .required(true)
+                .help("Sets crate's path where Cargo.toml located"),
+        )
+        .arg(
+            arg!(-i --binary <PATH>)
+                .required(true)
+                .help("Sets 64-bit binary package directory path"),
+        )
+        .arg(
+            arg!(-e --exe <FILE>)
+                .required(true)
+                .help("Sets Windows executable name"),
+        )
+        .arg(
+            arg!(-b --base <URI>)
+                .required(true)
+                .help(BASE_HELP),
+        )
+        .arg(
+            arg!(-u --output [PATH])
+                .required(false)
+                .help(OUTPUT_HELP),
+        )
+}
+
+fn completion_cmd() -> Command {
+    Command::new("completion")
+        .about("Generate the autocompletion script for the specified shell")
+        .arg(
+            arg!([generator])
+                .value_parser(value_parser!(Shell))
+                .required(true)
+                .index(1),
         )
 }
