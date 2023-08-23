@@ -174,13 +174,13 @@ fn workspace_cmd() -> Command {
                 .help("Delay in seconds between publish next workflow's crate"),
         )
         .arg(
-            arg!(-a - -all)
+            arg!(-a --all)
                 .required(false)
                 .action(ArgAction::SetTrue)
                 .help(ALL_HELP),
         )
         .arg(
-            arg!(-n - -noverify)
+            arg!(-n --noverify)
                 .required(false)
                 .action(ArgAction::SetTrue)
                 .help(NO_VERIFY_HELP),
@@ -205,13 +205,13 @@ fn crate_cmd() -> Command {
                 .index(2),
         )
         .arg(
-            arg!(-a - -all)
+            arg!(-a --all)
                 .required(false)
                 .action(ArgAction::SetTrue)
                 .help(ALL_HELP),
         )
         .arg(
-            arg!(-n - -noverify)
+            arg!(-n --noverify)
                 .required(false)
                 .action(ArgAction::SetTrue)
                 .help(NO_VERIFY_HELP),
