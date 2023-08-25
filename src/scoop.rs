@@ -72,7 +72,7 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(
             result.unwrap().as_str(),
-            r###"{
+            r#"{
   "description": "Microsoft Visual Studio solution parsing library",
   "homepage": "https://github.com/aegoroff/solv",
   "version": "0.1.13",
@@ -86,7 +86,7 @@ mod tests {
       ]
     }
   }
-}"###,
+}"#,
         )
     }
 
