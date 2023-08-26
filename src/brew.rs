@@ -103,11 +103,9 @@ fn uppercase_first_letter(s: &str) -> String {
 
 fn serialize_brew<T: Serialize>(data: &T) -> Result<String> {
     handlebars_helper!(lines: |count: i32| {
-        let mut i = 0;
-        while i < count {
-            println!();
-            i += 1;
-        }
+        for _ in 0..count {
+          println!();
+        };
     });
     let mut reg = Handlebars::new();
     reg.register_helper("lines", Box::new(lines));
