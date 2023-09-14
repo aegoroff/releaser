@@ -27,11 +27,12 @@ impl Resource {
                 });
 
             // If original ends with spearator char use as is or trim last (separator) char otherwise
-            if path.chars().next_back().unwrap_or_default() == SEP {
-                self.url.set_path(&p);
+            let path_to_set = if path.chars().next_back().unwrap_or_default() == SEP {
+                &p
             } else {
-                self.url.set_path(&p[..p.len() - 1]);
-            }
+                &p[..p.len() - 1]
+            };
+            self.url.set_path(path_to_set);
         } else {
             let r = self.url.join(path);
             if let Ok(u) = r {
