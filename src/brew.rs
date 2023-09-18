@@ -64,6 +64,7 @@ end
 "#;
 
 impl Brew {
+    /// Creates Brew struct instance and serializes it into String
     pub fn serialize(
         crate_path: &VfsPath,
         linux_path: &VfsPath,
