@@ -82,7 +82,7 @@ fn brew(cmd: &ArgMatches) -> Result<()> {
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
     let linux_path: VfsPath = PhysicalFS::new(PathBuf::from(linux_path)).into();
     let macos_path: VfsPath = PhysicalFS::new(PathBuf::from(macos_path)).into();
-    let b = brew::new_brew(&crate_path, &linux_path, &macos_path, base_uri)?;
+    let b = brew::Brew::serialize(&crate_path, &linux_path, &macos_path, base_uri)?;
     output_string(cmd, b)
 }
 
@@ -96,7 +96,7 @@ fn scoop(cmd: &ArgMatches) -> Result<()> {
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
     let binary_path: VfsPath = PhysicalFS::new(PathBuf::from(binary_path)).into();
 
-    let scoop = scoop::new_scoop(&crate_path, &binary_path, exe_name, base_uri)?;
+    let scoop = scoop::Scoop::serialize(&crate_path, &binary_path, exe_name, base_uri)?;
     output_string(cmd, scoop)
 }
 
@@ -174,13 +174,13 @@ fn workspace_cmd() -> Command {
                 .help("Delay in seconds between publish next workflow's crate"),
         )
         .arg(
-            arg!(-a --all)
+            arg!(-a - -all)
                 .required(false)
                 .action(ArgAction::SetTrue)
                 .help(ALL_HELP),
         )
         .arg(
-            arg!(-n --noverify)
+            arg!(-n - -noverify)
                 .required(false)
                 .action(ArgAction::SetTrue)
                 .help(NO_VERIFY_HELP),
@@ -205,13 +205,13 @@ fn crate_cmd() -> Command {
                 .index(2),
         )
         .arg(
-            arg!(-a --all)
+            arg!(-a - -all)
                 .required(false)
                 .action(ArgAction::SetTrue)
                 .help(ALL_HELP),
         )
         .arg(
-            arg!(-n --noverify)
+            arg!(-n - -noverify)
                 .required(false)
                 .action(ArgAction::SetTrue)
                 .help(NO_VERIFY_HELP),

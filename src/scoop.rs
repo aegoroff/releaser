@@ -26,29 +26,32 @@ pub struct Binary {
     pub bin: Vec<String>,
 }
 
-pub fn new_scoop(
-    crate_path: &VfsPath,
-    binary_path: &VfsPath,
-    executable_name: &str,
-    base_uri: &str,
-) -> Result<String> {
-    let crate_conf = new_cargo_config_path(crate_path)?;
-    let config = CrateConfig::open(&crate_conf)?;
-    let binary = packaging::new_binary_pkg(binary_path, base_uri)?;
-    let x64pkg = Binary {
-        url: binary.url,
-        hash: Some(binary.hash),
-        bin: vec![executable_name.to_string()],
-    };
+impl Scoop {
+    /// Creates Scoop struct instance and serializes it to String
+    pub fn serialize(
+        crate_path: &VfsPath,
+        binary_path: &VfsPath,
+        executable_name: &str,
+        base_uri: &str,
+    ) -> Result<String> {
+        let crate_conf = new_cargo_config_path(crate_path)?;
+        let config = CrateConfig::open(&crate_conf)?;
+        let binary = packaging::new_binary_pkg(binary_path, base_uri)?;
+        let x64pkg = Binary {
+            url: binary.url,
+            hash: Some(binary.hash),
+            bin: vec![executable_name.to_string()],
+        };
 
-    let scoop = Scoop {
-        description: config.package.description.unwrap_or_default(),
-        homepage: config.package.homepage,
-        version: config.package.version,
-        license: config.package.license.unwrap_or_default(),
-        architecture: Architecture { x64: x64pkg },
-    };
-    Ok(serde_json::to_string_pretty(&scoop)?)
+        let scoop = Scoop {
+            description: config.package.description.unwrap_or_default(),
+            homepage: config.package.homepage,
+            version: config.package.version,
+            license: config.package.license.unwrap_or_default(),
+            architecture: Architecture { x64: x64pkg },
+        };
+        Ok(serde_json::to_string_pretty(&scoop)?)
+    }
 }
 
 #[cfg(test)]
@@ -66,7 +69,7 @@ mod tests {
         let binary_path = root.join("x64").unwrap();
 
         // Act
-        let result = new_scoop(&root, &binary_path, "solv.exe", "http://localhost");
+        let result = Scoop::serialize(&root, &binary_path, "solv.exe", "http://localhost");
 
         // Assert
         assert!(result.is_ok());
@@ -96,7 +99,7 @@ mod tests {
         let binary_path = root.join("x86").unwrap();
 
         // Act
-        let result = new_scoop(&root, &binary_path, "solv.exe", "http://localhost");
+        let result = Scoop::serialize(&root, &binary_path, "solv.exe", "http://localhost");
 
         // Assert
         assert!(result.is_err());
@@ -126,7 +129,7 @@ mod tests {
             .unwrap();
 
         // Act
-        let result = new_scoop(&root, &binary_path, "solv.exe", "http://localhost");
+        let result = Scoop::serialize(&root, &binary_path, "solv.exe", "http://localhost");
 
         // Assert
         assert!(result.is_err());
