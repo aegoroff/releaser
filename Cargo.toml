@@ -18,7 +18,7 @@ toml_edit = "=0.21.0"
 serde = { version = "=1.0.192", features = ["derive"] }
 serde_json = "=1.0.108"
 vfs = "=0.10.0"
-clap = { version = "=4.4.7", features = ["std", "color", "suggestions", "cargo", "derive"] }
+clap = { version = "=4.4.8", features = ["std", "color", "suggestions", "cargo", "derive"] }
 clap_complete = "=4.4.4"
 petgraph = "=0.6.4"
 ansi_term = "=0.12.1"
