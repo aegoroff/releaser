@@ -16,7 +16,7 @@ semver = "=1.0.21"
 toml = "=0.8.8"
 toml_edit = "=0.21.0"
 serde = { version = "=1.0.193", features = ["derive"] }
-serde_json = "=1.0.109"
+serde_json = "=1.0.110"
 vfs = "=0.10.0"
 clap = { version = "=4.4.12", features = ["std", "color", "suggestions", "cargo", "derive"] }
 clap_complete = "=4.4.6"
