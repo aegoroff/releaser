@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate clap;
 
-use clap::{command, ArgAction, ArgMatches, Command};
+use clap::{command, Arg, ArgAction, ArgMatches, Command};
 use clap_complete::{generate, Shell};
 use color_eyre::eyre::{eyre, Result};
 use std::io;
@@ -173,18 +173,8 @@ fn workspace_cmd() -> Command {
                 .default_value("20")
                 .help("Delay in seconds between publish next workflow's crate"),
         )
-        .arg(
-            arg!(-a - -all)
-                .required(false)
-                .action(ArgAction::SetTrue)
-                .help(ALL_HELP),
-        )
-        .arg(
-            arg!(-n - -noverify)
-                .required(false)
-                .action(ArgAction::SetTrue)
-                .help(NO_VERIFY_HELP),
-        )
+        .arg(all_arg())
+        .arg(noverify_arg())
 }
 
 fn crate_cmd() -> Command {
@@ -204,29 +194,15 @@ fn crate_cmd() -> Command {
                 .required(true)
                 .index(2),
         )
-        .arg(
-            arg!(-a - -all)
-                .required(false)
-                .action(ArgAction::SetTrue)
-                .help(ALL_HELP),
-        )
-        .arg(
-            arg!(-n - -noverify)
-                .required(false)
-                .action(ArgAction::SetTrue)
-                .help(NO_VERIFY_HELP),
-        )
+        .arg(all_arg())
+        .arg(noverify_arg())
 }
 
 fn brew_cmd() -> Command {
     Command::new("b")
         .aliases(["brew"])
         .about("Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)")
-        .arg(
-            arg!(-c --crate <PATH>)
-                .required(true)
-                .help("Sets crate's path where Cargo.toml located"),
-        )
+        .arg(crate_arg())
         .arg(
             arg!(-l --linux <PATH>)
                 .required(false)
@@ -237,27 +213,15 @@ fn brew_cmd() -> Command {
                 .required(false)
                 .help("Sets Mac OS package directory path"),
         )
-        .arg(
-            arg!(-b --base <URI>)
-                .required(true)
-                .help(BASE_HELP),
-        )
-        .arg(
-            arg!(-u --output [PATH])
-                .required(false)
-                .help(OUTPUT_HELP),
-        )
+        .arg(base_arg())
+        .arg(output_arg())
 }
 
 fn scoop_cmd() -> Command {
     Command::new("s")
         .aliases(["scoop"])
         .about("Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)")
-        .arg(
-            arg!(-c --crate <PATH>)
-                .required(true)
-                .help("Sets crate's path where Cargo.toml located"),
-        )
+        .arg(crate_arg())
         .arg(
             arg!(-i --binary <PATH>)
                 .required(true)
@@ -268,16 +232,8 @@ fn scoop_cmd() -> Command {
                 .required(true)
                 .help("Sets Windows executable name"),
         )
-        .arg(
-            arg!(-b --base <URI>)
-                .required(true)
-                .help(BASE_HELP),
-        )
-        .arg(
-            arg!(-u --output [PATH])
-                .required(false)
-                .help(OUTPUT_HELP),
-        )
+        .arg(base_arg())
+        .arg(output_arg())
 }
 
 fn completion_cmd() -> Command {
@@ -289,4 +245,32 @@ fn completion_cmd() -> Command {
                 .required(true)
                 .index(1),
         )
+}
+
+fn base_arg() -> Arg {
+    arg!(-b --base <URI>).required(true).help(BASE_HELP)
+}
+
+fn output_arg() -> Arg {
+    arg!(-u --output[PATH]).required(false).help(OUTPUT_HELP)
+}
+
+fn crate_arg() -> Arg {
+    arg!(-c --crate <PATH>)
+        .required(true)
+        .help("Sets crate's path where Cargo.toml located")
+}
+
+fn noverify_arg() -> Arg {
+    arg!(-n --noverify)
+        .required(false)
+        .action(ArgAction::SetTrue)
+        .help(NO_VERIFY_HELP)
+}
+
+fn all_arg() -> Arg {
+    arg!(-a --all)
+        .required(false)
+        .action(ArgAction::SetTrue)
+        .help(ALL_HELP)
 }
