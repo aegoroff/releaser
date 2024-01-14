@@ -153,13 +153,7 @@ fn workspace_cmd() -> Command {
     Command::new("w")
         .aliases(["workspace"])
         .about("Release workspace specified by path")
-        .arg(
-            arg!([INCR])
-                .value_parser(value_parser!(Increment))
-                .help(INCR_HELP)
-                .required(true)
-                .index(1),
-        )
+        .arg(increment_arg())
         .arg(
             arg!([PATH])
                 .help("Sets workspace root path")
@@ -181,13 +175,7 @@ fn crate_cmd() -> Command {
     Command::new("c")
         .aliases(["crate"])
         .about("Release single crate specified by path")
-        .arg(
-            arg!([INCR])
-                .value_parser(value_parser!(Increment))
-                .help(INCR_HELP)
-                .required(true)
-                .index(1),
-        )
+        .arg(increment_arg())
         .arg(
             arg!([PATH])
                 .help("Sets crate's root path")
@@ -245,6 +233,14 @@ fn completion_cmd() -> Command {
                 .required(true)
                 .index(1),
         )
+}
+
+fn increment_arg() -> Arg {
+    arg!([INCR])
+    .value_parser(value_parser!(Increment))
+    .help(INCR_HELP)
+    .required(true)
+    .index(1)
 }
 
 fn base_arg() -> Arg {
