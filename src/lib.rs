@@ -14,7 +14,7 @@ use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
 
 use color_eyre::eyre::Result;
-use toml_edit::{value, Document};
+use toml_edit::{value, DocumentMut};
 use vfs::VfsPath;
 
 pub mod brew;
@@ -88,7 +88,7 @@ pub fn update_config(path: &VfsPath, version: &CrateVersion, incr: Increment) ->
     let mut content = String::new();
     file.read_to_string(&mut content)?;
 
-    let mut doc = content.parse::<Document>()?;
+    let mut doc = content.parse::<DocumentMut>()?;
 
     let mut result = Version::parse("0.0.0")?;
 
