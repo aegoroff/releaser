@@ -26,10 +26,10 @@ jobs:
             os: windows-latest
 
     steps:
-      - uses: hecrj/setup-rust-action@v1
+      - uses: hecrj/setup-rust-action@v2
         with:
           rust-version: ${{ matrix.rust }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Rust version
         run: rustup -V
       - name: Build
@@ -42,7 +42,9 @@ jobs:
           args: '-- --test-threads 1'
       - name: Upload to codecov.io
         if: matrix.build == 'linux' && matrix.rust != 'nightly'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Run tests
         if: matrix.build != 'linux'
         run: cargo test --verbose  -- --nocapture
