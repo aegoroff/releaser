@@ -18,7 +18,7 @@ toml_edit = "=0.22.7"
 serde = { version = "=1.0.197", features = ["derive"] }
 serde_json = "=1.0.114"
 vfs = "=0.12.0"
-clap = { version = "=4.5.2", features = ["std", "color", "suggestions", "cargo", "derive"] }
+clap = { version = "=4.5.3", features = ["std", "color", "suggestions", "cargo", "derive"] }
 clap_complete = "=4.5.1"
 petgraph = "=0.6.4"
 ansi_term = "=0.12.1"
@@ -26,7 +26,7 @@ handlebars = "=5.1.0"
 sha2 = "=0.10.8"
 hex = "=0.4.3"
 url = "=2.5.0"
-color-eyre = "=0.6.2"
+color-eyre = "=0.6.3"
 
 [dev-dependencies]
 mockall = "=0.12.1"
