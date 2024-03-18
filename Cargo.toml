@@ -14,7 +14,7 @@ edition = "2021"
 [dependencies]
 semver = "=1.0.22"
 toml = "=0.8.11"
-toml_edit = "=0.22.7"
+toml_edit = "=0.22.8"
 serde = { version = "=1.0.197", features = ["derive"] }
 serde_json = "=1.0.114"
 vfs = "=0.12.0"
