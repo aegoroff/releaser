@@ -28,10 +28,6 @@ mod version_iter;
 pub mod workflow;
 
 #[cfg(test)] // <-- not needed in integration tests
-#[macro_use]
-extern crate mockall;
-
-#[cfg(test)] // <-- not needed in integration tests
 extern crate rstest;
 
 const CARGO_CONFIG: &str = "Cargo.toml";
@@ -193,8 +189,10 @@ struct Package {
 #[serde(untagged)]
 enum Dependency {
     Plain(String),
+    #[allow(dead_code)]
     Optional(bool),
     Object(HashMap<String, Dependency>),
+    #[allow(dead_code)]
     List(Vec<Dependency>),
 }
 
