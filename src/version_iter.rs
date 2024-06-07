@@ -11,7 +11,7 @@ pub struct VersionIter<'a> {
     search: HashMap<String, usize>,
     members: Vec<String>,
     workspace_config_path: &'a VfsPath,
-    graph: DiGraphMap<usize, i32>,
+    graph: DiGraphMap<usize, ()>,
 }
 
 impl<'a> VersionIter<'a> {
@@ -94,7 +94,7 @@ impl<'a> Iterator for VersionIter<'a> {
         for place in &item.places {
             if let Place::Dependency(n, _) = place {
                 let from = self.search.get(n)?;
-                self.graph.add_edge(*from, *to, -1);
+                self.graph.add_edge(*from, *to, ());
             }
         }
 
