@@ -71,7 +71,7 @@ fn brew(cmd: &ArgMatches) -> Result<()> {
     let empty = String::default();
     let linux_path = cmd.get_one::<String>("linux").unwrap_or(&empty);
     let macos_path = cmd.get_one::<String>("macos").unwrap_or(&empty);
-    let macos_arm_path = cmd.get_one::<String>("macos-arm").unwrap_or(&empty);
+    let macos_arm_path = cmd.get_one::<String>("macosarm").unwrap_or(&empty);
 
     if linux_path.is_empty() && macos_path.is_empty() {
         return Ok(());
@@ -210,7 +210,7 @@ fn brew_cmd() -> Command {
                 .help("Sets Mac OS x64-86 package directory path"),
         )
         .arg(
-            arg!(-a --macos-arm <PATH>)
+            arg!(-a --macosarm <PATH>)
                 .required(false)
                 .help("Sets Mac OS ARM64 package directory path"),
         )
