@@ -71,6 +71,7 @@ fn brew(cmd: &ArgMatches) -> Result<()> {
     let empty = String::default();
     let linux_path = cmd.get_one::<String>("linux").unwrap_or(&empty);
     let macos_path = cmd.get_one::<String>("macos").unwrap_or(&empty);
+    let macos_arm_path = cmd.get_one::<String>("macos-arm").unwrap_or(&empty);
 
     if linux_path.is_empty() && macos_path.is_empty() {
         return Ok(());
@@ -82,7 +83,14 @@ fn brew(cmd: &ArgMatches) -> Result<()> {
     let crate_path: VfsPath = PhysicalFS::new(PathBuf::from(crate_path)).into();
     let linux_path: VfsPath = PhysicalFS::new(PathBuf::from(linux_path)).into();
     let macos_path: VfsPath = PhysicalFS::new(PathBuf::from(macos_path)).into();
-    let b = brew::Brew::serialize(&crate_path, &linux_path, &macos_path, base_uri)?;
+    let macos_arm_path: VfsPath = PhysicalFS::new(PathBuf::from(macos_arm_path)).into();
+    let b = brew::Brew::serialize(
+        &crate_path,
+        &linux_path,
+        &macos_path,
+        &macos_arm_path,
+        base_uri,
+    )?;
     output_string(cmd, b)
 }
 
@@ -199,7 +207,12 @@ fn brew_cmd() -> Command {
         .arg(
             arg!(-m --macos <PATH>)
                 .required(false)
-                .help("Sets Mac OS package directory path"),
+                .help("Sets Mac OS x64-86 package directory path"),
+        )
+        .arg(
+            arg!(-a --macos-arm <PATH>)
+                .required(false)
+                .help("Sets Mac OS ARM64 package directory path"),
         )
         .arg(base_arg())
         .arg(output_arg())
@@ -237,10 +250,10 @@ fn completion_cmd() -> Command {
 
 fn increment_arg() -> Arg {
     arg!([INCR])
-    .value_parser(value_parser!(Increment))
-    .help(INCR_HELP)
-    .required(true)
-    .index(1)
+        .value_parser(value_parser!(Increment))
+        .help(INCR_HELP)
+        .required(true)
+        .index(1)
 }
 
 fn base_arg() -> Arg {
@@ -248,7 +261,7 @@ fn base_arg() -> Arg {
 }
 
 fn output_arg() -> Arg {
-    arg!(-u --output[PATH]).required(false).help(OUTPUT_HELP)
+    arg!(-u - -output[PATH]).required(false).help(OUTPUT_HELP)
 }
 
 fn crate_arg() -> Arg {
@@ -258,14 +271,14 @@ fn crate_arg() -> Arg {
 }
 
 fn noverify_arg() -> Arg {
-    arg!(-n --noverify)
+    arg!(-n - -noverify)
         .required(false)
         .action(ArgAction::SetTrue)
         .help(NO_VERIFY_HELP)
 }
 
 fn all_arg() -> Arg {
-    arg!(-a --all)
+    arg!(-a - -all)
         .required(false)
         .action(ArgAction::SetTrue)
         .help(ALL_HELP)
