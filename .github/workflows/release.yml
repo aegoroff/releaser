@@ -59,10 +59,6 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install musl-tools -y
 
-      - name: Install p7zip (MacOS)
-        if: matrix.build == 'macos'
-        run: brew install p7zip
-
       - name: Build
         uses: houseabsolute/actions-rust-cross@v0
         with:
