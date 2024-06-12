@@ -90,13 +90,13 @@ impl Brew {
             macos.push(BrewPackage {
                 package: p,
                 cpu: "intel".to_string(),
-            })
+            });
         }
         if let Ok(p) = packaging::new_binary_pkg(macos_arm_path, base_uri) {
             macos.push(BrewPackage {
                 package: p,
                 cpu: "arm".to_string(),
-            })
+            });
         }
         let macos = if macos.is_empty() { None } else { Some(macos) };
 
