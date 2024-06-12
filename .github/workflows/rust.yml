@@ -15,25 +15,37 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [ linux, macos, windows ]
+        build: [ linux, macos-x64, macos-arm64, windows ]
         rust: [ stable ]
         include:
           - build: linux
             os: ubuntu-latest
-          - build: macos
+            target: x86_64-unknown-linux-musl
+          - build: macos-x64
             os: macos-latest
+            target: x86_64-apple-darwin
+          - build: macos-arm64
+            os: macos-latest
+            target: aarch64-apple-darwin
           - build: windows
             os: windows-latest
+            target: x86_64-pc-windows-msvc
 
     steps:
-      - uses: hecrj/setup-rust-action@v2
-        with:
-          rust-version: ${{ matrix.rust }}
+      - name: Update rust
+        if: matrix.build == 'linux'
+        run: rustup update
       - uses: actions/checkout@v4
       - name: Rust version
         run: rustup -V
       - name: Build
-        run: cargo build
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: "build"
+          target: ${{ matrix.target }}
+          toolchain: ${{ matrix.rust }}
+          args: "--workspace --release"
+          strip: true
       - name: Run cargo-tarpaulin
         if: matrix.build == 'linux'
         uses: actions-rs/tarpaulin@v0.1
@@ -47,7 +59,12 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Run tests
         if: matrix.build != 'linux'
-        run: cargo test --verbose  -- --nocapture
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: "test"
+          target: ${{ matrix.target }}
+          toolchain: ${{ matrix.rust }}
+          args: "--workspace --release"
       - name: Setup linter
         if: matrix.rust == 'nightly' || matrix.build != 'linux'
         run: rustup component add clippy
