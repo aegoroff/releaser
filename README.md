@@ -85,7 +85,7 @@ Options:
   -c, --crate <PATH>     Sets crate's path where Cargo.toml located
   -l, --linux <PATH>     Sets Linux package directory path
   -m, --macos <PATH>     Sets Mac OS x64-86 package directory path
-  -a, --macos <PATH>     Sets Mac OS ARM64 package directory path
+  -a, --macosarm <PATH>  Sets Mac OS ARM64 package directory path
   -b, --base <URI>       Base URI of downloaded artifacts
   -u, --output [<PATH>]  File path to save result to. If not set result will be written into stdout
   -h, --help             Print help
