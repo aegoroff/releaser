@@ -10,7 +10,8 @@ env:
   RELEASE_DIR: artifacts
   GITHUB_REF: "${{ github.ref }}"
   WINDOWS_TARGET: x86_64-pc-windows-msvc
-  MACOS_TARGET: x86_64-apple-darwin
+  MACOS_X64_TARGET: x86_64-apple-darwin
+  MACOS_ARM64_TARGET: aarch64-apple-darwin
   LINUX_TARGET: x86_64-unknown-linux-musl
 
 jobs:
@@ -19,17 +20,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [ linux, macos, windows ]
+        build: [ linux, macos-x64, macos-arm64, windows ]
+        rust: [ stable ]
         include:
           - build: linux
             os: ubuntu-latest
-            rust: stable
-          - build: macos
+            target: x86_64-unknown-linux-musl
+          - build: macos-x64
             os: macos-latest
-            rust: stable
+            target: x86_64-apple-darwin
+          - build: macos-arm64
+            os: macos-latest
+            target: aarch64-apple-darwin
           - build: windows
             os: windows-latest
-            rust: stable
+            target: x86_64-pc-windows-msvc
+
 
     steps:
       - uses: actions/checkout@v4
@@ -57,21 +63,14 @@ jobs:
         if: matrix.build == 'macos'
         run: brew install p7zip
 
-      - name: Build (Linux)
-        if: matrix.build == 'linux'
-        run: |
-          rustup target add ${{ env.LINUX_TARGET }}
-          cargo build --release --target ${{ env.LINUX_TARGET }}
-
-      - name: Build (MacOS)
-        if: matrix.build == 'macos'
-        run: cargo build --release
-
-      - name: Build (Windows)
-        if: matrix.build == 'windows'
-        run: cargo build --release
-        env:
-          RUSTFLAGS: -Ctarget-feature=+crt-static
+      - name: Build
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: "build"
+          target: ${{ matrix.target }}
+          toolchain: ${{ matrix.rust }}
+          args: "--workspace --release"
+          strip: true
 
       - name: Create artifact directory
         run: |
@@ -82,20 +81,26 @@ jobs:
         if: matrix.build == 'linux'
         run: |
           cp ./target/${{ env.LINUX_TARGET }}/release/${{ env.RELEASE_BIN }} ./dist/${{ env.RELEASE_BIN }}
-          7z a -ttar -so -an ./dist/* | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
+          7z a -ttar -so -an ./dist/* | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}.tar.gz
 
       - name: Create tarball (Windows)
         if: matrix.build == 'windows'
         shell: bash
         run: |
           mv ./target/release/${{ env.RELEASE_BIN }}.exe ./dist/${{ env.RELEASE_BIN }}.exe
-          7z a -ttar -so -an ./dist/* | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
+          7z a -ttar -so -an ./dist/* | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}.tar.gz
 
-      - name: Create tarball (MacOS)
-        if: matrix.build == 'macos'
+      - name: Create tarball (MacOS x64)
+        if: matrix.build == 'macos-x64'
         run: |
           mv ./target/release/${{ env.RELEASE_BIN }} ./dist/${{ env.RELEASE_BIN }}
-          7z a -ttar -so -an ./dist/* | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
+          7z a -ttar -so -an ./dist/* | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}.tar.gz
+
+      - name: Create tarball (MacOS arm64)
+        if: matrix.build == 'macos-arm64'
+        run: |
+          mv ./target/release/${{ env.RELEASE_BIN }} ./dist/${{ env.RELEASE_BIN }}
+          7z a -ttar -so -an ./dist/* | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}.tar.gz
 
       - name: Upload Zip
         uses: actions/upload-artifact@v4
@@ -157,11 +162,17 @@ jobs:
           name: windows
           path: windows
 
-      - name: Download MacOS tarball
+      - name: Download MacOS x64 tarball
         uses: actions/download-artifact@v4
         with:
-          name: macos
-          path: macos
+          name: macos-x64
+          path: macos-x64
+
+      - name: Download MacOS arm64 tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-arm64
+          path: macos-arm64
 
       - name: Release Linux tarball
         uses: actions/upload-release-asset@v1
@@ -183,12 +194,22 @@ jobs:
           asset_content_type: application/gzip
           asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
 
-      - name: Release MacOS tarball
+      - name: Release MacOS x64 tarball
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./macos/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
+          asset_path: ./macos-x64/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_X64_TARGET }}.tar.gz
           asset_content_type: application/gzip
-          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_TARGET }}.tar.gz
+          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_X64_TARGET }}.tar.gz
+
+      - name: Release MacOS arm64 tarball
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./macos-arm64/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_ARM64_TARGET }}.tar.gz
+          asset_content_type: application/gzip
+          asset_name: ${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_ARM64_TARGET }}.tar.gz
