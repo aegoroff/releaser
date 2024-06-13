@@ -86,14 +86,8 @@ jobs:
           mv ./target/${{ matrix.target }}/release/${{ env.RELEASE_BIN }}.exe ./dist/${{ env.RELEASE_BIN }}.exe
           7z a -ttar -so -an ./dist/* | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}.tar.gz
 
-      - name: Create tarball (MacOS x64)
-        if: matrix.build == 'macos-x64'
-        run: |
-          mv ./target/${{ matrix.target }}/release/${{ env.RELEASE_BIN }} ./dist/${{ env.RELEASE_BIN }}
-          7z a -ttar -so -an ./dist/* | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}.tar.gz
-
-      - name: Create tarball (MacOS arm64)
-        if: matrix.build == 'macos-arm64'
+      - name: Create tarball
+        if: matrix.build == 'macos-x64' || matrix.build == 'macos-arm64'
         run: |
           mv ./target/${{ matrix.target }}/release/${{ env.RELEASE_BIN }} ./dist/${{ env.RELEASE_BIN }}
           7z a -ttar -so -an ./dist/* | 7z a -si ./${{ env.RELEASE_DIR }}/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ matrix.target }}.tar.gz
