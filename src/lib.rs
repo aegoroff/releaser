@@ -147,12 +147,50 @@ fn new_cargo_config_path(root: &VfsPath) -> Result<VfsPath> {
     Ok(root.join(CARGO_CONFIG)?)
 }
 
+/// Increments the patch version of the given `Version` instance.
+///
+/// This function increments the patch version component of the provided
+/// `Version` instance by 1. Additionally, it resets the pre-release and
+/// build metadata components to empty values.
+///
+/// # Arguments
+///
+/// * `v` - A mutable reference to a `Version` instance that will be modified.
+///
+/// # Note
+///
+/// This function assumes that the `Version` instance passed in is valid and
+/// properly initialized. It does not perform any validation on the input.
+///
+/// # See Also
+///
+/// * `increment_minor` - For incrementing the minor version component.
+/// * `increment_major` - For incrementing the major version component.
 fn increment_patch(v: &mut Version) {
     v.patch += 1;
     v.pre = Prerelease::EMPTY;
     v.build = BuildMetadata::EMPTY;
 }
 
+/// Increments the minor version of the given `Version` instance.
+///
+/// This function increments the minor version component of the provided
+/// `Version` instance by 1. Additionally, it resets the patch, pre-release,
+/// and build metadata components to empty values.
+///
+/// # Arguments
+///
+/// * `v` - A mutable reference to a `Version` instance that will be modified.
+///
+/// # Note
+///
+/// This function assumes that the `Version` instance passed in is valid and
+/// properly initialized. It does not perform any validation on the input.
+///
+/// # See Also
+///
+/// * `increment_patch` - For incrementing the patch version component.
+/// * `increment_major` - For incrementing the major version component.
 fn increment_minor(v: &mut Version) {
     v.minor += 1;
     v.patch = 0;
@@ -160,6 +198,25 @@ fn increment_minor(v: &mut Version) {
     v.build = BuildMetadata::EMPTY;
 }
 
+/// Increments the major version of the given `Version` instance.
+///
+/// This function increments the major version component of the provided
+/// `Version` instance by 1. Additionally, it resets the minor, patch,
+/// pre-release, and build metadata components to empty values.
+///
+/// # Arguments
+///
+/// * `v` - A mutable reference to a `Version` instance that will be modified.
+///
+/// # Note
+///
+/// This function assumes that the `Version` instance passed in is valid and
+/// properly initialized. It does not perform any validation on the input.
+///
+/// # See Also
+///
+/// * `increment_minor` - For incrementing the minor version component.
+/// * `increment_patch` - For incrementing the patch version component.
 fn increment_major(v: &mut Version) {
     v.major += 1;
     v.minor = 0;
