@@ -69,6 +69,30 @@ where
     Ok(result)
 }
 
+/// Updates the version configuration in the given VfsPath based on the provided CrateVersion and Increment.
+///
+/// # Arguments
+///
+/// * `path` - The root path where the configuration file is located.
+/// * `version` - The CrateVersion instance which contains the path and places where the version needs to be updated.
+/// * `incr` - The Increment enum value indicating the type of version increment (Major, Minor, Patch).
+///
+/// # Returns
+///
+/// * `Result<Version>` - The updated version after applying the increment.
+///
+/// # Errors
+///
+/// This function will return an error if:
+/// * The path provided is invalid or cannot be accessed.
+/// * The configuration file cannot be opened or read.
+/// * The content of the configuration file cannot be parsed.
+/// * The new version cannot be written back to the configuration file.
+///
+/// # Note
+///
+/// If the `version.path` is empty, the function will use the provided `path` as the working configuration path.
+/// Otherwise, it will construct the path using the `version.path` and `CARGO_CONFIG`.
 pub fn update_config(path: &VfsPath, version: &CrateVersion, incr: Increment) -> Result<Version> {
     let working_config_path: &VfsPath;
     let member_config_path: VfsPath;
