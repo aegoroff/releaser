@@ -69,12 +69,12 @@ where
     Ok(result)
 }
 
-/// Updates the version configuration in the given VfsPath based on the provided CrateVersion and Increment.
+/// Updates the version configuration in the given `VfsPath` based on the provided `CrateVersion` and Increment.
 ///
 /// # Arguments
 ///
 /// * `path` - The root path where the configuration file is located.
-/// * `version` - The CrateVersion instance which contains the path and places where the version needs to be updated.
+/// * `version` - The `CrateVersion` instance which contains the path and places where the version needs to be updated.
 /// * `incr` - The Increment enum value indicating the type of version increment (Major, Minor, Patch).
 ///
 /// # Returns
