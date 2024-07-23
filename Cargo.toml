@@ -29,7 +29,7 @@ url = "=2.5.2"
 color-eyre = "=0.6.3"
 
 [dev-dependencies]
-mockall = "=0.12.1"
+mockall = "=0.13.0"
 rstest = "=0.21.0"
 
 [profile.release]
