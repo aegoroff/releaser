@@ -54,6 +54,21 @@ pub trait Vcs {
     fn push_tag(&self, path: &str, tag: &str) -> Result<()>;
 }
 
+/// Updates the configurations by aggregating the maximum version from an iterator of crate versions.
+///
+/// This function takes a `VfsPath` and an iterator over crate versions as input, and returns the maximum version found.
+///
+/// The `update_config` function is used to update each configuration in the iterator. The resulting versions are aggregated using the `max` method of the `Ord` trait.
+///
+/// # Arguments
+///
+/// * `path`: A `VfsPath` representing the path to the configurations.
+/// * `iter`: An iterator over crate versions.
+/// * `incr`: An increment value for versioning (currently unused).
+///
+/// # Returns
+///
+/// The maximum version found among the aggregated configurations.
 pub fn update_configs<I>(path: &VfsPath, iter: &mut I, incr: Increment) -> Result<Version>
 where
     I: Iterator<Item = CrateVersion>,
