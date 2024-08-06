@@ -30,7 +30,7 @@ color-eyre = "=0.6.3"
 
 [dev-dependencies]
 mockall = "=0.13.0"
-rstest = "=0.21.0"
+rstest = "=0.22.0"
 
 [profile.release]
 lto = true
