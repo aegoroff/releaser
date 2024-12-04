@@ -60,7 +60,7 @@ impl<'a> VersionIter<'a> {
     }
 }
 
-impl<'a> Iterator for VersionIter<'a> {
+impl Iterator for VersionIter<'_> {
     type Item = CrateVersion;
 
     fn next(&mut self) -> Option<Self::Item> {
