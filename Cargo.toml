@@ -12,7 +12,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-semver = "=1.0.24"
+semver = "=1.0.25"
 toml = "=0.8.19"
 toml_edit = "=0.22.22"
 serde = { version = "=1.0.217", features = ["derive"] }
