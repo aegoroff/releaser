@@ -37,6 +37,7 @@ Commands:
   b           Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)
   s           Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)
   completion  Generate the autocompletion script for the specified shell
+  bugreport   Collect information about the system and the environment that users can send along with a bug report
   help        Print this message or the help of the given subcommand(s)
 
 Options:

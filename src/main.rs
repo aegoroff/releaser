@@ -1,6 +1,12 @@
 #[macro_use]
 extern crate clap;
 
+use bugreport::{
+    bugreport,
+    collector::{CompileTimeInformation, EnvironmentVariables, OperatingSystem, SoftwareVersion},
+    format::Markdown,
+};
+
 use clap::{command, Arg, ArgAction, ArgMatches, Command};
 use clap_complete::{generate, Shell};
 use color_eyre::eyre::{eyre, Result};
@@ -44,6 +50,10 @@ fn main() -> Result<()> {
             print_completions(cmd);
             Ok(())
         }
+        Some(("bugreport", cmd)) => {
+            print_bugreport(cmd);
+            Ok(())
+        }
         _ => Ok(()),
     }
 }
@@ -54,6 +64,15 @@ fn print_completions(matches: &ArgMatches) {
     if let Some(generator) = matches.get_one::<Shell>("generator") {
         generate(*generator, &mut cmd, bin_name, &mut io::stdout());
     }
+}
+
+fn print_bugreport(_matches: &ArgMatches) {
+    bugreport!()
+        .info(SoftwareVersion::default())
+        .info(OperatingSystem::default())
+        .info(EnvironmentVariables::list(&["SHELL", "TERM"]))
+        .info(CompileTimeInformation::default())
+        .print::<Markdown>();
 }
 
 fn workspace(cmd: &ArgMatches) -> Result<()> {
@@ -155,6 +174,7 @@ fn build_cli() -> Command {
         .subcommand(brew_cmd())
         .subcommand(scoop_cmd())
         .subcommand(completion_cmd())
+        .subcommand(bugreport_cmd())
 }
 
 fn workspace_cmd() -> Command {
@@ -246,6 +266,11 @@ fn completion_cmd() -> Command {
                 .required(true)
                 .index(1),
         )
+}
+
+fn bugreport_cmd() -> Command {
+    Command::new("bugreport")
+        .about("Collect information about the system and the environment that users can send along with a bug report")
 }
 
 fn increment_arg() -> Arg {
