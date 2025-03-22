@@ -1,6 +1,6 @@
 use std::{thread, time};
 
-use ansi_term::Colour::Green;
+use console::style;
 use semver::Version;
 use vfs::VfsPath;
 
@@ -91,8 +91,8 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
             if i < crates_to_publish.len() - 1 {
                 println!(
                     " Waiting {} seconds after publish {} ...",
-                    Green.bold().paint(&delay_str),
-                    Green.bold().paint(publish)
+                    style(&delay_str).green().bold(),
+                    style(publish).green().bold()
                 );
                 thread::sleep(delay);
             }
