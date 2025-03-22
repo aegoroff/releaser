@@ -4,12 +4,12 @@ use console::style;
 use semver::Version;
 use vfs::VfsPath;
 
-use crate::version_iter::VersionIter;
 use crate::CrateConfig;
 use crate::Increment;
 use crate::Publisher;
 use crate::Vcs;
-use crate::{new_cargo_config_path, PublishOptions};
+use crate::version_iter::VersionIter;
+use crate::{PublishOptions, new_cargo_config_path};
 use color_eyre::eyre::Result;
 
 /// Represents virtual path in a filesystem
@@ -160,7 +160,7 @@ mod tests {
     #![allow(clippy::unwrap_used)]
     use super::*;
     use crate::MockVcs;
-    use crate::{MockPublisher, CARGO_CONFIG};
+    use crate::{CARGO_CONFIG, MockPublisher};
     use mockall::predicate::{eq, str};
     use rstest::{fixture, rstest};
     use vfs::MemoryFS;

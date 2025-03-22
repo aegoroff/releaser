@@ -4,8 +4,8 @@ use handlebars::Handlebars;
 use serde::Serialize;
 use vfs::VfsPath;
 
-use crate::packaging::Package;
 use crate::CrateConfig;
+use crate::packaging::Package;
 use crate::{new_cargo_config_path, packaging};
 use color_eyre::eyre::Result;
 

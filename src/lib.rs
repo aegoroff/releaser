@@ -14,7 +14,7 @@ use semver::{BuildMetadata, Prerelease, Version};
 use serde::Deserialize;
 
 use color_eyre::eyre::Result;
-use toml_edit::{value, DocumentMut};
+use toml_edit::{DocumentMut, value};
 use vfs::VfsPath;
 
 pub mod brew;

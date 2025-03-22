@@ -7,20 +7,20 @@ use bugreport::{
     format::Markdown,
 };
 
-use clap::{command, Arg, ArgAction, ArgMatches, Command};
-use clap_complete::{generate, Shell};
-use color_eyre::eyre::{eyre, Result};
+use clap::{Arg, ArgAction, ArgMatches, Command, command};
+use clap_complete::{Shell, generate};
+use color_eyre::eyre::{Result, eyre};
 use std::io;
 use std::option::Option::Some;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};
 
+use releaser::Increment;
 use releaser::brew;
 use releaser::cargo::Cargo;
 use releaser::git::Git;
 use releaser::scoop;
 use releaser::workflow::{Crate, Release, VPath, Workspace};
-use releaser::Increment;
 
 const PATH: &str = "PATH";
 const FILE: &str = "FILE";

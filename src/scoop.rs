@@ -1,4 +1,4 @@
-use crate::{new_cargo_config_path, packaging, CrateConfig};
+use crate::{CrateConfig, new_cargo_config_path, packaging};
 use color_eyre::eyre::Result;
 use serde::Serialize;
 use vfs::VfsPath;

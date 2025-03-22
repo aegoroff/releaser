@@ -1,4 +1,4 @@
-use crate::{CrateConfig, CrateVersion, Dependency, Place, WorkspaceConfig, CARGO_CONFIG, VERSION};
+use crate::{CARGO_CONFIG, CrateConfig, CrateVersion, Dependency, Place, VERSION, WorkspaceConfig};
 use color_eyre::eyre::Result;
 use petgraph::algo::DfsSpace;
 use petgraph::graphmap::DiGraphMap;
@@ -111,7 +111,7 @@ mod tests {
 
     use super::*;
     use crate::version_iter::VersionIter;
-    use crate::{update_configs, Increment};
+    use crate::{Increment, update_configs};
     use rstest::{fixture, rstest};
 
     #[test]
