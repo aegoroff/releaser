@@ -1,6 +1,6 @@
 use crate::hash;
 use crate::resource::Resource;
-use color_eyre::eyre::{eyre, Result};
+use color_eyre::eyre::{OptionExt, Result};
 use serde::Serialize;
 use vfs::VfsPath;
 
@@ -25,13 +25,11 @@ pub fn new_binary_pkg(path: &VfsPath, base_uri: &str) -> Result<Package> {
 fn calculate_sha256(path: &VfsPath) -> Result<(String, String)> {
     let mut it = path.read_dir()?;
     let file_name = it.find(|x| x.extension().is_some_and(|ext| ext.eq(PKG_EXTENSION)));
+    let file_name =
+        file_name.ok_or_eyre(format!("No file with extension {PKG_EXTENSION} found"))?;
 
-    if let Some(file_name) = file_name {
-        let hash = hash::calculate_sha256(&file_name)?;
-        Ok((hash, file_name.filename()))
-    } else {
-        Err(eyre!("No file with extension {PKG_EXTENSION} found"))
-    }
+    let hash = hash::calculate_sha256(&file_name)?;
+    Ok((hash, file_name.filename()))
 }
 
 #[cfg(test)]
