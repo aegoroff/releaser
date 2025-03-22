@@ -23,6 +23,9 @@ use releaser::workflow::{Crate, Release, VPath, Workspace};
 use releaser::Increment;
 
 const PATH: &str = "PATH";
+const FILE: &str = "FILE";
+const URI: &str = "URI";
+const NUMBER: &str = "NUMBER";
 const INCR: &str = "INCR";
 const INCR_HELP: &str = "Version increment. One of the following: major, minor or patch";
 const ALL: &str = "all";
@@ -35,6 +38,12 @@ const OUTPUT_HELP: &str =
 const BASE: &str = "base";
 const CRATE: &str = "crate";
 const BASE_HELP: &str = "Base URI of downloaded artifacts";
+const EXE: &str = "exe";
+const BINARY: &str = "binary";
+const DELAY: &str = "delay";
+const LINUX: &str = "linux";
+const MACOS: &str = "macos";
+const MACOSARM: &str = "macosarm";
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -76,7 +85,7 @@ fn print_bugreport(_matches: &ArgMatches) {
 }
 
 fn workspace(cmd: &ArgMatches) -> Result<()> {
-    let delay_seconds = cmd.get_one::<u64>("delay").unwrap_or(&20);
+    let delay_seconds = cmd.get_one::<u64>(DELAY).unwrap_or(&20);
     let r = Workspace::new(*delay_seconds, Cargo, Git);
     release(cmd, &r)
 }
@@ -88,9 +97,9 @@ fn single_crate(cmd: &ArgMatches) -> Result<()> {
 
 fn brew(cmd: &ArgMatches) -> Result<()> {
     let empty = String::default();
-    let linux_path = cmd.get_one::<String>("linux").unwrap_or(&empty);
-    let macos_path = cmd.get_one::<String>("macos").unwrap_or(&empty);
-    let macos_arm_path = cmd.get_one::<String>("macosarm").unwrap_or(&empty);
+    let linux_path = cmd.get_one::<String>(LINUX).unwrap_or(&empty);
+    let macos_path = cmd.get_one::<String>(MACOS).unwrap_or(&empty);
+    let macos_arm_path = cmd.get_one::<String>(MACOSARM).unwrap_or(&empty);
 
     if linux_path.is_empty() && macos_path.is_empty() {
         return Ok(());
@@ -115,8 +124,8 @@ fn brew(cmd: &ArgMatches) -> Result<()> {
 
 fn scoop(cmd: &ArgMatches) -> Result<()> {
     let empty = String::default();
-    let exe_name = cmd.get_one::<String>("exe").unwrap_or(&empty);
-    let binary_path = cmd.get_one::<String>("binary").unwrap_or(&empty);
+    let exe_name = cmd.get_one::<String>(EXE).unwrap_or(&empty);
+    let binary_path = cmd.get_one::<String>(BINARY).unwrap_or(&empty);
     let crate_path = cmd.get_one::<String>(CRATE).unwrap_or(&empty);
     let base_uri = cmd.get_one::<String>(BASE).unwrap_or(&empty);
 
@@ -183,13 +192,16 @@ fn workspace_cmd() -> Command {
         .about("Release workspace specified by path")
         .arg(increment_arg())
         .arg(
-            arg!([PATH])
+            Arg::new(PATH)
                 .help("Sets workspace root path")
                 .required(true)
                 .index(2),
         )
         .arg(
-            arg!(-d --delay <NUMBER>)
+            Arg::new(DELAY)
+                .long(DELAY)
+                .short('d')
+                .value_name(NUMBER)
                 .required(false)
                 .value_parser(value_parser!(u64))
                 .default_value("20")
@@ -205,7 +217,7 @@ fn crate_cmd() -> Command {
         .about("Release single crate specified by path")
         .arg(increment_arg())
         .arg(
-            arg!([PATH])
+            Arg::new(PATH)
                 .help("Sets crate's root path")
                 .required(true)
                 .index(2),
@@ -220,17 +232,26 @@ fn brew_cmd() -> Command {
         .about("Create brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux only)")
         .arg(crate_arg())
         .arg(
-            arg!(-l --linux <PATH>)
+            Arg::new(LINUX)
+                .long(LINUX)
+                .short('l')
+                .value_name(PATH)
                 .required(false)
                 .help("Sets Linux package directory path"),
         )
         .arg(
-            arg!(-m --macos <PATH>)
+            Arg::new(MACOS)
+                .long(MACOS)
+                .short('m')
+                .value_name(PATH)
                 .required(false)
                 .help("Sets Mac OS x64-86 package directory path"),
         )
         .arg(
-            arg!(-a --macosarm <PATH>)
+            Arg::new(MACOSARM)
+                .long(MACOSARM)
+                .short('a')
+                .value_name(PATH)
                 .required(false)
                 .help("Sets Mac OS ARM64 package directory path"),
         )
@@ -244,12 +265,18 @@ fn scoop_cmd() -> Command {
         .about("Create scoop package manager JSON (package definition file) to publish it into bucket (Windows only)")
         .arg(crate_arg())
         .arg(
-            arg!(-i --binary <PATH>)
+            Arg::new(BINARY)
+                .long(BINARY)
+                .short('i')
+                .value_name(PATH)
                 .required(true)
                 .help("Sets 64-bit binary package directory path"),
         )
         .arg(
-            arg!(-e --exe <FILE>)
+            Arg::new(EXE)
+                .long(EXE)
+                .short('e')
+                .value_name(FILE)
                 .required(true)
                 .help("Sets Windows executable name"),
         )
@@ -274,7 +301,7 @@ fn bugreport_cmd() -> Command {
 }
 
 fn increment_arg() -> Arg {
-    arg!([INCR])
+    Arg::new(INCR)
         .value_parser(value_parser!(Increment))
         .help(INCR_HELP)
         .required(true)
@@ -282,28 +309,46 @@ fn increment_arg() -> Arg {
 }
 
 fn base_arg() -> Arg {
-    arg!(-b --base <URI>).required(true).help(BASE_HELP)
+    Arg::new(BASE)
+        .long(BASE)
+        .short('b')
+        .value_name(URI)
+        .required(true)
+        .help(BASE_HELP)
 }
 
 fn output_arg() -> Arg {
-    arg!(-u - -output[PATH]).required(false).help(OUTPUT_HELP)
+    Arg::new(OUTPUT)
+        .long(OUTPUT)
+        .short('u')
+        .num_args(0..=1)
+        .value_name(PATH)
+        .required(false)
+        .help(OUTPUT_HELP)
 }
 
 fn crate_arg() -> Arg {
-    arg!(-c --crate <PATH>)
+    Arg::new(CRATE)
+        .long(CRATE)
+        .short('c')
+        .value_name(PATH)
         .required(true)
         .help("Sets crate's path where Cargo.toml located")
 }
 
 fn noverify_arg() -> Arg {
-    arg!(-n - -noverify)
+    Arg::new(NO_VERIFY)
+        .long(NO_VERIFY)
+        .short('n')
         .required(false)
         .action(ArgAction::SetTrue)
         .help(NO_VERIFY_HELP)
 }
 
 fn all_arg() -> Arg {
-    arg!(-a - -all)
+    Arg::new(ALL)
+        .long(ALL)
+        .short('a')
         .required(false)
         .action(ArgAction::SetTrue)
         .help(ALL_HELP)
