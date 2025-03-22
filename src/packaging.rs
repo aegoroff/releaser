@@ -24,13 +24,7 @@ pub fn new_binary_pkg(path: &VfsPath, base_uri: &str) -> Result<Package> {
 
 fn calculate_sha256(path: &VfsPath) -> Result<(String, String)> {
     let mut it = path.read_dir()?;
-    let file_name = it.find(|x| {
-        if let Some(ext) = x.extension() {
-            ext.eq(PKG_EXTENSION)
-        } else {
-            false
-        }
-    });
+    let file_name = it.find(|x| x.extension().is_some_and(|ext| ext.eq(PKG_EXTENSION)));
 
     if let Some(file_name) = file_name {
         let hash = hash::calculate_sha256(&file_name)?;
