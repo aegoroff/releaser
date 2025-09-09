@@ -27,7 +27,7 @@ hex = "=0.4.3"
 url = "=2.5.7"
 color-eyre = "=0.6.5"
 bugreport = "=0.5.1"
-console = "=0.16.0"
+console = "=0.16.1"
 
 [dev-dependencies]
 mockall = "=0.13.1"
