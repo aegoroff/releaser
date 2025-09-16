@@ -12,14 +12,14 @@ edition = "2024"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-semver = "=1.0.26"
+semver = "=1.0.27"
 toml = "=0.9.6"
-toml_edit = "=0.23.4"
+toml_edit = "=0.23.5"
 serde = { version = "=1.0.225", features = ["derive"] }
-serde_json = "=1.0.143"
+serde_json = "=1.0.145"
 vfs = "=0.12.2"
 clap = { version = "=4.5.47", features = ["std", "color", "suggestions", "cargo", "derive"] }
-clap_complete = "=4.5.57"
+clap_complete = "=4.5.58"
 petgraph = "=0.8.2"
 handlebars = "=6.3.2"
 sha2 = "=0.10.9"
