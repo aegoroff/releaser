@@ -36,6 +36,9 @@ jobs:
         if: matrix.build == 'linux'
         run: rustup update
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+            components: clippy
       - name: Rust version
         run: rustup -V
       - name: Build
