@@ -79,7 +79,8 @@ jobs:
         uses: auguwu/clippy-action@1.4.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          check-args: --all-features --release -- -Dwarnings
+          check-args: --all-features --release
+          args: -Dwarnings
       - name: Run audit
         if: matrix.rust != 'nightly' && matrix.build == 'linux'
         uses: actions-rs/audit-check@v1
