@@ -73,7 +73,7 @@ jobs:
         run: cargo clippy -- -Dwarnings
       - name: Run clippy-check
         if: matrix.rust != 'nightly' && matrix.build == 'linux'
-        uses: actions-rs/clippy-check@v1
+        uses: auguwu/clippy-action@1.4.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features --release -- -Dwarnings
