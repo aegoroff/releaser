@@ -15,12 +15,12 @@ use std::option::Option::Some;
 use std::path::PathBuf;
 use vfs::{PhysicalFS, VfsPath};
 
-use releaser::Increment;
 use releaser::brew;
 use releaser::cargo::Cargo;
 use releaser::git::Git;
 use releaser::scoop;
 use releaser::workflow::{Crate, Release, VPath, Workspace};
+use releaser::{Increment, NonPublisher};
 
 const PATH: &str = "PATH";
 const FILE: &str = "FILE";
@@ -35,6 +35,9 @@ const NO_VERIFY_HELP: &str = "Whether to add option --no-verify to cargo publish
 const OUTPUT: &str = "output";
 const OUTPUT_HELP: &str =
     "File path to save result to. If not set result will be written into stdout";
+const NO_PUBLISH: &str = "nopublish";
+const NO_PUBLISH_HELP: &str =
+    "Dont publish crate. Just change version, commit, add tag and push changes";
 const BASE: &str = "base";
 const CRATE: &str = "crate";
 const BASE_HELP: &str = "Base URI of downloaded artifacts";
@@ -86,13 +89,23 @@ fn print_bugreport(_matches: &ArgMatches) {
 
 fn workspace(cmd: &ArgMatches) -> Result<()> {
     let delay_seconds = cmd.get_one::<u64>(DELAY).unwrap_or(&20);
-    let r = Workspace::new(*delay_seconds, Cargo, Git);
-    release(cmd, &r)
+    if cmd.get_flag(NO_PUBLISH) {
+        let r = Workspace::new(*delay_seconds, NonPublisher, Git);
+        release(cmd, &r)
+    } else {
+        let r = Workspace::new(*delay_seconds, Cargo, Git);
+        release(cmd, &r)
+    }
 }
 
 fn single_crate(cmd: &ArgMatches) -> Result<()> {
-    let r = Crate::new(Cargo, Git);
-    release(cmd, &r)
+    if cmd.get_flag(NO_PUBLISH) {
+        let r = Crate::new(NonPublisher, Git);
+        release(cmd, &r)
+    } else {
+        let r = Crate::new(Cargo, Git);
+        release(cmd, &r)
+    }
 }
 
 fn brew(cmd: &ArgMatches) -> Result<()> {
@@ -209,6 +222,7 @@ fn workspace_cmd() -> Command {
         )
         .arg(all_arg())
         .arg(noverify_arg())
+        .arg(nopublish_arg())
 }
 
 fn crate_cmd() -> Command {
@@ -224,6 +238,7 @@ fn crate_cmd() -> Command {
         )
         .arg(all_arg())
         .arg(noverify_arg())
+        .arg(nopublish_arg())
 }
 
 fn brew_cmd() -> Command {
@@ -343,6 +358,14 @@ fn noverify_arg() -> Arg {
         .required(false)
         .action(ArgAction::SetTrue)
         .help(NO_VERIFY_HELP)
+}
+
+fn nopublish_arg() -> Arg {
+    Arg::new(NO_PUBLISH)
+        .long(NO_PUBLISH)
+        .required(false)
+        .action(ArgAction::SetTrue)
+        .help(NO_PUBLISH_HELP)
 }
 
 fn all_arg() -> Arg {

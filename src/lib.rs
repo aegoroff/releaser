@@ -54,6 +54,16 @@ pub trait Vcs {
     fn push_tag(&self, path: &str, tag: &str) -> Result<()>;
 }
 
+/// Represents a publisher that does nothing.
+#[derive(Default)]
+pub struct NonPublisher;
+
+impl Publisher for NonPublisher {
+    fn publish<'a>(&'a self, _path: &'a str, _options: PublishOptions<'a>) -> Result<()> {
+        Ok(())
+    }
+}
+
 /// Updates the configurations by aggregating the maximum version from an iterator of crate versions.
 ///
 /// This function takes a `VfsPath` and an iterator over crate versions as input, and returns the maximum version found.
