@@ -1,6 +1,6 @@
 [package]
 name = "releaser"
-version = "0.14.1"
+version = "0.15.0"
 description = "Crate or workspace releasing tool. All crates from workspace will be released on crates.io"
 authors = ["egoroff <egoroff@gmail.com>"]
 repository = "https://github.com/aegoroff/releaser"
