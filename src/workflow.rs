@@ -98,6 +98,7 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Workspace<P, V> {
             }
         }
 
+        self.vcs.push(root.real_path)?;
         self.vcs.create_tag(root.real_path, &ver)?;
         self.vcs.push_tag(root.real_path, &ver)?;
 
@@ -140,6 +141,7 @@ impl<'a, P: Publisher, V: Vcs> Release<'a> for Crate<P, V> {
         };
         self.publisher.publish(root.real_path, options)?;
 
+        self.vcs.push(root.real_path)?;
         self.vcs.create_tag(root.real_path, &ver)?;
         self.vcs.push_tag(root.real_path, &ver)?;
 
@@ -203,6 +205,12 @@ mod tests {
             .returning(|_, _| Ok(()));
 
         mock_vcs
+            .expect_push()
+            .with(eq("/x"))
+            .times(1)
+            .returning(|_| Ok(()));
+
+        mock_vcs
             .expect_create_tag()
             .with(eq("/x"), eq("v0.2.0"))
             .times(1)
@@ -249,6 +257,12 @@ mod tests {
             .withf(move |p, o| p == "/x" && *o == options)
             .times(1)
             .returning(|_, _| Ok(()));
+
+        mock_vcs
+            .expect_push()
+            .with(eq("/x"))
+            .times(1)
+            .returning(|_| Ok(()));
 
         mock_vcs
             .expect_create_tag()

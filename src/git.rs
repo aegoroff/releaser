@@ -42,4 +42,14 @@ impl Vcs for Git {
         child.wait()?;
         Ok(())
     }
+
+    fn push(&self, path: &str) -> Result<()> {
+        let mut child = Command::new(TOOL)
+            .current_dir(path)
+            .arg("push")
+            .arg("origin")
+            .spawn()?;
+        child.wait()?;
+        Ok(())
+    }
 }

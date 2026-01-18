@@ -52,6 +52,7 @@ pub trait Vcs {
     fn commit(&self, path: &str, message: &str) -> Result<()>;
     fn create_tag(&self, path: &str, tag: &str) -> Result<()>;
     fn push_tag(&self, path: &str, tag: &str) -> Result<()>;
+    fn push(&self, path: &str) -> Result<()>;
 }
 
 /// Represents a publisher that does nothing.
