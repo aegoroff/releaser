@@ -277,7 +277,7 @@ cargo fmt
 
 This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
 
-Copyright (c) 2018-2020 Alexander Egorov
+Copyright (c) 2021-2026 Alexander Egorov
 
 ## Related Projects
 
