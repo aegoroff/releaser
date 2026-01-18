@@ -27,7 +27,7 @@ A powerful command-line tool for automating the release process of Rust crates a
 - 📦 **Package Manager Integration**: Generate Homebrew formulas and Scoop manifests
 - 🔧 **Flexible Publishing Options**: Control publishing with various flags and options
 - ⏱️ **Smart Delay Handling**: Built-in delays between crate publications to ensure proper indexing
-- 🛠️ **Non-publish Mode**: Test release workflows without actually publishing to crates.io
+- 🛠️ **Non-publish Mode**: Change crate(s) verisions, commit and git without actually publishing to crates.io
 - 📝 **Automatic Git Integration**: Commit changes, create tags, and push to remote repositories
 - 🎨 **Shell Completions**: Generate autocompletion scripts for your shell
 
