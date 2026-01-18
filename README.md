@@ -58,6 +58,7 @@ Options:
   -d, --delay <NUMBER>  Delay in seconds between publish next workflow's crate [default: 20]
   -a, --all             Whether to add option --all-features to cargo publish command
   -n, --noverify        Whether to add option --no-verify to cargo publish command
+      --nopublish       Dont publish crate. Just change version, commit, add tag and push changes
   -h, --help            Print help information
 ```
 Releasing simple crate
@@ -73,6 +74,7 @@ Arguments:
 Options:
   -a, --all       Whether to add option --all-features to cargo publish command
   -n, --noverify  Whether to add option --no-verify to cargo publish command
+      --nopublish Dont publish crate. Just change version, commit, add tag and push changes
   -h, --help      Print help information
 ```
 Creating brew package manager Formula (package definition file) to publish it into a tap (MacOS and Linux
