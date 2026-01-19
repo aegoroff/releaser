@@ -4,7 +4,7 @@
 [![Rust](https://github.com/aegoroff/releaser/actions/workflows/rust.yml/badge.svg)](https://github.com/aegoroff/releaser/actions/workflows/rust.yml)
 [![codecov](https://codecov.io/gh/aegoroff/releaser/branch/master/graph/badge.svg?token=A2vtLxosWU)](https://codecov.io/gh/aegoroff/releaser)
 [![](https://tokei.rs/b1/github/aegoroff/releaser?category=code)](https://github.com/XAMPPRocky/tokei)
-[![Minimum Stable Rust Version](https://img.shields.io/badge/Rust-1.85.1-blue?color=fc8d62&logo=rust)](https://blog.rust-lang.org/2025/02/20/Rust-1.85.1/)
+[![Minimum Stable Rust Version](https://img.shields.io/badge/Rust-1.85.1-blue?color=fc8d62&logo=rust)](https://blog.rust-lang.org/2025/03/18/Rust-1.85.1/)
 
 A powerful command-line tool for automating the release process of Rust crates and workspaces on crates.io, with support for package manager formula generation.
 
