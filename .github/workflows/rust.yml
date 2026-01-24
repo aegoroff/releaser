@@ -15,11 +15,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [ linux, macos-x64, macos-arm64, windows ]
         rust: [ stable ]
         include:
           - build: linux
-            os: ubuntu-22.04
+            os: ubuntu-latest
             target: x86_64-unknown-linux-musl
           - build: macos-x64
             os: macos-latest
@@ -49,17 +48,22 @@ jobs:
           toolchain: ${{ matrix.rust }}
           args: "--workspace --release"
           strip: true
-      - name: Run cargo-tarpaulin
-        if: matrix.build == 'linux'
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          version: '0.15.0'
-          args: '-- --test-threads 1'
-      - name: Upload to codecov.io
+
+      - name: Install cargo-llvm-cov
         if: matrix.build == 'linux' && matrix.rust != 'nightly'
-        uses: codecov/codecov-action@v4
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Generate code coverage
+        if: matrix.build == 'linux' && matrix.rust != 'nightly'
+        run: cargo llvm-cov --workspace --lcov --output-path lcov.info
+
+      - name: Upload to Codecov
+        if: matrix.build == 'linux' && matrix.rust != 'nightly'
+        uses: codecov/codecov-action@v5
+        with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Run tests
         if: matrix.build != 'linux'
         uses: houseabsolute/actions-rust-cross@v0

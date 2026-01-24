@@ -9,10 +9,6 @@ env:
   RELEASE_BIN: releaser
   RELEASE_DIR: artifacts
   GITHUB_REF: "${{ github.ref }}"
-  WINDOWS_TARGET: x86_64-pc-windows-msvc
-  MACOS_X64_TARGET: x86_64-apple-darwin
-  MACOS_ARM64_TARGET: aarch64-apple-darwin
-  LINUX_TARGET: x86_64-unknown-linux-musl
 
 jobs:
   build:
@@ -20,11 +16,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [ linux, macos-x64, macos-arm64, windows ]
         rust: [ stable ]
         include:
           - build: linux
-            os: ubuntu-22.04
+            os: ubuntu-latest
             target: x86_64-unknown-linux-musl
           - build: macos-x64
             os: macos-latest
@@ -113,7 +108,7 @@ jobs:
         id: git-cliff
         with:
           config: cliff.toml
-          args: -vv --latest --strip header
+          args: --latest --strip header
         env:
           OUTPUT: CHANGES.md
 
@@ -130,29 +125,10 @@ jobs:
           echo "using version tag ${GITHUB_REF:11}"
           echo "version=${GITHUB_REF:11}" >> $GITHUB_OUTPUT
 
-      - name: Download Linux tarball
+      - name: Download artefacts
         uses: actions/download-artifact@v7
         with:
-          name: linux
-          path: linux
-
-      - name: Download Windows tarball
-        uses: actions/download-artifact@v7
-        with:
-          name: windows
-          path: windows
-
-      - name: Download MacOS x64 tarball
-        uses: actions/download-artifact@v7
-        with:
-          name: macos-x64
-          path: macos-x64
-
-      - name: Download MacOS arm64 tarball
-        uses: actions/download-artifact@v7
-        with:
-          name: macos-arm64
-          path: macos-arm64
+          path: release
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -160,7 +136,4 @@ jobs:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           body: "${{ needs.generate-changelog.outputs.release_body }}"
           files: |
-            ./linux/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.LINUX_TARGET }}.tar.gz
-            ./windows/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.WINDOWS_TARGET }}.tar.gz
-            ./macos-x64/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_X64_TARGET }}.tar.gz
-            ./macos-arm64/${{ env.RELEASE_BIN }}-${{ steps.get_version.outputs.VERSION }}-${{ env.MACOS_ARM64_TARGET }}.tar.gz
+            ./release/**/*.tar.gz
