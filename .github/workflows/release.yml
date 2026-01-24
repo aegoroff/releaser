@@ -16,6 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        build: [ linux, macos-x64, macos-arm64, windows ]
         rust: [ stable ]
         include:
           - build: linux
