@@ -22,7 +22,7 @@ clap = { version = "=4.6.0", features = ["std", "color", "suggestions", "cargo",
 clap_complete = "=4.6.0"
 petgraph = "=0.8.3"
 handlebars = "=6.4.0"
-sha2 = "=0.10.9"
+sha2 = "=0.11.0"
 hex = "=0.4.3"
 url = "=2.5.8"
 color-eyre = "=0.6.5"
