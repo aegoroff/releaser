@@ -30,7 +30,7 @@ bugreport = "=0.6.0"
 console = "=0.16.3"
 
 [dev-dependencies]
-mockall = "=0.14.0"
+mockall = "=0.15.0"
 rstest = "=0.26.1"
 
 [profile.release]
