@@ -64,7 +64,7 @@ class {{ formula }} < Formula
 {{#if (or linux macos)}}
 {{lines 1}}
   def install
-    bin.install Dir["*"]
+    bin.install Dir["*"].select { |f| File.file?(f) && File.executable?(f) }
   end
 {{lines 1}}
 {{/if}}
@@ -258,7 +258,7 @@ class Solv < Formula
   end
 
   def install
-    bin.install Dir["*"]
+    bin.install Dir["*"].select { |f| File.file?(f) && File.executable?(f) }
   end
 
 end
@@ -324,7 +324,7 @@ class Solv < Formula
   end
 
   def install
-    bin.install Dir["*"]
+    bin.install Dir["*"].select { |f| File.file?(f) && File.executable?(f) }
   end
 
 end
@@ -373,7 +373,7 @@ class Solv < Formula
   end
 
   def install
-    bin.install Dir["*"]
+    bin.install Dir["*"].select { |f| File.file?(f) && File.executable?(f) }
   end
 
 end
@@ -437,7 +437,7 @@ class Solv < Formula
   end
 
   def install
-    bin.install Dir["*"]
+    bin.install Dir["*"].select { |f| File.file?(f) && File.executable?(f) }
   end
 
 end
