@@ -120,15 +120,14 @@ where
 /// If the `version.path` is empty, the function will use the provided `path` as the working configuration path.
 /// Otherwise, it will construct the path using the `version.path` and `CARGO_CONFIG`.
 pub fn update_config(path: &VfsPath, version: &CrateVersion, incr: Increment) -> Result<Version> {
-    let working_config_path: &VfsPath;
     let member_config_path: VfsPath;
-    if version.path.is_empty() {
-        working_config_path = path;
+    let working_config_path: &VfsPath = if version.path.is_empty() {
+        path
     } else {
         let parent = path.parent();
         member_config_path = parent.join(&version.path)?.join(CARGO_CONFIG)?;
-        working_config_path = &member_config_path;
-    }
+        &member_config_path
+    };
 
     let mut file = working_config_path.open_file()?;
     let mut content = String::new();
